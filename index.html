@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f3f5f7">
+<title>授業記録システム v0.1</title>
+<style>
+:root{
+  --bg:#f3f5f7;--card:#fff;--text:#1f2933;--sub:#6b7280;--line:#d7dde4;
+  --primary:#315b8a;--primary-soft:#eaf1f8;--radius:16px
+}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",sans-serif}
+body{min-height:100vh}
+button,input,textarea,select{font:inherit;color:inherit}
+button{touch-action:manipulation}
+.app{max-width:720px;margin:0 auto;padding:0 16px calc(112px + env(safe-area-inset-bottom))}
+.header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);margin:0 -16px;padding:calc(14px + env(safe-area-inset-top)) 16px 14px}
+.header-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.header-center{text-align:center}.header-title{font-size:18px;font-weight:700}.header-meta{font-size:13px;color:var(--sub);margin-top:2px}.header-right{text-align:right}
+.back-btn,.text-btn{border:0;background:none;color:var(--primary);padding:8px 0;font-weight:600}
+.badge{display:inline-block;border-radius:999px;padding:6px 10px;background:#e9edf1;color:#55606d;font-size:12px}.badge.done{background:#e7f3ea;color:#28663a}
+.page-title{font-size:22px;font-weight:700;margin:20px 0 4px}.page-sub{font-size:13px;color:var(--sub);margin-bottom:14px}
+.lesson-list{display:grid;gap:12px;margin-top:14px}
+.lesson-card{width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:16px;display:grid;grid-template-columns:66px 1fr auto;gap:12px;align-items:center}
+.lesson-time{font-weight:700}.lesson-name{font-size:17px;font-weight:700}.lesson-meta{font-size:13px;color:var(--sub);margin-top:3px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:14px 0}
+.card-title{font-size:16px;font-weight:700;margin:0 0 4px}.hint{font-size:13px;color:var(--sub);margin:0 0 12px}
+.readonly{border:1px solid var(--line);background:#f7f8fa;border-radius:12px;padding:13px 14px;line-height:1.45}
+.field{margin-top:14px}.label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+input,textarea,select{width:100%;max-width:100%;min-width:0;border:1px solid #cbd3dc;border-radius:12px;background:#fff;padding:12px 13px;outline:none}
+select{-webkit-appearance:none;appearance:none;background-image:linear-gradient(45deg,transparent 50%,#333 50%),linear-gradient(135deg,#333 50%,transparent 50%);background-position:calc(100% - 17px) 52%,calc(100% - 12px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:32px}
+textarea{min-height:140px;resize:vertical;line-height:1.65}
+input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3px rgba(49,91,138,.10)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.date-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.time-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.btn{border:1px solid #cbd3dc;background:#fff;border-radius:12px;padding:12px 14px;font-weight:600}.btn.primary{border-color:var(--primary);background:var(--primary);color:#fff}.btn.full{width:100%}
+.btn-stack{display:grid;gap:10px;margin-top:14px}
+.segment{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.segment button{border:1px solid #cbd3dc;background:#fff;border-radius:12px;padding:12px 8px;font-weight:600}.segment button.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.guide{font-size:13px;line-height:1.7;color:#4b5563;background:#faf9f5;border:1px solid #ebe4ce;border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.counter{text-align:right;font-size:12px;color:var(--sub);margin-top:6px}.link-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px}.link-btn{border:0;background:none;color:var(--primary);padding:8px 0;font-weight:600}
+.history{margin-top:10px;display:grid;gap:8px}.history-item{border:1px solid var(--line);background:#f7f8fa;border-radius:10px;padding:11px}.history-date{font-size:12px;color:var(--sub);margin-bottom:5px}
+.rating{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.rating button{border:1px solid #cbd3dc;background:#fff;border-radius:12px;padding:12px;font-size:19px;font-weight:700}.rating button.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{border:1px solid #cbd3dc;background:#fff;border-radius:999px;padding:10px 14px}.chip.active{background:var(--primary-soft);border-color:#91acce;color:#234e7a;font-weight:700}
+.hidden{display:none!important}
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+.savebar-inner{max-width:688px;margin:0 auto}.savebar button{width:100%;border:0;border-radius:14px;padding:15px 18px;background:var(--primary);color:#fff;font-size:16px;font-weight:700}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#20252b;color:#fff;padding:10px 14px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:50}.toast.show{opacity:1}
+.note{font-size:12px;color:var(--sub);line-height:1.6}
+@media(max-width:380px){.app{padding-left:12px;padding-right:12px}.header{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px}.date-grid{gap:6px}.date-grid select{font-size:14px;padding-left:8px;padding-right:26px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(() => {
+  const STORAGE_KEY="lesson-record-v01-github";
+  const now=new Date(), Y=now.getFullYear(), M=now.getMonth()+1, D=now.getDate();
+
+  const materialDb={
+    "新中学問題集 数学2年":[{from:36,to:47,unit:"連立方程式"},{from:48,to:55,unit:"連立方程式の利用"},{from:56,to:73,unit:"一次関数"}],
+    "計算トレーニング 数学2年":[{from:22,to:33,unit:"連立方程式の計算"}],
+    "新中学問題集 英語2年":[{from:40,to:51,unit:"不定詞"},{from:52,to:63,unit:"動名詞"}],
+    "標準問題集 国語3年":[{from:18,to:29,unit:"説明的文章の読解"},{from:30,to:41,unit:"文学的文章の読解"}]
+  };
+
+  const lessons=[
+    {id:"l1",student:"佐藤 陽菜",grade:"中2",subject:"数学",hour:17,minute:0,type:"通常",materials:["新中学問題集 数学2年","計算トレーニング 数学2年"],prevHomework:"新中学問題集 数学2年 p.46〜47 の残り（大問3・4）",history:[
+      {date:"2026/09/12",text:"加減法で係数をそろえる手順を確認しました。途中式を省略するとミスが出るため、一行ずつ書く練習を行いました。"},
+      {date:"2026/09/05",text:"分数を含む連立方程式を扱いました。分母をはらう処理を確認した後は、自力で解ける問題が増えました。"}]},
+    {id:"l2",student:"鈴木 大輝",grade:"中2",subject:"英語",hour:18,minute:30,type:"振替",materials:["新中学問題集 英語2年"],prevHomework:"新中学問題集 英語2年 p.46〜47、単語テスト範囲の復習",history:[
+      {date:"2026/09/11",text:"不定詞の名詞的用法・副詞的用法の識別を演習しました。英作文ではtoの位置を確認しました。"}]},
+    {id:"l3",student:"高橋 芽衣",grade:"中3",subject:"国語",hour:20,minute:0,type:"講習",materials:["標準問題集 国語3年"],prevHomework:"標準問題集 国語3年 p.24〜25 の記述問題",history:[
+      {date:"2026/09/10",text:"接続語に着目して段落関係を整理しました。記述問題では必要な要素を意識して書けるようになりました。"}]}
+  ];
+
+  const state={lessonId:null,records:load(),forgot:new Set(),rating:"",manualUnit:false,editDateTime:false,draftDateTime:null,showPrev:false,showHistory:false};
+
+  function load(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")}catch(e){return {}}}
+  function persist(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state.records))}
+  function pad(n){return String(n).padStart(2,"0")}
+  function formatDateTime(x){return x.year+"/"+pad(x.month)+"/"+pad(x.day)+" "+pad(x.hour)+":"+pad(x.minute)}
+  function lessonBase(l){return {year:Y,month:M,day:D,hour:l.hour,minute:l.minute}}
+  function getLesson(){return lessons.find(x=>x.id===state.lessonId)}
+  function getRecord(){return state.records[state.lessonId]||null}
+  function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","'":"&#39;"}[c]))}
+  function unitFor(material,from,to){const a=Number(from),b=Number(to||from);if(!Number.isFinite(a))return"";return(materialDb[material]||[]).filter(r=>a<=r.to&&b>=r.from).map(r=>r.unit).join(" / ")}
+  function toast(msg){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t)}t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1300)}
+
+  function renderList(){
+    document.getElementById("app").innerHTML='<div class="app"><div class="header"><div class="header-row"><div></div><div class="header-center"><div class="header-title">授業記録システム v0.1</div><div class="header-meta">架空データ・試作版</div></div><div></div></div></div>'+
+    '<h1 class="page-title">今日の授業</h1><div class="page-sub">'+Y+'年'+M+'月'+D+'日</div><div class="lesson-list">'+lessons.map(l=>{const done=!!state.records[l.id];return '<button class="lesson-card" data-open="'+l.id+'"><div class="lesson-time">'+pad(l.hour)+':'+pad(l.minute)+'</div><div><div class="lesson-name">'+esc(l.student)+'</div><div class="lesson-meta">'+esc(l.grade)+'・'+esc(l.subject)+'・'+esc(l.type)+'</div></div><span class="badge '+(done?'done':'')+'">'+(done?'記録済み':'未記録')+'</span></button>'}).join("")+'</div><p class="note" style="margin-top:18px">この試作版は架空データを使用し、入力内容はこのiPhoneのブラウザ内に保存されます。</p></div>';
+    document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openRecord(b.dataset.open));
+  }
+
+  function openRecord(id){
+    state.lessonId=id;state.editDateTime=false;state.showPrev=false;state.showHistory=false;
+    const l=getLesson(),r=getRecord();state.rating=r?.rating||"";state.forgot=new Set(r?.forgot||["なし"]);state.manualUnit=!!r?.manualUnit;
+    const dt=r?.performedAt||lessonBase(l),material=r?.material||l.materials[0],pageFrom=r?.pageFrom||"",pageTo=r?.pageTo||"",unit=r?.unit||unitFor(material,pageFrom,pageTo);
+    renderRecord({dt,material,pageFrom,pageTo,unit,review:r?.review||"",homeworkComment:r?.homeworkComment||"",nextHomework:r?.nextHomework||"",note:r?.note||"",customMaterial:r?.customMaterial||"",forgotOther:r?.forgotOther||"",type:r?.type||l.type});
+  }
+
+  function renderRecord(v){
+    const l=getLesson(),status=state.records[l.id]?"記録済み":"未記録",allMaterials=[...new Set([...l.materials,...Object.keys(materialDb)])];
+    document.getElementById("app").innerHTML='<div class="app">'+
+    '<div class="header"><div class="header-row"><button class="back-btn" id="backBtn">← 一覧</button><div class="header-center"><div class="header-title">'+esc(l.student)+'</div><div class="header-meta">'+esc(l.grade)+'・'+esc(l.subject)+'</div></div><div class="header-right"><span class="badge '+(status==="記録済み"?'done':'')+'">'+status+'</span></div></div></div>'+
+    '<section class="card"><h2 class="card-title">実施日時</h2><p class="hint">予定から自動表示（変更可）</p>'+(state.editDateTime?datetimeEditor(state.draftDateTime||v.dt):'<div class="readonly">'+formatDateTime(v.dt)+'</div><div style="margin-top:8px"><button class="text-btn" id="editDatetimeBtn">日時を変更</button></div>')+'</section>'+
+    '<section class="card"><h2 class="card-title">授業区分</h2><p class="hint">予定から自動表示（変更可）</p><div class="segment" id="typeSegment">'+["通常","振替","講習"].map(t=>'<button data-type="'+t+'" class="'+(v.type===t?'active':'')+'">'+t+'</button>').join("")+'</div></section>'+
+    '<section class="card"><h2 class="card-title">教科</h2><p class="hint">生徒情報から自動表示</p><div>'+esc(l.subject)+'</div></section>'+
+    '<section class="card"><h2 class="card-title">教材</h2><p class="hint">登録教材を優先表示</p><select id="material">'+allMaterials.map(x=>'<option value="'+esc(x)+'" '+(v.material===x?'selected':'')+'>'+esc(x)+'</option>').join("")+'<option value="__custom__" '+(v.material==="__custom__"?'selected':'')+'>自由入力</option></select><div id="customMaterialWrap" class="field '+(v.material==="__custom__"?'':'hidden')+'"><label class="label">教材名</label><input id="customMaterial" value="'+esc(v.customMaterial||"")+'"></div></section>'+
+    '<section class="card"><h2 class="card-title">ページ</h2><div class="row"><div><label class="label">開始</label><input id="pageFrom" inputmode="numeric" type="number" min="1" value="'+esc(v.pageFrom)+'"></div><div><label class="label">終了</label><input id="pageTo" inputmode="numeric" type="number" min="1" value="'+esc(v.pageTo)+'"></div></div><div class="field"><label class="label">単元</label><div class="readonly" id="unitDisplay">'+esc(v.unit||"—")+'</div><button class="text-btn" id="editUnitBtn">変更</button><input id="unitManual" class="hidden" value="'+esc(v.unit||"")+'" placeholder="単元名を入力"></div></section>'+
+    '<section class="card"><h2 class="card-title">講評</h2><div class="guide"><strong>書いてほしいこと</strong><br>・今日やったこと<br>・つまずいたこと／難しかったこと<br>・できたこと／できるようになったこと</div><textarea id="review" placeholder="授業の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter" id="reviewCount">'+String(v.review||"").length+'文字</div><div class="link-row"><button class="link-btn" id="prevBtn">前回の講評を見る</button><button class="link-btn" id="historyBtn">過去の講評を見る</button></div><div id="historyArea" class="history"></div></section>'+
+    '<section class="card"><h2 class="card-title">前回の宿題</h2><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'">'+r+'</button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></section>'+
+    '<section class="card"><h2 class="card-title">今回の宿題</h2><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></section>'+
+    '<section class="card"><h2 class="card-title">忘れ物</h2><p class="hint">複数選択可</p><div class="chips" id="forgotChips">'+["なし","筆記用具","教材","宿題","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'">'+x+'</button>').join("")+'</div><div class="field '+(state.forgot.has("その他")?'':'hidden')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></section>'+
+    '<section class="card"><h2 class="card-title">備考（内部用）</h2><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></section></div>'+
+    '<div class="savebar"><div class="savebar-inner"><button id="saveBtn">保存する</button></div></div>';
+    bindRecord(v);
+  }
+
+  function datetimeEditor(dt){
+    const years=Array.from({length:5},(_,i)=>dt.year-2+i),days=new Date(dt.year,dt.month,0).getDate();
+    return '<div class="field"><label class="label">日付</label><div class="date-grid"><select id="editYear">'+years.map(x=>'<option value="'+x+'" '+(x===dt.year?'selected':'')+'>'+x+'年</option>').join("")+'</select><select id="editMonth">'+Array.from({length:12},(_,i)=>i+1).map(x=>'<option value="'+x+'" '+(x===dt.month?'selected':'')+'>'+x+'月</option>').join("")+'</select><select id="editDay">'+Array.from({length:days},(_,i)=>i+1).map(x=>'<option value="'+x+'" '+(x===dt.day?'selected':'')+'>'+x+'日</option>').join("")+'</select></div></div>'+
+    '<div class="field"><label class="label">時刻（10分刻み）</label><div class="time-grid"><select id="editHour">'+Array.from({length:24},(_,i)=>i).map(x=>'<option value="'+x+'" '+(x===dt.hour?'selected':'')+'>'+pad(x)+'時</option>').join("")+'</select><select id="editMinute">'+[0,10,20,30,40,50].map(x=>'<option value="'+x+'" '+(x===dt.minute?'selected':'')+'>'+pad(x)+'分</option>').join("")+'</select></div></div>'+
+    '<div class="btn-stack"><button class="btn primary full" id="applyDatetime">変更を反映</button><button class="btn full" id="cancelDatetime">キャンセル</button></div>';
+  }
+
+  function capture(v){
+    return {dt:v.dt,material:document.getElementById("material")?.value||v.material,customMaterial:document.getElementById("customMaterial")?.value||v.customMaterial||"",pageFrom:document.getElementById("pageFrom")?.value??v.pageFrom,pageTo:document.getElementById("pageTo")?.value??v.pageTo,unit:(document.getElementById("unitDisplay")?.textContent||v.unit||"").replace(/^—$/,""),review:document.getElementById("review")?.value??v.review,homeworkComment:document.getElementById("homeworkComment")?.value??v.homeworkComment,nextHomework:document.getElementById("nextHomework")?.value??v.nextHomework,note:document.getElementById("note")?.value??v.note,forgotOther:document.getElementById("forgotOther")?.value??v.forgotOther,type:document.querySelector("#typeSegment .active")?.dataset.type||v.type};
+  }
+
+  function bindRecord(v){
+    document.getElementById("backBtn").onclick=renderList;
+    const e=document.getElementById("editDatetimeBtn");if(e)e.onclick=()=>{const c=capture(v);state.draftDateTime={...v.dt};state.editDateTime=true;renderRecord(c)};
+    const c=document.getElementById("cancelDatetime");if(c)c.onclick=()=>{const cur=capture(v);state.editDateTime=false;state.draftDateTime=null;renderRecord(cur)};
+    const a=document.getElementById("applyDatetime");if(a){
+      const sync=()=>{const yy=Number(document.getElementById("editYear").value),mm=Number(document.getElementById("editMonth").value),old=Number(document.getElementById("editDay").value),max=new Date(yy,mm,0).getDate(),ds=document.getElementById("editDay");if(ds.options.length!==max){ds.innerHTML=Array.from({length:max},(_,i)=>i+1).map(x=>'<option value="'+x+'">'+x+'日</option>').join("");ds.value=String(Math.min(old,max))}state.draftDateTime={year:yy,month:mm,day:Number(ds.value),hour:Number(document.getElementById("editHour").value),minute:Number(document.getElementById("editMinute").value)}};
+      ["editYear","editMonth","editDay","editHour","editMinute"].forEach(id=>document.getElementById(id).onchange=sync);
+      a.onclick=()=>{sync();const cur=capture(v);cur.dt={...state.draftDateTime};state.editDateTime=false;state.draftDateTime=null;renderRecord(cur)};
+    }
+    document.querySelectorAll("[data-type]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-type]").forEach(x=>x.classList.remove("active"));b.classList.add("active")});
+    const mat=document.getElementById("material");
+    const updateUnit=()=>{if(state.manualUnit)return;const u=unitFor(mat.value,document.getElementById("pageFrom").value,document.getElementById("pageTo").value);document.getElementById("unitDisplay").textContent=u||"—";document.getElementById("unitManual").value=u};
+    mat.onchange=()=>{document.getElementById("customMaterialWrap").classList.toggle("hidden",mat.value!=="__custom__");state.manualUnit=false;updateUnit()};
+    document.getElementById("pageFrom").oninput=updateUnit;document.getElementById("pageTo").oninput=updateUnit;
+    document.getElementById("editUnitBtn").onclick=()=>{const i=document.getElementById("unitManual");i.classList.toggle("hidden");if(!i.classList.contains("hidden"))i.focus()};
+    document.getElementById("unitManual").oninput=e=>{state.manualUnit=true;document.getElementById("unitDisplay").textContent=e.target.value.trim()||"—"};
+    document.getElementById("review").oninput=e=>document.getElementById("reviewCount").textContent=e.target.value.length+"文字";
+    document.getElementById("prevBtn").onclick=()=>{state.showPrev=!state.showPrev;renderHistory()};
+    document.getElementById("historyBtn").onclick=()=>{state.showHistory=!state.showHistory;renderHistory()};
+    document.querySelectorAll("[data-rating]").forEach(b=>b.onclick=()=>{state.rating=b.dataset.rating;document.querySelectorAll("[data-rating]").forEach(x=>x.classList.toggle("active",x.dataset.rating===state.rating))});
+    document.querySelectorAll("[data-forgot]").forEach(b=>b.onclick=()=>{const x=b.dataset.forgot;if(x==="なし")state.forgot=new Set(["なし"]);else{state.forgot.delete("なし");state.forgot.has(x)?state.forgot.delete(x):state.forgot.add(x);if(!state.forgot.size)state.forgot.add("なし")}document.querySelectorAll("[data-forgot]").forEach(z=>z.classList.toggle("active",state.forgot.has(z.dataset.forgot)));document.getElementById("forgotOtherWrap").classList.toggle("hidden",!state.forgot.has("その他"))});
+    document.getElementById("saveBtn").onclick=()=>saveRecord(v);
+  }
+
+  function renderHistory(){const l=getLesson(),a=document.getElementById("historyArea");let items=[];if(state.showPrev&&l.history[0])items=[l.history[0]];if(state.showHistory)items=l.history;a.innerHTML=items.map(h=>'<div class="history-item"><div class="history-date">'+esc(h.date)+'</div><div>'+esc(h.text)+'</div></div>').join("")}
+  function saveRecord(v){const c=capture(v),l=getLesson();state.records[l.id]={performedAt:c.dt,type:c.type,material:c.material,customMaterial:c.customMaterial,pageFrom:c.pageFrom,pageTo:c.pageTo,unit:c.unit,manualUnit:state.manualUnit,review:c.review,rating:state.rating,homeworkComment:c.homeworkComment,nextHomework:c.nextHomework,forgot:[...state.forgot],forgotOther:state.forgot.has("その他")?c.forgotOther:"",note:c.note,savedAt:new Date().toISOString()};persist();toast("保存しました");setTimeout(()=>openRecord(l.id),350)}
+  renderList();
+})();
+</script>
+</body>
+</html>
