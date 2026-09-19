@@ -35,7 +35,13 @@ button{touch-action:manipulation}
   align-items:center;
   gap:8px
 }
-.header-center{text-align:center;min-width:0}
+.header-center{
+  text-align:center;
+  min-width:0;
+  display:flex;
+  justify-content:center;
+  align-items:center
+}
 .header-title{
   font-size:17px;
   font-weight:700;
@@ -43,22 +49,33 @@ button{touch-action:manipulation}
   display:flex;
   align-items:baseline;
   justify-content:center;
-  gap:10px;
-  white-space:nowrap
-}
-.header-ruby{
-  display:inline-flex;
-  flex-direction:column-reverse;
-  align-items:center;
+  gap:8px;
+  white-space:nowrap;
   line-height:1
 }
-.header-ruby rt{
-  font-size:10px;
+.header-name{
+  display:inline-flex;
+  align-items:baseline;
+  gap:.28em;
+  position:relative
+}
+.header-name-part{
+  position:relative;
+  display:inline-block;
+  line-height:1
+}
+.header-kana{
+  position:absolute;
+  left:50%;
+  bottom:calc(100% + 4px);
+  transform:translateX(-50%);
+  font-size:9px;
   font-weight:600;
   color:var(--sub);
   line-height:1;
   letter-spacing:.04em;
-  margin-bottom:3px
+  white-space:nowrap;
+  pointer-events:none
 }
 .header-grade{
   display:inline-block;
@@ -67,7 +84,8 @@ button{touch-action:manipulation}
 .header-sep{
   color:#8d98a5;
   font-weight:500;
-  margin-right:-2px
+  margin-left:1px;
+  margin-right:-1px
 }
 .header-right{display:flex;justify-content:flex-end}
 .header-left{display:flex;justify-content:flex-start}
@@ -370,7 +388,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   .app{padding-left:12px;padding-right:12px}
   .header{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px}
   .header-row{gap:5px}
-  .header-title{font-size:15px;gap:8px}.header-ruby rt{font-size:9px;margin-bottom:2px}
+  .header-title{font-size:15px;gap:7px}.header-kana{font-size:8px;bottom:calc(100% + 3px)}
   .header-action{font-size:14px}
   .header-back{column-gap:2px;padding-right:9px}
   .header-submit{column-gap:2px;padding-left:10px}
@@ -393,12 +411,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   };
 
   const lessons=[
-    {id:"l1",student:"佐藤 陽菜",studentKana:"さとう ひな",grade:"中2",subject:"数学",hour:17,minute:0,type:"通常",materials:["新中学問題集 数学2年","計算トレーニング 数学2年"],prevHomework:"新中学問題集 数学2年 p.46〜47 の残り（大問3・4）",history:[
+    {id:"l1",student:"佐藤 陽菜",familyName:"佐藤",givenName:"陽菜",familyKana:"さとう",givenKana:"ひな",grade:"中2",subject:"数学",hour:17,minute:0,type:"通常",materials:["新中学問題集 数学2年","計算トレーニング 数学2年"],prevHomework:"新中学問題集 数学2年 p.46〜47 の残り（大問3・4）",history:[
       {date:"2026/09/12",text:"加減法で係数をそろえる手順を確認しました。途中式を省略するとミスが出るため、一行ずつ書く練習を行いました。"},
       {date:"2026/09/05",text:"分数を含む連立方程式を扱いました。分母をはらう処理を確認した後は、自力で解ける問題が増えました。"}]},
-    {id:"l2",student:"鈴木 大輝",studentKana:"すずき だいき",grade:"中2",subject:"英語",hour:18,minute:20,type:"振替",materials:["新中学問題集 英語2年"],prevHomework:"新中学問題集 英語2年 p.46〜47、単語テスト範囲の復習",history:[
+    {id:"l2",student:"鈴木 大輝",familyName:"鈴木",givenName:"大輝",familyKana:"すずき",givenKana:"だいき",grade:"中2",subject:"英語",hour:18,minute:20,type:"振替",materials:["新中学問題集 英語2年"],prevHomework:"新中学問題集 英語2年 p.46〜47、単語テスト範囲の復習",history:[
       {date:"2026/09/11",text:"不定詞の名詞的用法・副詞的用法の識別を演習しました。英作文ではtoの位置を確認しました。"}]},
-    {id:"l3",student:"高橋 芽衣",studentKana:"たかはし めい",grade:"中3",subject:"国語",hour:19,minute:40,type:"講習",materials:["標準問題集 国語3年"],prevHomework:"標準問題集 国語3年 p.24〜25 の記述問題",history:[
+    {id:"l3",student:"高橋 芽衣",familyName:"高橋",givenName:"芽衣",familyKana:"たかはし",givenKana:"めい",grade:"中3",subject:"国語",hour:19,minute:40,type:"講習",materials:["標準問題集 国語3年"],prevHomework:"標準問題集 国語3年 p.24〜25 の記述問題",history:[
       {date:"2026/09/10",text:"接続語に着目して段落関係を整理しました。記述問題では必要な要素を意識して書けるようになりました。"}]}
   ];
 
@@ -560,8 +578,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         '<span>一覧</span>'+
       '</button></div>'+
       '<div class="header-center"><div class="header-title">'+
-        (l.studentKana
-          ? '<ruby class="header-ruby"><span>'+esc(l.student)+'</span><rt>'+esc(l.studentKana)+'</rt></ruby><span class="header-sep">｜</span><span class="header-grade">'+esc(l.grade)+'</span>'
+        ((l.familyName&&l.givenName)
+          ? '<span class="header-name">'+
+              '<span class="header-name-part"><span class="header-kana">'+esc(l.familyKana||"")+'</span>'+esc(l.familyName)+'</span>'+
+              '<span class="header-name-part"><span class="header-kana">'+esc(l.givenKana||"")+'</span>'+esc(l.givenName)+'</span>'+
+            '</span><span class="header-sep">｜</span><span class="header-grade">'+esc(l.grade)+'</span>'
           : esc(l.student)+'｜'+esc(l.grade)
         )+
       '</div></div>'+
