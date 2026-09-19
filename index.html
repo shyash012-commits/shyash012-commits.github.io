@@ -44,7 +44,7 @@ button{touch-action:manipulation}
 }
 .datetime-blocks{
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-columns:repeat(3,minmax(0,1fr));
   gap:6px;
 }
 .dt-block{
@@ -117,6 +117,7 @@ button{touch-action:manipulation}
 .dt-options.cols-4{grid-template-columns:repeat(4,1fr)}
 .dt-options.cols-5{grid-template-columns:repeat(5,1fr)}
 .dt-options.cols-7{grid-template-columns:repeat(7,1fr)}
+.dt-options.cols-1{grid-template-columns:1fr}
 .dt-option{
   border:0;
   background:transparent;
@@ -353,17 +354,17 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     return '<div class="datetime-blocks" aria-label="実施日時">'+
       '<button type="button" class="dt-block" data-dt-part="month" aria-label="月を変更"><span id="dtMonthValue">'+pad(dt.month)+'</span>月</button>'+
       '<button type="button" class="dt-block" data-dt-part="day" aria-label="日を変更"><span id="dtDayValue">'+pad(dt.day)+'</span>日</button>'+
-      '<button type="button" class="dt-block" data-dt-part="hour" aria-label="時を変更"><span id="dtHourValue">'+pad(dt.hour)+'</span>時</button>'+
-      '<button type="button" class="dt-block" data-dt-part="minute" aria-label="分を変更"><span id="dtMinuteValue">'+pad(dt.minute)+'</span>分</button>'+
+      '<button type="button" class="dt-block" data-dt-part="time" aria-label="時刻を変更"><span id="dtTimeValue">'+pad(dt.hour)+':'+pad(dt.minute)+'</span></button>'+
     '</div>';
   }
 
   function refreshDateTimeBlocks(dt){
-    const values={month:dt.month,day:dt.day,hour:dt.hour,minute:dt.minute};
-    Object.entries(values).forEach(([part,value])=>{
-      const el=document.getElementById("dt"+part[0].toUpperCase()+part.slice(1)+"Value");
-      if(el)el.textContent=pad(value);
-    });
+    const monthEl=document.getElementById("dtMonthValue");
+    const dayEl=document.getElementById("dtDayValue");
+    const timeEl=document.getElementById("dtTimeValue");
+    if(monthEl)monthEl.textContent=pad(dt.month);
+    if(dayEl)dayEl.textContent=pad(dt.day);
+    if(timeEl)timeEl.textContent=pad(dt.hour)+':'+pad(dt.minute);
   }
 
   function closeDateTimePopover(){
@@ -374,8 +375,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function dateTimeChoices(part,dt){
     if(part==="month")return {values:Array.from({length:12},(_,i)=>i+1),cols:4,suffix:"月"};
     if(part==="day")return {values:Array.from({length:new Date(dt.year,dt.month,0).getDate()},(_,i)=>i+1),cols:7,suffix:"日"};
-    if(part==="hour")return {values:Array.from({length:10},(_,i)=>i+11),cols:5,suffix:"時"};
-    return {values:[0,10,20,30,40,50],cols:3,suffix:"分"};
+    return {values:["11:00","13:00","14:20","15:40","17:00","18:20","19:40"],cols:1,suffix:""};
   }
 
   function openDateTimePopover(part,anchor,v){
@@ -389,9 +389,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     pop.className="dt-popover";
     pop.setAttribute("role","dialog");
     pop.setAttribute("aria-label",suffix+"を選択");
-    pop.innerHTML='<div class="dt-options cols-'+cols+'">'+values.map(value=>
-      '<button type="button" class="dt-option '+(Number(v.dt[part])===value?'current':'')+'" data-dt-choice="'+value+'">'+pad(value)+suffix+'</button>'
-    ).join("")+'</div>';
+    const currentTime=pad(v.dt.hour)+':'+pad(v.dt.minute);
+    pop.innerHTML='<div class="dt-options cols-'+cols+'">'+values.map(value=>{
+      const current=part==="time" ? currentTime===value : Number(v.dt[part])===value;
+      const label=part==="time" ? value : pad(value)+suffix;
+      return '<button type="button" class="dt-option '+(current?'current':'')+'" data-dt-choice="'+value+'">'+label+'</button>';
+    }).join("")+'</div>';
 
     document.body.append(backdrop,pop);
 
@@ -422,8 +425,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     pop.querySelectorAll("[data-dt-choice]").forEach(btn=>{
       btn.onclick=()=>{
-        const value=Number(btn.dataset.dtChoice);
-        v.dt[part]=value;
+        const raw=btn.dataset.dtChoice;
+        if(part==="time"){
+          const [hour,minute]=raw.split(":").map(Number);
+          v.dt.hour=hour;
+          v.dt.minute=minute;
+        }else{
+          v.dt[part]=Number(raw);
+        }
 
         // If the month changes, keep the day valid for that month.
         if(part==="month"){
