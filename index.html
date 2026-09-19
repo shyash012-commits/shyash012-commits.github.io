@@ -47,72 +47,41 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .chips{display:flex;flex-wrap:wrap;gap:8px}.chip{border:1px solid #cbd3dc;background:#fff;border-radius:999px;padding:10px 14px}.chip.active{background:var(--primary-soft);border-color:#91acce;color:#234e7a;font-weight:700}
 .hidden{display:none!important}
 
-/* Motion: connected, shared-element style */
+/* Motion: layout itself moves; no page-level crossfade */
 @media (prefers-reduced-motion:no-preference){
-  /* These names let the browser animate each card from its old geometry to its new geometry. */
-  .vt-datetime{view-transition-name:datetime-card}
-  .vt-type{view-transition-name:type-card}
-  .vt-subject{view-transition-name:subject-card}
-  .vt-material{view-transition-name:material-card}
-  .vt-pages{view-transition-name:pages-card}
-  .vt-review{view-transition-name:review-card}
-  .vt-prevhomework{view-transition-name:prev-homework-card}
-  .vt-nexthomework{view-transition-name:next-homework-card}
-  .vt-forgot{view-transition-name:forgot-card}
-  .vt-note{view-transition-name:note-card}
-
-  ::view-transition-old(root),
-  ::view-transition-new(root){animation:none}
-
-  ::view-transition-group(datetime-card),
-  ::view-transition-group(type-card),
-  ::view-transition-group(subject-card),
-  ::view-transition-group(material-card),
-  ::view-transition-group(pages-card),
-  ::view-transition-group(review-card),
-  ::view-transition-group(prev-homework-card),
-  ::view-transition-group(next-homework-card),
-  ::view-transition-group(forgot-card),
-  ::view-transition-group(note-card){
-    animation-duration:360ms;
-    animation-timing-function:cubic-bezier(.22,1,.36,1);
-  }
-
-  ::view-transition-old(datetime-card),
-  ::view-transition-new(datetime-card),
-  ::view-transition-old(subject-card),
-  ::view-transition-new(subject-card){
-    animation-duration:260ms;
-    animation-timing-function:cubic-bezier(.22,1,.36,1);
-  }
-
   .soft-reveal{
     display:grid;
     grid-template-rows:0fr;
     opacity:0;
-    transform:translateY(-4px);
+    transform:translateY(-5px) scale(.995);
     margin-top:0!important;
     pointer-events:none;
     transition:
-      grid-template-rows 300ms cubic-bezier(.22,1,.36,1),
-      opacity 180ms ease,
-      transform 300ms cubic-bezier(.22,1,.36,1),
-      margin-top 300ms cubic-bezier(.22,1,.36,1);
+      grid-template-rows 360ms cubic-bezier(.16,1,.3,1),
+      opacity 180ms ease-out,
+      transform 360ms cubic-bezier(.16,1,.3,1),
+      margin-top 360ms cubic-bezier(.16,1,.3,1);
   }
   .soft-reveal>*{overflow:hidden;min-height:0}
   .soft-reveal.open{
     grid-template-rows:1fr;
     opacity:1;
-    transform:translateY(0);
+    transform:translateY(0) scale(1);
     margin-top:14px!important;
     pointer-events:auto;
   }
-  .history{
-    overflow:hidden;
+  .history{overflow:hidden}
+
+  button,.btn,.chip,.rating button,.segment button{
     transition:
-      height 300ms cubic-bezier(.22,1,.36,1),
-      opacity 180ms ease,
-      transform 300ms cubic-bezier(.22,1,.36,1);
+      background-color 180ms ease-out,
+      border-color 180ms ease-out,
+      color 180ms ease-out,
+      transform 140ms cubic-bezier(.16,1,.3,1),
+      opacity 180ms ease-out;
+  }
+  button:active,.btn:active,.chip:active,.rating button:active,.segment button:active{
+    transform:scale(.985);
   }
 }
 .savebar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
@@ -159,38 +128,78 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function unitFor(material,from,to){const a=Number(from),b=Number(to||from);if(!Number.isFinite(a))return"";return(materialDb[material]||[]).filter(r=>a<=r.to&&b>=r.from).map(r=>r.unit).join(" / ")}
   function toast(msg){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t)}t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1300)}
 
+  function findCard(title){
+    return [...document.querySelectorAll(".card")].find(card=>
+      card.querySelector(".card-title")?.textContent.trim()===title
+    );
+  }
+
+  function springProgress(t){
+    if(t<=0)return 0;
+    if(t>=1)return 1;
+    return 1-Math.exp(-12*t)*(Math.cos(11*t)+0.35*Math.sin(11*t));
+  }
+
+  function heightSpringFrames(from,to,steps=30){
+    return Array.from({length:steps+1},(_,i)=>{
+      const t=i/steps,p=i===steps?1:springProgress(t);
+      return {height:(from+(to-from)*p)+"px",offset:t};
+    });
+  }
+
   function smoothSectionSwap(title, renderFn){
-    if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){
-      renderFn();
-      return;
-    }
+    const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const oldCard=findCard(title);
+    const oldHeight=oldCard?.getBoundingClientRect().height;
+    const oldTop=oldCard?.getBoundingClientRect().top;
 
-    /* On current Safari/Chrome, this keeps the card itself continuous while its
-       contents change, and moves every card below it as one connected layout. */
-    if(document.startViewTransition){
-      document.startViewTransition(()=>renderFn());
-      return;
-    }
-
-    /* Fallback for older browsers: keep the transition restrained rather than
-       doing a full fade-out/fade-in. */
-    const oldCard=[...document.querySelectorAll(".card")].find(card=>
-      card.querySelector(".card-title")?.textContent.trim()===title
-    );
-    const oldRect=oldCard?.getBoundingClientRect();
     renderFn();
-    const newCard=[...document.querySelectorAll(".card")].find(card=>
-      card.querySelector(".card-title")?.textContent.trim()===title
-    );
-    if(!oldRect||!newCard)return;
-    const newRect=newCard.getBoundingClientRect();
-    newCard.animate(
-      [
-        {clipPath:`inset(0 0 ${Math.max(0,newRect.height-oldRect.height)}px 0 round 14px)`,opacity:.96},
-        {clipPath:"inset(0 0 0 0 round 14px)",opacity:1}
-      ],
-      {duration:300,easing:"cubic-bezier(.22,1,.36,1)"}
-    );
+    if(reduce||!oldCard||!Number.isFinite(oldHeight))return;
+
+    const newCard=findCard(title);
+    if(!newCard)return;
+    const newHeight=newCard.getBoundingClientRect().height;
+    const newTop=newCard.getBoundingClientRect().top;
+
+    /* Keep the tapped card visually anchored while its real height changes.
+       Because we animate the actual height, every card below is pushed smoothly
+       by normal layout instead of cross-fading between screenshots. */
+    if(Number.isFinite(oldTop)&&Math.abs(newTop-oldTop)>0.5){
+      window.scrollBy(0,newTop-oldTop);
+    }
+
+    newCard.style.height=oldHeight+"px";
+    newCard.style.overflow="hidden";
+    newCard.style.willChange="height";
+
+    const h=newCard.animate(heightSpringFrames(oldHeight,newHeight),{
+      duration:460,
+      easing:"linear",
+      fill:"both"
+    });
+
+    /* Headings remain fixed; only the changing controls settle into place. */
+    [...newCard.children].slice(2).forEach((el,i)=>{
+      el.animate([
+        {opacity:.18,transform:"translateY(7px) scale(.995)"},
+        {opacity:1,transform:"translateY(0) scale(1)"}
+      ],{
+        duration:230,
+        delay:35+Math.min(i,3)*18,
+        easing:"cubic-bezier(.16,1,.3,1)",
+        fill:"both"
+      });
+    });
+
+    h.onfinish=()=>{
+      newCard.style.height=newHeight+"px";
+      h.cancel();
+      requestAnimationFrame(()=>{
+        newCard.style.height="";
+        newCard.style.overflow="";
+        newCard.style.willChange="";
+      });
+    };
   }
 
   function renderList(){
@@ -276,19 +285,30 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     if(state.showPrev&&l.history[0])items=[l.history[0]];
     if(state.showHistory)items=l.history;
 
-    a.style.height=oldHeight+"px";
-    a.style.opacity=oldHeight? "1":"0";
     a.innerHTML=items.map(h=>'<div class="history-item"><div class="history-date">'+esc(h.date)+'</div><div>'+esc(h.text)+'</div></div>').join("");
     a.style.height="auto";
     const newHeight=a.getBoundingClientRect().height;
-    a.style.height=oldHeight+"px";
 
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+      a.style.height="";
+      a.style.opacity=newHeight?"1":"0";
+      return;
+    }
+
+    a.style.height=oldHeight+"px";
+    a.style.overflow="hidden";
+    const anim=a.animate(heightSpringFrames(oldHeight,newHeight,26),{
+      duration:420,easing:"linear",fill:"both"
+    });
+    a.animate([
+      {opacity:oldHeight?1:0,transform:oldHeight?"translateY(0)":"translateY(6px)"},
+      {opacity:newHeight?1:0,transform:"translateY(0)"}
+    ],{duration:220,easing:"cubic-bezier(.16,1,.3,1)",fill:"both"});
+    anim.onfinish=()=>{
       a.style.height=newHeight+"px";
-      a.style.opacity=newHeight? "1":"0";
-      a.style.transform=newHeight? "translateY(0)":"translateY(-4px)";
-    }));
-    setTimeout(()=>{a.style.height="";a.style.transform="";},280);
+      anim.cancel();
+      requestAnimationFrame(()=>{a.style.height="";a.style.overflow=""});
+    };
   }
   function saveRecord(v){const c=capture(v),l=getLesson();state.records[l.id]={performedAt:c.dt,type:c.type,subject:c.subject,material:c.material,customMaterial:c.customMaterial,pageFrom:c.pageFrom,pageTo:c.pageTo,unit:c.unit,manualUnit:state.manualUnit,review:c.review,rating:state.rating,homeworkComment:c.homeworkComment,nextHomework:c.nextHomework,forgot:[...state.forgot],forgotOther:state.forgot.has("その他")?c.forgotOther:"",note:c.note,savedAt:new Date().toISOString()};persist();toast("保存しました");setTimeout(()=>openRecord(l.id),350)}
   renderList();
