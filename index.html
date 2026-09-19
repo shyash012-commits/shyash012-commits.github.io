@@ -86,7 +86,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function lessonBase(l){return {year:Y,month:M,day:D,hour:l.hour,minute:l.minute}}
   function getLesson(){return lessons.find(x=>x.id===state.lessonId)}
   function getRecord(){return state.records[state.lessonId]||null}
-  function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","'":"&#39;"}[c]))}
+  function esc(s){return String(s??"").replace(/[&<>"']/g,c=>c==="&"?"&amp;":c==="<"?"&lt;":c===">"?"&gt;":c==="\""?"&quot;":"&#39;")}
   function unitFor(material,from,to){const a=Number(from),b=Number(to||from);if(!Number.isFinite(a))return"";return(materialDb[material]||[]).filter(r=>a<=r.to&&b>=r.from).map(r=>r.unit).join(" / ")}
   function toast(msg){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t)}t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1300)}
 
