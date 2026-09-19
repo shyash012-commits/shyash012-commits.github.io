@@ -43,51 +43,114 @@ button{touch-action:manipulation}
 .header-action{
   height:var(--header-control-height);
   border-radius:var(--header-control-radius);
-  display:inline-flex;
+  display:grid;
   align-items:center;
-  gap:8px;
-  border:1.5px solid #cbd3dc;
+  border:1.25px solid #cbd3dc;
   background:#fff;
   font-weight:700;
-  font-size:14px;
+  font-size:15px;
   white-space:nowrap;
   line-height:1;
-  -webkit-tap-highlight-color:transparent
+  -webkit-tap-highlight-color:transparent;
+  appearance:none;
+  -webkit-appearance:none;
+  transition:
+    background-color .16s ease,
+    border-color .16s ease,
+    color .16s ease,
+    transform .12s ease,
+    box-shadow .16s ease,
+    opacity .16s ease
 }
 .header-action .header-icon{
   width:var(--header-icon-size);
   height:var(--header-icon-size);
-  flex:0 0 var(--header-icon-size);
   border-radius:50%;
   display:grid;
-  place-items:center
+  place-items:center;
+  justify-self:center;
+  align-self:center
 }
 .header-action .header-icon svg{
-  width:18px;height:18px;
+  width:20px;
+  height:20px;
+  display:block;
   fill:none;
   stroke:currentColor;
-  stroke-width:2.2;
+  stroke-width:2.15;
   stroke-linecap:round;
-  stroke-linejoin:round
+  stroke-linejoin:round;
+  shape-rendering:geometricPrecision
 }
-/* 同心円：内円30px、外カプセル端R21px → 円周間は常に6px */
+/*
+  同心円ルール：
+  外カプセル高 42px → 端の半径 21px
+  内円 30px → 半径 15px
+  21 - 15 = 6px
+  左右端の42pxゾーンの中心に内円を置くことで、
+  CSS上でも円周間距離を常に6pxにする。
+*/
 .header-back{
-  padding:0 12px 0 var(--header-curve-gap);
+  grid-template-columns:var(--header-control-height) auto;
+  column-gap:8px;
+  padding:0 13px 0 0;
   color:var(--text)
 }
 .header-back .header-icon{
-  border:1.5px solid #7f8a96
+  border:1.25px solid #aeb8c3;
+  background:#fff;
+  color:#243140;
+  transition:
+    background-color .16s ease,
+    border-color .16s ease,
+    color .16s ease,
+    transform .12s ease
 }
 .header-submit{
-  padding:0 var(--header-curve-gap) 0 14px;
+  grid-template-columns:auto var(--header-control-height);
+  column-gap:8px;
+  padding:0 0 0 14px;
   color:#fff;
-  background:var(--primary);
-  border-color:var(--primary)
+  background:linear-gradient(180deg,#2f8cff 0%, #2278ef 100%);
+  border-color:#2278ef;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12)
 }
 .header-submit .header-icon{
-  border:1.5px solid rgba(255,255,255,.95)
+  border:0;
+  background:#fff;
+  color:#2278ef;
+  transition:
+    background-color .16s ease,
+    color .16s ease,
+    transform .12s ease,
+    opacity .16s ease
 }
-.header-action:active{transform:scale(.985)}
+/* 参照モックに合わせたタップ時の見え方 */
+.header-back:active,
+.header-back.is-pressed{
+  background:#edf3f8;
+  border-color:#d4dde7;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55)
+}
+.header-back:active .header-icon,
+.header-back.is-pressed .header-icon{
+  background:#fff;
+  border-color:#96a4b2;
+  color:#243140
+}
+.header-submit:active,
+.header-submit.is-pressed{
+  background:linear-gradient(180deg,#247cf1 0%, #1a67da 100%);
+  border-color:#1a67da;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10)
+}
+.header-submit:active .header-icon,
+.header-submit.is-pressed .header-icon{
+  background:#fff;
+  color:#1a67da
+}
+.header-action:active,
+.header-action.is-pressed{transform:scale(.985)}
 .back-btn,.text-btn{border:0;background:none;color:var(--primary);padding:8px 0;font-weight:600}
 .compact-action{margin-top:6px}.compact-action .text-btn{padding:6px 0 0}
 .badge{display:inline-block;border-radius:999px;padding:6px 10px;background:#e9edf1;color:#55606d;font-size:12px}.badge.done{background:#e7f3ea;color:#28663a}
@@ -273,9 +336,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   .header{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px}
   .header-row{gap:5px}
   .header-title{font-size:15px}
-  .header-action{font-size:13px;gap:6px}
-  .header-back{padding-right:9px}
-  .header-submit{padding-left:10px}
+  .header-action{font-size:14px}
+  .header-back{column-gap:6px;padding-right:10px}
+  .header-submit{column-gap:6px;padding-left:11px}
   .date-grid{gap:6px}.date-grid select{font-size:14px;padding-left:8px;padding-right:26px}
 }
 </style>
@@ -316,6 +379,19 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function esc(s){return String(s??"").replace(/[&<>"']/g,c=>c==="&"?"&amp;":c==="<"?"&lt;":c===">"?"&gt;":c==="\""?"&quot;":"&#39;")}
   function unitFor(material,from,to){const a=Number(from),b=Number(to||from);if(!Number.isFinite(a))return"";return(materialDb[material]||[]).filter(r=>a<=r.to&&b>=r.from).map(r=>r.unit).join(" / ")}
   function toast(msg){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t)}t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1300)}
+
+  function bindPressFeedback(el){
+    if(!el) return;
+    const on = ()=>el.classList.add("is-pressed");
+    const off = ()=>el.classList.remove("is-pressed");
+    el.addEventListener("touchstart", on, {passive:true});
+    el.addEventListener("touchend", off);
+    el.addEventListener("touchcancel", off);
+    el.addEventListener("pointerdown", on);
+    el.addEventListener("pointerup", off);
+    el.addEventListener("pointerleave", off);
+    el.addEventListener("blur", off);
+  }
 
   let autoSaveTimer=null;
   function writeRecord(v){
@@ -445,13 +521,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     document.getElementById("app").innerHTML='<div class="app">'+
     '<div class="header"><div class="header-row">'+
       '<div class="header-left"><button class="header-action header-back" id="backBtn" aria-label="一覧に戻る">'+
-        '<span class="header-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 5.5 8.5 12 15 18.5"/></svg></span>'+
+        '<span class="header-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M12.25 4.75 7 10l5.25 5.25"/></svg></span>'+
         '<span>一覧</span>'+
       '</button></div>'+
       '<div class="header-center"><div class="header-title">'+esc(l.student)+'｜'+esc(l.grade)+'</div></div>'+
       '<div class="header-right"><button class="header-action header-submit" id="submitBtn">'+
         '<span>提出</span>'+
-        '<span class="header-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7.5 15 4.5-4.5 4.5 4.5"/><path d="m7.5 9 4.5-4.5L16.5 9"/></svg></span>'+
+        '<span class="header-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5 9 10 4l5 5"/><path d="m5 16 5-5 5 5"/></svg></span>'+
       '</button></div>'+
     '</div></div>'+
     '<section class="card vt-datetime"><div class="datetime-row"><div class="datetime-label">実施日時</div>'+datetimeBlocks(v.dt)+'</div></section>'+
@@ -574,13 +650,16 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   }
 
   function bindRecord(v){
-    document.getElementById("backBtn").onclick=()=>{
+    const backBtn=document.getElementById("backBtn");
+    bindPressFeedback(backBtn);
+    backBtn.onclick=()=>{
       closeDateTimePopover();
       autoSaveNow(v);
       renderList();
     };
 
     const submitBtn=document.getElementById("submitBtn");
+    bindPressFeedback(submitBtn);
     if(submitBtn)submitBtn.onclick=()=>{
       autoSaveNow(v);
       toast("提出ボタンの動作は次に決めます");
