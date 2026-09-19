@@ -31,20 +31,31 @@ button{touch-action:manipulation}
 .readonly{border:1px solid var(--line);background:#f7f8fa;border-radius:12px;padding:13px 14px;line-height:1.45}
 
 /* Direct-edit date/time blocks */
+.datetime-row{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+}
+.datetime-label{
+  font-size:15px;
+  font-weight:700;
+  white-space:nowrap;
+}
 .datetime-blocks{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:8px;
+  gap:6px;
 }
 .dt-block{
   position:relative;
   border:1px solid #cbd3dc;
   background:#f7f8fa;
   border-radius:12px;
-  min-height:50px;
-  padding:10px 6px;
+  min-height:42px;
+  padding:8px 3px;
   font-weight:700;
-  font-size:16px;
+  font-size:14px;
   white-space:nowrap;
   box-shadow:0 1px 0 rgba(31,41,51,.02);
 }
@@ -320,7 +331,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const l=getLesson(),status=state.records[l.id]?"記録済み":"未記録",allMaterials=[...new Set([...l.materials,...Object.keys(materialDb)])];
     document.getElementById("app").innerHTML='<div class="app">'+
     '<div class="header"><div class="header-row"><button class="back-btn" id="backBtn">← 一覧</button><div class="header-center"><div class="header-title">'+esc(l.student)+'</div><div class="header-meta">'+esc(l.grade)+'・'+esc(v.subject)+'</div></div><div class="header-right"><span class="badge '+(status==="記録済み"?'done':'')+'">'+status+'</span></div></div></div>'+
-    '<section class="card vt-datetime"><h2 class="card-title">実施日時</h2><p class="hint">予定から自動表示（各項目をタップして変更）</p>'+datetimeBlocks(v.dt)+'</section>'+
+    '<section class="card vt-datetime"><div class="datetime-row"><div class="datetime-label">実施日時</div>'+datetimeBlocks(v.dt)+'</div></section>'+
     '<section class="card vt-type"><h2 class="card-title">授業区分</h2><p class="hint">予定から自動表示（変更可）</p><div class="segment" id="typeSegment">'+["通常","振替","講習"].map(t=>'<button data-type="'+t+'" class="'+(v.type===t?'active':'')+'">'+t+'</button>').join("")+'</div></section>'+
     '<section class="card vt-subject"><h2 class="card-title">教科</h2><p class="hint">生徒情報から自動表示（変更可）</p>'+
     (state.editSubject
