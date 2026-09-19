@@ -387,11 +387,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   display:flex;
   align-items:center;
   gap:10px;
-  width:max-content;
-  max-width:calc(100vw - 20px);
+  width:min(calc(100vw - 20px),700px);
 }
 .record-nav-shell{
-  width:282px;
+  flex:1 1 auto;
+  min-width:0;
   height:var(--footer-outer-h);
   border:1px solid var(--line);
   border-radius:var(--footer-outer-r);
@@ -524,7 +524,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     gap:8px;
   }
   .record-nav-shell{
-    width:calc(100vw - 84px);
     padding:8px;
   }
   .record-nav-item{padding-left:6px;padding-right:6px}
