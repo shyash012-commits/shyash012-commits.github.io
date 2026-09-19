@@ -38,36 +38,43 @@ button{touch-action:manipulation}
 .header-center{
   text-align:center;
   min-width:0;
+  height:var(--header-control-height);
   display:flex;
   justify-content:center;
   align-items:center
 }
 .header-title{
+  height:var(--header-control-height);
   font-size:17px;
   font-weight:700;
   letter-spacing:.01em;
   display:flex;
-  align-items:baseline;
+  align-items:center;
   justify-content:center;
   gap:8px;
   white-space:nowrap;
   line-height:1
 }
 .header-name{
+  height:var(--header-control-height);
   display:inline-flex;
-  align-items:baseline;
+  align-items:center;
   gap:.28em;
   position:relative
 }
 .header-name-part{
   position:relative;
-  display:inline-block;
-  line-height:1
+  height:var(--header-control-height);
+  display:inline-flex;
+  align-items:center;
+  line-height:1;
+  padding-top:7px
 }
 .header-kana{
   position:absolute;
   left:50%;
-  bottom:calc(100% + 4px);
+  top:0;
+  bottom:auto;
   transform:translateX(-50%);
   font-size:9px;
   font-weight:600;
@@ -78,8 +85,10 @@ button{touch-action:manipulation}
   pointer-events:none
 }
 .header-grade{
-  display:inline-block;
-  line-height:1
+  display:inline-flex;
+  align-items:center;
+  line-height:1;
+  padding-top:7px
 }
 .header-sep{
   color:#8d98a5;
@@ -388,7 +397,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   .app{padding-left:12px;padding-right:12px}
   .header{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px}
   .header-row{gap:5px}
-  .header-title{font-size:15px;gap:7px}.header-kana{font-size:8px;bottom:calc(100% + 3px)}
+  .header-title{font-size:15px;gap:7px}.header-kana{font-size:8px;top:0}
   .header-action{font-size:14px}
   .header-back{column-gap:2px;padding-right:9px}
   .header-submit{column-gap:2px;padding-left:10px}
