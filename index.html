@@ -22,6 +22,8 @@ button{touch-action:manipulation}
   --header-curve-gap:6px;
   --header-control-height:calc(var(--header-icon-size) + var(--header-curve-gap)*2);
   --header-control-radius:calc(var(--header-icon-size)/2 + var(--header-curve-gap));
+  --header-name-size:17px;
+  --header-kana-size:9px;
   position:sticky;top:0;z-index:20;
   background:rgba(255,255,255,.96);
   -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
@@ -45,7 +47,7 @@ button{touch-action:manipulation}
 }
 .header-title{
   height:var(--header-control-height);
-  font-size:17px;
+  font-size:var(--header-name-size);
   font-weight:700;
   letter-spacing:.01em;
   display:flex;
@@ -67,16 +69,24 @@ button{touch-action:manipulation}
   height:var(--header-control-height);
   display:inline-flex;
   align-items:center;
-  line-height:1;
-  padding-top:7px
+  line-height:1
 }
 .header-kana{
   position:absolute;
   left:50%;
-  top:4px;
+  /*
+    生徒名は42pxのヘッダー領域の縦中央。
+    生徒名上端 = (ヘッダー高 - 生徒名字高) / 2
+    その上端とカプセル上端(0)の中点に、ふりがなの中心を置く。
+    最後にふりがなの半分だけ戻して top を決める。
+  */
+  top:calc(
+    ((var(--header-control-height) - var(--header-name-size)) / 4)
+    - (var(--header-kana-size) / 2)
+  );
   bottom:auto;
   transform:translateX(-50%);
-  font-size:9px;
+  font-size:var(--header-kana-size);
   font-weight:600;
   color:var(--sub);
   line-height:1;
@@ -85,16 +95,22 @@ button{touch-action:manipulation}
   pointer-events:none
 }
 .header-grade{
+  height:var(--header-control-height);
   display:inline-flex;
   align-items:center;
-  line-height:1;
-  padding-top:7px
+  line-height:1
 }
 .header-sep{
-  color:#8d98a5;
-  font-weight:500;
+  width:1px;
+  height:22px;
+  background:#8d98a5;
+  display:inline-block;
+  align-self:center;
   margin-left:1px;
-  margin-right:-1px
+  margin-right:-1px;
+  font-size:0;
+  line-height:0;
+  flex:0 0 1px
 }
 .header-right{display:flex;justify-content:flex-end}
 .header-left{display:flex;justify-content:flex-start}
@@ -397,7 +413,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   .app{padding-left:12px;padding-right:12px}
   .header{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px}
   .header-row{gap:5px}
-  .header-title{font-size:15px;gap:7px}.header-kana{font-size:8px;top:4px}
+  .header{--header-name-size:15px;--header-kana-size:8px}.header-title{gap:7px}
   .header-action{font-size:14px}
   .header-back{column-gap:2px;padding-right:9px}
   .header-submit{column-gap:2px;padding-left:10px}
