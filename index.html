@@ -12,15 +12,84 @@
   --primary:#315b8a;--primary-soft:#eaf1f8;--radius:16px
 }
 *{box-sizing:border-box;min-width:0}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",sans-serif}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",sans-serif;font-variant-numeric:tabular-nums}
 body{min-height:100vh}
 button,input,textarea,select{font:inherit;color:inherit}
 button{touch-action:manipulation}
-.app{max-width:720px;margin:0 auto;padding:0 16px calc(112px + env(safe-area-inset-bottom))}
-.header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);margin:0 -16px;padding:calc(14px + env(safe-area-inset-top)) 16px 14px}
-.header-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
-.header-center{text-align:center}.header-title{font-size:18px;font-weight:700}.header-meta{font-size:13px;color:var(--sub);margin-top:2px}.header-right{text-align:right}
-.back-btn,.text-btn{border:0;background:none;color:var(--primary);padding:8px 0;font-weight:600}.compact-action{margin-top:6px}.compact-action .text-btn{padding:6px 0 0}
+.app{max-width:720px;margin:0 auto;padding:0 16px calc(32px + env(safe-area-inset-bottom))}
+.header{
+  --header-icon-size:30px;
+  --header-curve-gap:6px;
+  --header-control-height:calc(var(--header-icon-size) + var(--header-curve-gap)*2);
+  --header-control-radius:calc(var(--header-icon-size)/2 + var(--header-curve-gap));
+  position:sticky;top:0;z-index:20;
+  background:rgba(255,255,255,.96);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+  margin:0 -16px;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px
+}
+.header-row{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  gap:8px
+}
+.header-center{text-align:center;min-width:0}
+.header-title{font-size:17px;font-weight:700;white-space:nowrap;letter-spacing:.01em}
+.header-right{display:flex;justify-content:flex-end}
+.header-left{display:flex;justify-content:flex-start}
+
+.header-action{
+  height:var(--header-control-height);
+  border-radius:var(--header-control-radius);
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border:1.5px solid #cbd3dc;
+  background:#fff;
+  font-weight:700;
+  font-size:14px;
+  white-space:nowrap;
+  line-height:1;
+  -webkit-tap-highlight-color:transparent
+}
+.header-action .header-icon{
+  width:var(--header-icon-size);
+  height:var(--header-icon-size);
+  flex:0 0 var(--header-icon-size);
+  border-radius:50%;
+  display:grid;
+  place-items:center
+}
+.header-action .header-icon svg{
+  width:18px;height:18px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2.2;
+  stroke-linecap:round;
+  stroke-linejoin:round
+}
+/* 同心円：内円30px、外カプセル端R21px → 円周間は常に6px */
+.header-back{
+  padding:0 12px 0 var(--header-curve-gap);
+  color:var(--text)
+}
+.header-back .header-icon{
+  border:1.5px solid #7f8a96
+}
+.header-submit{
+  padding:0 var(--header-curve-gap) 0 14px;
+  color:#fff;
+  background:var(--primary);
+  border-color:var(--primary)
+}
+.header-submit .header-icon{
+  border:1.5px solid rgba(255,255,255,.95)
+}
+.header-action:active{transform:scale(.985)}
+.back-btn,.text-btn{border:0;background:none;color:var(--primary);padding:8px 0;font-weight:600}
+.compact-action{margin-top:6px}.compact-action .text-btn{padding:6px 0 0}
 .badge{display:inline-block;border-radius:999px;padding:6px 10px;background:#e9edf1;color:#55606d;font-size:12px}.badge.done{background:#e7f3ea;color:#28663a}
 .page-title{font-size:22px;font-weight:700;margin:20px 0 4px}.page-sub{font-size:13px;color:var(--sub);margin-bottom:14px}
 .lesson-list{display:grid;gap:12px;margin-top:14px}
@@ -197,11 +266,18 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     transform:scale(.985);
   }
 }
-.savebar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
-.savebar-inner{max-width:688px;margin:0 auto}.savebar button{width:100%;border:0;border-radius:14px;padding:15px 18px;background:var(--primary);color:#fff;font-size:16px;font-weight:700}
 .toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#20252b;color:#fff;padding:10px 14px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:50}.toast.show{opacity:1}
 .note{font-size:12px;color:var(--sub);line-height:1.6}
-@media(max-width:380px){.app{padding-left:12px;padding-right:12px}.header{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px}.date-grid{gap:6px}.date-grid select{font-size:14px;padding-left:8px;padding-right:26px}}
+@media(max-width:380px){
+  .app{padding-left:12px;padding-right:12px}
+  .header{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px}
+  .header-row{gap:5px}
+  .header-title{font-size:15px}
+  .header-action{font-size:13px;gap:6px}
+  .header-back{padding-right:9px}
+  .header-submit{padding-left:10px}
+  .date-grid{gap:6px}.date-grid select{font-size:14px;padding-left:8px;padding-right:26px}
+}
 </style>
 </head>
 <body>
@@ -222,9 +298,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     {id:"l1",student:"佐藤 陽菜",grade:"中2",subject:"数学",hour:17,minute:0,type:"通常",materials:["新中学問題集 数学2年","計算トレーニング 数学2年"],prevHomework:"新中学問題集 数学2年 p.46〜47 の残り（大問3・4）",history:[
       {date:"2026/09/12",text:"加減法で係数をそろえる手順を確認しました。途中式を省略するとミスが出るため、一行ずつ書く練習を行いました。"},
       {date:"2026/09/05",text:"分数を含む連立方程式を扱いました。分母をはらう処理を確認した後は、自力で解ける問題が増えました。"}]},
-    {id:"l2",student:"鈴木 大輝",grade:"中2",subject:"英語",hour:18,minute:30,type:"振替",materials:["新中学問題集 英語2年"],prevHomework:"新中学問題集 英語2年 p.46〜47、単語テスト範囲の復習",history:[
+    {id:"l2",student:"鈴木 大輝",grade:"中2",subject:"英語",hour:18,minute:20,type:"振替",materials:["新中学問題集 英語2年"],prevHomework:"新中学問題集 英語2年 p.46〜47、単語テスト範囲の復習",history:[
       {date:"2026/09/11",text:"不定詞の名詞的用法・副詞的用法の識別を演習しました。英作文ではtoの位置を確認しました。"}]},
-    {id:"l3",student:"高橋 芽衣",grade:"中3",subject:"国語",hour:20,minute:0,type:"講習",materials:["標準問題集 国語3年"],prevHomework:"標準問題集 国語3年 p.24〜25 の記述問題",history:[
+    {id:"l3",student:"高橋 芽衣",grade:"中3",subject:"国語",hour:19,minute:40,type:"講習",materials:["標準問題集 国語3年"],prevHomework:"標準問題集 国語3年 p.24〜25 の記述問題",history:[
       {date:"2026/09/10",text:"接続語に着目して段落関係を整理しました。記述問題では必要な要素を意識して書けるようになりました。"}]}
   ];
 
@@ -240,6 +316,42 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function esc(s){return String(s??"").replace(/[&<>"']/g,c=>c==="&"?"&amp;":c==="<"?"&lt;":c===">"?"&gt;":c==="\""?"&quot;":"&#39;")}
   function unitFor(material,from,to){const a=Number(from),b=Number(to||from);if(!Number.isFinite(a))return"";return(materialDb[material]||[]).filter(r=>a<=r.to&&b>=r.from).map(r=>r.unit).join(" / ")}
   function toast(msg){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t)}t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1300)}
+
+  let autoSaveTimer=null;
+  function writeRecord(v){
+    if(!state.lessonId)return;
+    const c=capture(v),l=getLesson(),prev=state.records[l.id]||{};
+    state.records[l.id]={
+      ...prev,
+      performedAt:c.dt,
+      type:c.type,
+      subject:c.subject,
+      material:c.material,
+      customMaterial:c.customMaterial,
+      pageFrom:c.pageFrom,
+      pageTo:c.pageTo,
+      unit:c.unit,
+      manualUnit:state.manualUnit,
+      review:c.review,
+      rating:state.rating,
+      homeworkComment:c.homeworkComment,
+      nextHomework:c.nextHomework,
+      forgot:[...state.forgot],
+      forgotOther:state.forgot.has("その他")?c.forgotOther:"",
+      note:c.note,
+      savedAt:new Date().toISOString()
+    };
+    persist();
+  }
+  function autoSaveNow(v){
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer=null;
+    writeRecord(v);
+  }
+  function scheduleAutoSave(v,delay=420){
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer=setTimeout(()=>{writeRecord(v);autoSaveTimer=null},delay);
+  }
 
   function findCard(title){
     return [...document.querySelectorAll(".card")].find(card=>
@@ -331,7 +443,17 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function renderRecord(v){
     const l=getLesson(),status=state.records[l.id]?"記録済み":"未記録",allMaterials=[...new Set([...l.materials,...Object.keys(materialDb)])];
     document.getElementById("app").innerHTML='<div class="app">'+
-    '<div class="header"><div class="header-row"><button class="back-btn" id="backBtn">← 一覧</button><div class="header-center"><div class="header-title">'+esc(l.student)+'</div><div class="header-meta">'+esc(l.grade)+'・'+esc(v.subject)+'</div></div><div class="header-right"><span class="badge '+(status==="記録済み"?'done':'')+'">'+status+'</span></div></div></div>'+
+    '<div class="header"><div class="header-row">'+
+      '<div class="header-left"><button class="header-action header-back" id="backBtn" aria-label="一覧に戻る">'+
+        '<span class="header-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 5.5 8.5 12 15 18.5"/></svg></span>'+
+        '<span>一覧</span>'+
+      '</button></div>'+
+      '<div class="header-center"><div class="header-title">'+esc(l.student)+'｜'+esc(l.grade)+'</div></div>'+
+      '<div class="header-right"><button class="header-action header-submit" id="submitBtn">'+
+        '<span>提出</span>'+
+        '<span class="header-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7.5 15 4.5-4.5 4.5 4.5"/><path d="m7.5 9 4.5-4.5L16.5 9"/></svg></span>'+
+      '</button></div>'+
+    '</div></div>'+
     '<section class="card vt-datetime"><div class="datetime-row"><div class="datetime-label">実施日時</div>'+datetimeBlocks(v.dt)+'</div></section>'+
     '<section class="card vt-type"><h2 class="card-title">授業区分</h2><p class="hint">予定から自動表示（変更可）</p><div class="segment" id="typeSegment">'+["通常","振替","講習"].map(t=>'<button data-type="'+t+'" class="'+(v.type===t?'active':'')+'">'+t+'</button>').join("")+'</div></section>'+
     '<section class="card vt-subject"><h2 class="card-title">教科</h2><p class="hint">生徒情報から自動表示（変更可）</p>'+
@@ -345,8 +467,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="card vt-prevhomework"><h2 class="card-title">前回の宿題</h2><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'">'+r+'</button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></section>'+
     '<section class="card vt-nexthomework"><h2 class="card-title">今回の宿題</h2><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></section>'+
     '<section class="card vt-forgot"><h2 class="card-title">忘れ物</h2><p class="hint">複数選択可</p><div class="chips" id="forgotChips">'+["なし","筆記用具","教材","宿題","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'">'+x+'</button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></section>'+
-    '<section class="card vt-note"><h2 class="card-title">備考（内部用）</h2><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></section></div>'+
-    '<div class="savebar"><div class="savebar-inner"><button id="saveBtn">保存する</button></div></div>';
+    '<section class="card vt-note"><h2 class="card-title">備考（内部用）</h2><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></section></div>';
     bindRecord(v);
   }
 
@@ -442,6 +563,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
         refreshDateTimeBlocks(v.dt);
         closeDateTimePopover();
+        autoSaveNow(v);
       };
     });
   }
@@ -452,29 +574,116 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   }
 
   function bindRecord(v){
-    document.getElementById("backBtn").onclick=()=>{closeDateTimePopover();renderList()};
+    document.getElementById("backBtn").onclick=()=>{
+      closeDateTimePopover();
+      autoSaveNow(v);
+      renderList();
+    };
+
+    const submitBtn=document.getElementById("submitBtn");
+    if(submitBtn)submitBtn.onclick=()=>{
+      autoSaveNow(v);
+      toast("提出ボタンの動作は次に決めます");
+    };
+
     document.querySelectorAll("[data-dt-part]").forEach(btn=>{
       btn.onclick=()=>openDateTimePopover(btn.dataset.dtPart,btn,v);
     });
-    document.querySelectorAll("[data-type]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-type]").forEach(x=>x.classList.remove("active"));b.classList.add("active")});
+
+    document.querySelectorAll("[data-type]").forEach(b=>b.onclick=()=>{
+      document.querySelectorAll("[data-type]").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      v.type=b.dataset.type;
+      autoSaveNow(v);
+    });
+
     const editSubjectBtn=document.getElementById("editSubjectBtn");
-    if(editSubjectBtn) editSubjectBtn.onclick=()=>{const cur=capture(v);state.draftSubject=v.subject;state.editSubject=true;smoothSectionSwap("教科",()=>renderRecord(cur))};
+    if(editSubjectBtn) editSubjectBtn.onclick=()=>{
+      const cur=capture(v);
+      state.draftSubject=v.subject;
+      state.editSubject=true;
+      smoothSectionSwap("教科",()=>renderRecord(cur));
+    };
+
     const applySubject=document.getElementById("applySubject");
-    if(applySubject) applySubject.onclick=()=>{const cur=capture(v);cur.subject=document.getElementById("subjectSelect").value;state.editSubject=false;state.draftSubject="";smoothSectionSwap("教科",()=>renderRecord(cur))};
+    if(applySubject) applySubject.onclick=()=>{
+      const cur=capture(v);
+      cur.subject=document.getElementById("subjectSelect").value;
+      state.editSubject=false;
+      state.draftSubject="";
+      autoSaveNow(cur);
+      smoothSectionSwap("教科",()=>renderRecord(cur));
+    };
+
     const cancelSubject=document.getElementById("cancelSubject");
-    if(cancelSubject) cancelSubject.onclick=()=>{const cur=capture(v);state.editSubject=false;state.draftSubject="";smoothSectionSwap("教科",()=>renderRecord(cur))};
+    if(cancelSubject) cancelSubject.onclick=()=>{
+      const cur=capture(v);
+      state.editSubject=false;
+      state.draftSubject="";
+      smoothSectionSwap("教科",()=>renderRecord(cur));
+    };
+
     const mat=document.getElementById("material");
-    const updateUnit=()=>{if(state.manualUnit)return;const u=unitFor(mat.value,document.getElementById("pageFrom").value,document.getElementById("pageTo").value);document.getElementById("unitDisplay").textContent=u||"—";document.getElementById("unitManual").value=u};
-    mat.onchange=()=>{document.getElementById("customMaterialWrap").classList.toggle("hidden",mat.value!=="__custom__");state.manualUnit=false;updateUnit()};
-    document.getElementById("pageFrom").oninput=updateUnit;document.getElementById("pageTo").oninput=updateUnit;
-    document.getElementById("editUnitBtn").onclick=()=>{const w=document.getElementById("unitManualWrap"),i=document.getElementById("unitManual");w.classList.toggle("open");if(w.classList.contains("open"))setTimeout(()=>i.focus(),160)};
-    document.getElementById("unitManual").oninput=e=>{state.manualUnit=true;document.getElementById("unitDisplay").textContent=e.target.value.trim()||"—"};
-    document.getElementById("review").oninput=e=>document.getElementById("reviewCount").textContent=e.target.value.length+"文字";
+    const updateUnit=()=>{
+      if(state.manualUnit)return;
+      const u=unitFor(mat.value,document.getElementById("pageFrom").value,document.getElementById("pageTo").value);
+      document.getElementById("unitDisplay").textContent=u||"—";
+      document.getElementById("unitManual").value=u;
+    };
+
+    mat.onchange=()=>{
+      document.getElementById("customMaterialWrap").classList.toggle("hidden",mat.value!=="__custom__");
+      state.manualUnit=false;
+      updateUnit();
+      autoSaveNow(v);
+    };
+
+    document.getElementById("pageFrom").oninput=()=>{updateUnit();scheduleAutoSave(v)};
+    document.getElementById("pageTo").oninput=()=>{updateUnit();scheduleAutoSave(v)};
+
+    document.getElementById("editUnitBtn").onclick=()=>{
+      const w=document.getElementById("unitManualWrap"),i=document.getElementById("unitManual");
+      w.classList.toggle("open");
+      if(w.classList.contains("open"))setTimeout(()=>i.focus(),160)
+    };
+
+    document.getElementById("unitManual").oninput=e=>{
+      state.manualUnit=true;
+      document.getElementById("unitDisplay").textContent=e.target.value.trim()||"—";
+      scheduleAutoSave(v);
+    };
+
+    document.getElementById("review").oninput=e=>{
+      document.getElementById("reviewCount").textContent=e.target.value.length+"文字";
+      scheduleAutoSave(v);
+    };
+
     document.getElementById("prevBtn").onclick=()=>{state.showPrev=!state.showPrev;renderHistory()};
     document.getElementById("historyBtn").onclick=()=>{state.showHistory=!state.showHistory;renderHistory()};
-    document.querySelectorAll("[data-rating]").forEach(b=>b.onclick=()=>{state.rating=b.dataset.rating;document.querySelectorAll("[data-rating]").forEach(x=>x.classList.toggle("active",x.dataset.rating===state.rating))});
-    document.querySelectorAll("[data-forgot]").forEach(b=>b.onclick=()=>{const x=b.dataset.forgot;if(x==="なし")state.forgot=new Set(["なし"]);else{state.forgot.delete("なし");state.forgot.has(x)?state.forgot.delete(x):state.forgot.add(x);if(!state.forgot.size)state.forgot.add("なし")}document.querySelectorAll("[data-forgot]").forEach(z=>z.classList.toggle("active",state.forgot.has(z.dataset.forgot)));document.getElementById("forgotOtherWrap").classList.toggle("open",state.forgot.has("その他"))});
-    document.getElementById("saveBtn").onclick=()=>{closeDateTimePopover();saveRecord(v)};
+
+    document.querySelectorAll("[data-rating]").forEach(b=>b.onclick=()=>{
+      state.rating=b.dataset.rating;
+      document.querySelectorAll("[data-rating]").forEach(x=>x.classList.toggle("active",x.dataset.rating===state.rating));
+      autoSaveNow(v);
+    });
+
+    document.querySelectorAll("[data-forgot]").forEach(b=>b.onclick=()=>{
+      const x=b.dataset.forgot;
+      if(x==="なし")state.forgot=new Set(["なし"]);
+      else{
+        state.forgot.delete("なし");
+        state.forgot.has(x)?state.forgot.delete(x):state.forgot.add(x);
+        if(!state.forgot.size)state.forgot.add("なし");
+      }
+      document.querySelectorAll("[data-forgot]").forEach(z=>z.classList.toggle("active",state.forgot.has(z.dataset.forgot)));
+      document.getElementById("forgotOtherWrap").classList.toggle("open",state.forgot.has("その他"));
+      autoSaveNow(v);
+    });
+
+    ["customMaterial","homeworkComment","nextHomework","forgotOther","note"].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.addEventListener("input",()=>scheduleAutoSave(v));
+    });
   }
 
   function renderHistory(){
@@ -509,7 +718,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       requestAnimationFrame(()=>{a.style.height="";a.style.overflow=""});
     };
   }
-  function saveRecord(v){const c=capture(v),l=getLesson();state.records[l.id]={performedAt:c.dt,type:c.type,subject:c.subject,material:c.material,customMaterial:c.customMaterial,pageFrom:c.pageFrom,pageTo:c.pageTo,unit:c.unit,manualUnit:state.manualUnit,review:c.review,rating:state.rating,homeworkComment:c.homeworkComment,nextHomework:c.nextHomework,forgot:[...state.forgot],forgotOther:state.forgot.has("その他")?c.forgotOther:"",note:c.note,savedAt:new Date().toISOString()};persist();toast("保存しました");setTimeout(()=>openRecord(l.id),350)}
   renderList();
 })();
 </script>
