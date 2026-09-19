@@ -29,6 +29,107 @@ button{touch-action:manipulation}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:14px 0}
 .card-title{font-size:16px;font-weight:700;margin:0 0 4px}.hint{font-size:13px;color:var(--sub);margin:0 0 12px}
 .readonly{border:1px solid var(--line);background:#f7f8fa;border-radius:12px;padding:13px 14px;line-height:1.45}
+
+/* Direct-edit date/time blocks */
+.datetime-blocks{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+}
+.dt-block{
+  position:relative;
+  border:1px solid #cbd3dc;
+  background:#f7f8fa;
+  border-radius:12px;
+  min-height:50px;
+  padding:10px 6px;
+  font-weight:700;
+  font-size:16px;
+  white-space:nowrap;
+  box-shadow:0 1px 0 rgba(31,41,51,.02);
+}
+.dt-block:active{background:#eef2f6}
+.dt-popover-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:79;
+  background:transparent;
+}
+.dt-popover{
+  --arrow-x:50%;
+  position:fixed;
+  z-index:80;
+  width:min(330px,calc(100vw - 24px));
+  border:1px solid #d3d9e0;
+  border-radius:16px;
+  background:rgba(255,255,255,.98);
+  box-shadow:0 14px 42px rgba(31,41,51,.18),0 2px 8px rgba(31,41,51,.08);
+  padding:10px;
+  transform-origin:var(--arrow-x) top;
+  animation:dtPopoverIn 220ms cubic-bezier(.16,1,.3,1);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+}
+.dt-popover.above{
+  transform-origin:var(--arrow-x) bottom;
+}
+.dt-popover::before,
+.dt-popover::after{
+  content:"";
+  position:absolute;
+  left:calc(var(--arrow-x) - 8px);
+  width:16px;
+  height:16px;
+  transform:rotate(45deg);
+}
+.dt-popover::before{
+  top:-9px;
+  background:#d3d9e0;
+}
+.dt-popover::after{
+  top:-8px;
+  background:rgba(255,255,255,.98);
+}
+.dt-popover.above::before{
+  top:auto;
+  bottom:-9px;
+}
+.dt-popover.above::after{
+  top:auto;
+  bottom:-8px;
+}
+.dt-options{
+  display:grid;
+  gap:6px;
+}
+.dt-options.cols-3{grid-template-columns:repeat(3,1fr)}
+.dt-options.cols-4{grid-template-columns:repeat(4,1fr)}
+.dt-options.cols-5{grid-template-columns:repeat(5,1fr)}
+.dt-options.cols-7{grid-template-columns:repeat(7,1fr)}
+.dt-option{
+  border:0;
+  background:transparent;
+  border-radius:10px;
+  min-height:40px;
+  padding:7px 3px;
+  font-size:14px;
+  font-weight:650;
+}
+.dt-option.current{
+  background:var(--primary);
+  color:#fff;
+}
+.dt-option:not(.current):active{
+  background:#edf2f7;
+}
+@keyframes dtPopoverIn{
+  from{opacity:0;transform:translateY(-4px) scale(.96)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@media (prefers-reduced-motion:reduce){
+  .dt-popover{animation:none}
+}
+
 .field{margin-top:14px}.label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
 input,textarea,select{width:100%;max-width:100%;min-width:0;border:1px solid #cbd3dc;border-radius:12px;background:#fff;padding:12px 13px;outline:none}
 select{-webkit-appearance:none;appearance:none;background-image:linear-gradient(45deg,transparent 50%,#333 50%),linear-gradient(135deg,#333 50%,transparent 50%);background-position:calc(100% - 17px) 52%,calc(100% - 12px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:32px}
@@ -115,7 +216,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       {date:"2026/09/10",text:"接続語に着目して段落関係を整理しました。記述問題では必要な要素を意識して書けるようになりました。"}]}
   ];
 
-  const state={lessonId:null,records:load(),forgot:new Set(),rating:"",manualUnit:false,editDateTime:false,draftDateTime:null,editSubject:false,draftSubject:"",showPrev:false,showHistory:false};
+  const state={lessonId:null,records:load(),forgot:new Set(),rating:"",manualUnit:false,editSubject:false,draftSubject:"",showPrev:false,showHistory:false};
 
   function load(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")}catch(e){return {}}}
   function persist(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state.records))}
@@ -209,7 +310,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   }
 
   function openRecord(id){
-    state.lessonId=id;state.editDateTime=false;state.editSubject=false;state.draftSubject="";state.showPrev=false;state.showHistory=false;
+    state.lessonId=id;state.editSubject=false;state.draftSubject="";state.showPrev=false;state.showHistory=false;
     const l=getLesson(),r=getRecord();state.rating=r?.rating||"";state.forgot=new Set(r?.forgot||["なし"]);state.manualUnit=!!r?.manualUnit;
     const dt=r?.performedAt||lessonBase(l),material=r?.material||l.materials[0],pageFrom=r?.pageFrom||"",pageTo=r?.pageTo||"",unit=r?.unit||unitFor(material,pageFrom,pageTo),subject=r?.subject||l.subject;
     renderRecord({dt,material,pageFrom,pageTo,unit,review:r?.review||"",homeworkComment:r?.homeworkComment||"",nextHomework:r?.nextHomework||"",note:r?.note||"",customMaterial:r?.customMaterial||"",forgotOther:r?.forgotOther||"",type:r?.type||l.type,subject});
@@ -219,7 +320,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const l=getLesson(),status=state.records[l.id]?"記録済み":"未記録",allMaterials=[...new Set([...l.materials,...Object.keys(materialDb)])];
     document.getElementById("app").innerHTML='<div class="app">'+
     '<div class="header"><div class="header-row"><button class="back-btn" id="backBtn">← 一覧</button><div class="header-center"><div class="header-title">'+esc(l.student)+'</div><div class="header-meta">'+esc(l.grade)+'・'+esc(v.subject)+'</div></div><div class="header-right"><span class="badge '+(status==="記録済み"?'done':'')+'">'+status+'</span></div></div></div>'+
-    '<section class="card vt-datetime"><h2 class="card-title">実施日時</h2><p class="hint">予定から自動表示（変更可）</p>'+(state.editDateTime?datetimeEditor(state.draftDateTime||v.dt):'<div class="readonly">'+formatDateTime(v.dt)+'</div><div class="compact-action"><button class="text-btn" id="editDatetimeBtn">日時を変更</button></div>')+'</section>'+
+    '<section class="card vt-datetime"><h2 class="card-title">実施日時</h2><p class="hint">予定から自動表示（各項目をタップして変更）</p>'+datetimeBlocks(v.dt)+'</section>'+
     '<section class="card vt-type"><h2 class="card-title">授業区分</h2><p class="hint">予定から自動表示（変更可）</p><div class="segment" id="typeSegment">'+["通常","振替","講習"].map(t=>'<button data-type="'+t+'" class="'+(v.type===t?'active':'')+'">'+t+'</button>').join("")+'</div></section>'+
     '<section class="card vt-subject"><h2 class="card-title">教科</h2><p class="hint">生徒情報から自動表示（変更可）</p>'+
     (state.editSubject
@@ -237,26 +338,104 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     bindRecord(v);
   }
 
-  function datetimeEditor(dt){
-    const years=Array.from({length:5},(_,i)=>dt.year-2+i),days=new Date(dt.year,dt.month,0).getDate();
-    return '<div class="field"><label class="label">日付</label><div class="date-grid"><select id="editYear">'+years.map(x=>'<option value="'+x+'" '+(x===dt.year?'selected':'')+'>'+x+'年</option>').join("")+'</select><select id="editMonth">'+Array.from({length:12},(_,i)=>i+1).map(x=>'<option value="'+x+'" '+(x===dt.month?'selected':'')+'>'+x+'月</option>').join("")+'</select><select id="editDay">'+Array.from({length:days},(_,i)=>i+1).map(x=>'<option value="'+x+'" '+(x===dt.day?'selected':'')+'>'+x+'日</option>').join("")+'</select></div></div>'+
-    '<div class="field"><label class="label">時刻（10分刻み）</label><div class="time-grid"><select id="editHour">'+Array.from({length:10},(_,i)=>i+11).map(x=>'<option value="'+x+'" '+(x===dt.hour?'selected':'')+'>'+pad(x)+'時</option>').join("")+'</select><select id="editMinute">'+[0,10,20,30,40,50].map(x=>'<option value="'+x+'" '+(x===dt.minute?'selected':'')+'>'+pad(x)+'分</option>').join("")+'</select></div></div>'+
-    '<div class="btn-stack"><button class="btn primary full" id="applyDatetime">変更を反映</button><button class="btn full" id="cancelDatetime">キャンセル</button></div>';
+  function datetimeBlocks(dt){
+    return '<div class="datetime-blocks" aria-label="実施日時">'+
+      '<button type="button" class="dt-block" data-dt-part="month" aria-label="月を変更"><span id="dtMonthValue">'+pad(dt.month)+'</span>月</button>'+
+      '<button type="button" class="dt-block" data-dt-part="day" aria-label="日を変更"><span id="dtDayValue">'+pad(dt.day)+'</span>日</button>'+
+      '<button type="button" class="dt-block" data-dt-part="hour" aria-label="時を変更"><span id="dtHourValue">'+pad(dt.hour)+'</span>時</button>'+
+      '<button type="button" class="dt-block" data-dt-part="minute" aria-label="分を変更"><span id="dtMinuteValue">'+pad(dt.minute)+'</span>分</button>'+
+    '</div>';
   }
+
+  function refreshDateTimeBlocks(dt){
+    const values={month:dt.month,day:dt.day,hour:dt.hour,minute:dt.minute};
+    Object.entries(values).forEach(([part,value])=>{
+      const el=document.getElementById("dt"+part[0].toUpperCase()+part.slice(1)+"Value");
+      if(el)el.textContent=pad(value);
+    });
+  }
+
+  function closeDateTimePopover(){
+    document.querySelector(".dt-popover")?.remove();
+    document.querySelector(".dt-popover-backdrop")?.remove();
+  }
+
+  function dateTimeChoices(part,dt){
+    if(part==="month")return {values:Array.from({length:12},(_,i)=>i+1),cols:4,suffix:"月"};
+    if(part==="day")return {values:Array.from({length:new Date(dt.year,dt.month,0).getDate()},(_,i)=>i+1),cols:7,suffix:"日"};
+    if(part==="hour")return {values:Array.from({length:10},(_,i)=>i+11),cols:5,suffix:"時"};
+    return {values:[0,10,20,30,40,50],cols:3,suffix:"分"};
+  }
+
+  function openDateTimePopover(part,anchor,v){
+    closeDateTimePopover();
+
+    const {values,cols,suffix}=dateTimeChoices(part,v.dt);
+    const backdrop=document.createElement("div");
+    backdrop.className="dt-popover-backdrop";
+
+    const pop=document.createElement("div");
+    pop.className="dt-popover";
+    pop.setAttribute("role","dialog");
+    pop.setAttribute("aria-label",suffix+"を選択");
+    pop.innerHTML='<div class="dt-options cols-'+cols+'">'+values.map(value=>
+      '<button type="button" class="dt-option '+(Number(v.dt[part])===value?'current':'')+'" data-dt-choice="'+value+'">'+pad(value)+suffix+'</button>'
+    ).join("")+'</div>';
+
+    document.body.append(backdrop,pop);
+
+    // Position the bubble close to the tapped block while keeping it inside the viewport.
+    pop.style.visibility="hidden";
+    const ar=anchor.getBoundingClientRect();
+    const pr=pop.getBoundingClientRect();
+    const gap=10;
+    let left=ar.left+ar.width/2-pr.width/2;
+    left=Math.max(12,Math.min(left,window.innerWidth-pr.width-12));
+
+    let top=ar.bottom+gap;
+    let above=false;
+    if(top+pr.height>window.innerHeight-12){
+      top=ar.top-pr.height-gap;
+      above=true;
+      pop.classList.add("above");
+    }
+    if(top<12)top=12;
+
+    pop.style.left=left+"px";
+    pop.style.top=top+"px";
+    const arrowX=Math.max(18,Math.min(pr.width-18,ar.left+ar.width/2-left));
+    pop.style.setProperty("--arrow-x",arrowX+"px");
+    pop.style.visibility="visible";
+
+    backdrop.onclick=closeDateTimePopover;
+
+    pop.querySelectorAll("[data-dt-choice]").forEach(btn=>{
+      btn.onclick=()=>{
+        const value=Number(btn.dataset.dtChoice);
+        v.dt[part]=value;
+
+        // If the month changes, keep the day valid for that month.
+        if(part==="month"){
+          const maxDay=new Date(v.dt.year,v.dt.month,0).getDate();
+          if(v.dt.day>maxDay)v.dt.day=maxDay;
+        }
+
+        refreshDateTimeBlocks(v.dt);
+        closeDateTimePopover();
+      };
+    });
+  }
+
 
   function capture(v){
     return {dt:v.dt,material:document.getElementById("material")?.value||v.material,customMaterial:document.getElementById("customMaterial")?.value||v.customMaterial||"",pageFrom:document.getElementById("pageFrom")?.value??v.pageFrom,pageTo:document.getElementById("pageTo")?.value??v.pageTo,unit:(document.getElementById("unitDisplay")?.textContent||v.unit||"").replace(/^—$/,""),review:document.getElementById("review")?.value??v.review,homeworkComment:document.getElementById("homeworkComment")?.value??v.homeworkComment,nextHomework:document.getElementById("nextHomework")?.value??v.nextHomework,note:document.getElementById("note")?.value??v.note,forgotOther:document.getElementById("forgotOther")?.value??v.forgotOther,type:document.querySelector("#typeSegment .active")?.dataset.type||v.type,subject:v.subject};
   }
 
   function bindRecord(v){
-    document.getElementById("backBtn").onclick=renderList;
-    const e=document.getElementById("editDatetimeBtn");if(e)e.onclick=()=>{const c=capture(v);state.draftDateTime={...v.dt};state.editDateTime=true;smoothSectionSwap("実施日時",()=>renderRecord(c))};
-    const c=document.getElementById("cancelDatetime");if(c)c.onclick=()=>{const cur=capture(v);state.editDateTime=false;state.draftDateTime=null;smoothSectionSwap("実施日時",()=>renderRecord(cur))};
-    const a=document.getElementById("applyDatetime");if(a){
-      const sync=()=>{const yy=Number(document.getElementById("editYear").value),mm=Number(document.getElementById("editMonth").value),old=Number(document.getElementById("editDay").value),max=new Date(yy,mm,0).getDate(),ds=document.getElementById("editDay");if(ds.options.length!==max){ds.innerHTML=Array.from({length:max},(_,i)=>i+1).map(x=>'<option value="'+x+'">'+x+'日</option>').join("");ds.value=String(Math.min(old,max))}state.draftDateTime={year:yy,month:mm,day:Number(ds.value),hour:Number(document.getElementById("editHour").value),minute:Number(document.getElementById("editMinute").value)}};
-      ["editYear","editMonth","editDay","editHour","editMinute"].forEach(id=>document.getElementById(id).onchange=sync);
-      a.onclick=()=>{sync();const cur=capture(v);cur.dt={...state.draftDateTime};state.editDateTime=false;state.draftDateTime=null;smoothSectionSwap("実施日時",()=>renderRecord(cur))};
-    }
+    document.getElementById("backBtn").onclick=()=>{closeDateTimePopover();renderList()};
+    document.querySelectorAll("[data-dt-part]").forEach(btn=>{
+      btn.onclick=()=>openDateTimePopover(btn.dataset.dtPart,btn,v);
+    });
     document.querySelectorAll("[data-type]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-type]").forEach(x=>x.classList.remove("active"));b.classList.add("active")});
     const editSubjectBtn=document.getElementById("editSubjectBtn");
     if(editSubjectBtn) editSubjectBtn.onclick=()=>{const cur=capture(v);state.draftSubject=v.subject;state.editSubject=true;smoothSectionSwap("教科",()=>renderRecord(cur))};
@@ -275,7 +454,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     document.getElementById("historyBtn").onclick=()=>{state.showHistory=!state.showHistory;renderHistory()};
     document.querySelectorAll("[data-rating]").forEach(b=>b.onclick=()=>{state.rating=b.dataset.rating;document.querySelectorAll("[data-rating]").forEach(x=>x.classList.toggle("active",x.dataset.rating===state.rating))});
     document.querySelectorAll("[data-forgot]").forEach(b=>b.onclick=()=>{const x=b.dataset.forgot;if(x==="なし")state.forgot=new Set(["なし"]);else{state.forgot.delete("なし");state.forgot.has(x)?state.forgot.delete(x):state.forgot.add(x);if(!state.forgot.size)state.forgot.add("なし")}document.querySelectorAll("[data-forgot]").forEach(z=>z.classList.toggle("active",state.forgot.has(z.dataset.forgot)));document.getElementById("forgotOtherWrap").classList.toggle("open",state.forgot.has("その他"))});
-    document.getElementById("saveBtn").onclick=()=>saveRecord(v);
+    document.getElementById("saveBtn").onclick=()=>{closeDateTimePopover();saveRecord(v)};
   }
 
   function renderHistory(){
