@@ -668,10 +668,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 .preview-icon-slot{
   position:absolute;
-  right:0;
-  top:0;
+  right:-1.25px;
+  top:50%;
   width:var(--footer-item-h);
   height:var(--footer-item-h);
+  transform:translateY(-50%);
   display:grid;
   place-items:center;
   isolation:isolate;
