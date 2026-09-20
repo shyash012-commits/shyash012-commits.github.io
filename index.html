@@ -306,32 +306,21 @@ button{touch-action:manipulation}
 }
 .material-card-number-slot{
   display:inline-block;
-  width:0;
+  width:1em;
+  max-width:0;
   flex:0 0 auto;
   overflow:hidden;
   white-space:nowrap;
-  line-height:1.2;
-  transition:width var(--footer-motion-dur) var(--footer-motion-ease);
-  will-change:width;
-}
-.material-card-number-slot.is-visible{
-  width:1em;
-}
-.material-card-number-label{
-  display:inline-block;
-  width:1em;
-  max-width:0;
-  overflow:hidden;
-  white-space:nowrap;
   opacity:0;
+  line-height:1.2;
   transform:translateX(-4px);
+  will-change:max-width,opacity,transform;
   transition:
     max-width var(--footer-motion-dur) var(--footer-motion-ease),
     transform var(--footer-motion-dur) var(--footer-motion-ease),
     opacity var(--footer-fade-dur) ease;
-  will-change:max-width,opacity,transform;
 }
-.material-card-number-slot.is-visible .material-card-number-label{
+.material-card-number-slot.is-visible{
   max-width:1em;
   opacity:1;
   transform:translateX(0);
@@ -669,7 +658,6 @@ button{touch-action:manipulation}
 
 @media (prefers-reduced-motion:reduce){
   .material-card-number-slot,
-  .material-card-number-label,
   .material-delete-action,
   .material-delete-label,
   .material-entry-shell,
@@ -1778,7 +1766,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
-    '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title material-card-title"><span>使用教材</span><span class="material-card-number-slot" id="materialCardNumber" aria-hidden="true"><span class="material-card-number-label">①</span></span></h2><p class="hint inline-auto-hint">*登録済み教材を優先表示</p><button type="button" class="material-text-action material-delete-action" id="deleteFirstMaterialBtn"><span class="material-delete-label">削除</span></button></div><div class="card-body">'+
+    '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title material-card-title"><span>使用教材</span><span class="material-card-number-slot" id="materialCardNumber" aria-hidden="true"></span></h2><p class="hint inline-auto-hint">*登録済み教材を優先表示</p><button type="button" class="material-text-action material-delete-action" id="deleteFirstMaterialBtn"><span class="material-delete-label">削除</span></button></div><div class="card-body">'+
       '<div class="material-entries" id="materialEntries">'+
         materialEntries.map((entry,index)=>materialEntryMarkup(entry,allMaterials,index===0)).join("")+
       '</div>'+
@@ -2641,6 +2629,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const entries=materialEntryList();
       const multiple=entries.length>1;
 
+      materialCardNumber.textContent="①";
       materialCardNumber.classList.toggle("is-visible",multiple);
       deleteFirstMaterialBtn.classList.toggle("is-visible",multiple);
       deleteFirstMaterialBtn.setAttribute("aria-hidden",String(!multiple));
