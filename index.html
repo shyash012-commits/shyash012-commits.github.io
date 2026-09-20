@@ -296,12 +296,15 @@ button{touch-action:manipulation}
   display:inline-flex;
   align-items:baseline;
   flex:0 0 auto;
+  line-height:1.2;
 }
 .material-card-number-slot{
   display:inline-block;
-  width:1em;
-  flex:0 0 1em;
-  text-align:center;
+  flex:0 0 auto;
+  line-height:1.2;
+}
+.material-card-number-slot:empty{
+  display:none;
 }
 .record-section .inline-auto-hint{
   margin:0;
@@ -438,10 +441,18 @@ button{touch-action:manipulation}
 .material-entry-shell{
   overflow:visible;
 }
-.material-entry-shell:not(:first-child){
-  margin-top:var(--record-item-gap);
-  padding-top:var(--record-item-gap);
-  border-top:1px solid var(--line);
+.material-entry-shell:not(:first-child) .material-entry-content{
+  position:relative;
+  padding-top:calc(var(--record-item-gap) * 2 + 1px);
+}
+.material-entry-shell:not(:first-child) .material-entry-content::before{
+  content:"";
+  position:absolute;
+  top:var(--record-item-gap);
+  left:0;
+  right:0;
+  height:1px;
+  background:var(--line);
 }
 .material-entry-content{
   min-width:0;
@@ -450,6 +461,7 @@ button{touch-action:manipulation}
   display:flex;
   align-items:center;
   min-height:21px;
+  line-height:1.2;
   margin-bottom:var(--record-content-gap);
 }
 .material-entry-shell:first-child .material-entry-heading{
