@@ -300,8 +300,9 @@ button{touch-action:manipulation}
   font-weight:650;
 }
 .dt-option.current{
-  background:var(--primary);
+  background:linear-gradient(180deg,#2f8cff 0%, #2278ef 100%);
   color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
 }
 .dt-option:not(.current):active{
   background:#edf2f7;
@@ -322,13 +323,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .date-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .time-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.btn{border:1px solid #cbd3dc;background:#fff;border-radius:12px;padding:12px 14px;font-weight:600}.btn.primary{border-color:var(--primary);background:var(--primary);color:#fff}.btn.full{width:100%}
+.btn{border:1px solid #cbd3dc;background:#fff;border-radius:12px;padding:12px 14px;font-weight:600}.btn.primary{border-color:#2278ef;background:linear-gradient(180deg,#2f8cff 0%, #2278ef 100%);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}.btn.primary:active{background:linear-gradient(180deg,#247cf1 0%, #1a67da 100%);border-color:#1a67da}.btn.full{width:100%}
 .btn-stack{display:grid;gap:10px;margin-top:14px}
-.segment{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.segment button{border:1px solid #cbd3dc;background:#fff;border-radius:12px;padding:12px 8px;font-weight:600}.segment button.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.segment{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.segment button{border:1px solid #cbd3dc;background:#fff;border-radius:12px;padding:12px 8px;font-weight:600}.segment button.active{background:linear-gradient(180deg,#2f8cff 0%, #2278ef 100%);border-color:#2278ef;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}.segment button.active:active{background:linear-gradient(180deg,#247cf1 0%, #1a67da 100%);border-color:#1a67da}
 .guide{font-size:13px;line-height:1.7;color:#4b5563;background:#faf9f5;border:1px solid #ebe4ce;border-radius:10px;padding:10px 12px;margin-bottom:10px}
 .counter{text-align:right;font-size:12px;color:var(--sub);margin-top:6px}.link-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px}.link-btn{border:0;background:none;color:var(--primary);padding:8px 0;font-weight:600}
 .history{margin-top:10px;display:grid;gap:8px}.history-item{border:1px solid var(--line);background:#f7f8fa;border-radius:10px;padding:11px}.history-date{font-size:12px;color:var(--sub);margin-bottom:5px}
-.rating{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.rating button{border:1px solid #cbd3dc;background:#fff;border-radius:12px;padding:12px;font-size:19px;font-weight:700}.rating button.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.rating{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.rating button{border:1px solid #cbd3dc;background:#fff;border-radius:12px;padding:12px;font-size:19px;font-weight:700}.rating button.active{background:linear-gradient(180deg,#2f8cff 0%, #2278ef 100%);border-color:#2278ef;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}.rating button.active:active{background:linear-gradient(180deg,#247cf1 0%, #1a67da 100%);border-color:#1a67da}
 .chips{display:flex;flex-wrap:wrap;gap:8px}.chip{border:1px solid #cbd3dc;background:#fff;border-radius:999px;padding:10px 14px}.chip.active{background:var(--primary-soft);border-color:#91acce;color:#234e7a;font-weight:700}
 .hidden{display:none!important}
 
@@ -502,6 +503,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   padding:0 11px 0 6px;
   color:#fff;
   background:linear-gradient(180deg,#2f8cff 0%,#2278ef 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
 }
 .record-nav-item.active .record-icon-circle{
   width:var(--footer-icon-d);
@@ -543,6 +545,23 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 @keyframes recordSaveSpin{to{transform:rotate(360deg)}}
 .record-footer-spacer{height:90px}
 .vt-datetime,.vt-material,.vt-prevhomework,.vt-forgot{scroll-margin-top:86px}
+
+
+/* White control gloss — same material language as the blue actions */
+.header-back,
+.header-back .header-icon,
+.record-nav-shell,
+.record-nav-item:not(.active) .record-icon-circle,
+.record-nav-item.active .record-icon-circle,
+.record-save-state,
+.record-save-state .record-icon-circle,
+.btn:not(.primary),
+.segment button:not(.active),
+.rating button:not(.active),
+.chip:not(.active){
+  background:linear-gradient(180deg,#ffffff 0%,#f7f9fb 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95);
+}
 
 @media(max-width:380px){
   .record-footer{
