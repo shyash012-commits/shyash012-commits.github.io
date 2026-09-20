@@ -1626,7 +1626,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       });
     }
 
-    function previewStackTarget(option){
+    function previewStackInfo(option){
       const group=option.closest(PREVIEW_OPTION_GROUP_SELECTOR);
       if(!group)return null;
 
@@ -1634,21 +1634,44 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const index=options.indexOf(option);
       if(index<0)return null;
 
-      // Left wins; use the nearest selected option on the right only when needed.
-      for(let i=index-1;i>=0;i--){
-        if(options[i].classList.contains("active"))return options[i];
-      }
-      for(let i=index+1;i<options.length;i++){
-        if(options[i].classList.contains("active"))return options[i];
-      }
-      return null;
+      const selected=options
+        .map((candidate,targetIndex)=>({
+          target:candidate,
+          targetIndex,
+          distance:Math.abs(targetIndex-index)
+        }))
+        .filter(({target})=>target.classList.contains("active"));
+
+      if(!selected.length)return null;
+
+      // Nearest selected card wins; an equal-distance tie goes to the left.
+      selected.sort((a,b)=>
+        a.distance-b.distance ||
+        (a.targetIndex<index?-1:1)-(b.targetIndex<index?-1:1)
+      );
+
+      const {target,targetIndex,distance}=selected[0];
+      const isLeft=index<targetIndex;
+
+      // Farther cards sit lower. At the same distance, the card on the left
+      // sits one layer above the card on the right.
+      const zIndex=Math.max(
+        1,
+        (options.length-distance)*2 + (isLeft?1:0)
+      );
+
+      return {target,distance,isLeft,zIndex,groupSize:options.length};
     }
 
     function raiseActiveOptions(options){
       options.forEach(option=>{
         rememberMotionStyle(option);
+        const group=option.closest(PREVIEW_OPTION_GROUP_SELECTOR);
+        const groupSize=group
+          ? [...group.children].filter(child=>child.matches(PREVIEW_OPTION_SELECTOR)).length
+          : 1;
         option.style.position="relative";
-        option.style.zIndex="2";
+        option.style.zIndex=String(groupSize*2+2);
       });
     }
 
@@ -1700,7 +1723,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       );
     }
 
-    function floatOption(option,rect){
+    function floatOption(option,rect,zIndex=1){
       rememberMotionStyle(option);
       Object.assign(option.style,{
         position:"fixed",
@@ -1710,7 +1733,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         height:px(rect.height),
         margin:"0",
         pointerEvents:"none",
-        zIndex:"1",
+        zIndex:String(zIndex),
         overflow:"hidden"
       });
     }
@@ -1764,12 +1787,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const token=++previewOptionMotionToken;
       const activeBefore=captureRects(active);
       const inactiveBefore=captureRects(inactive);
-      const targets=new Map(inactive.map(option=>[option,previewStackTarget(option)]));
+      const stackInfo=new Map(inactive.map(option=>[option,previewStackInfo(option)]));
 
       raiseActiveOptions(active);
 
       inactive.forEach(option=>{
-        floatOption(option,inactiveBefore.get(option));
+        const info=stackInfo.get(option);
+        floatOption(option,inactiveBefore.get(option),info?.zIndex||1);
         animateOptionLabel(option,false);
       });
 
@@ -1778,8 +1802,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
       inactive.forEach(option=>{
         const from=inactiveBefore.get(option);
-        const target=targets.get(option);
-        const targetRect=target?activeAfter.get(target):null;
+        const info=stackInfo.get(option);
+        const targetRect=info?.target?activeAfter.get(info.target):null;
 
         if(!from||!targetRect){
           trackPreviewAnimation(
@@ -1806,7 +1830,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       });
     }
 
-    function makePreviewClone(option,from,to){
+    function makePreviewClone(option,from,to,zIndex=1){
       const clone=option.cloneNode(true);
       clone.removeAttribute("id");
       clone.removeAttribute("data-preview-motion-style");
@@ -1822,7 +1846,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         height:px(to.height),
         margin:"0",
         pointerEvents:"none",
-        zIndex:"1",
+        zIndex:String(zIndex),
         overflow:"hidden"
       });
 
@@ -1848,8 +1872,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
       const token=++previewOptionMotionToken;
       const activeBefore=captureRects(active);
-      const targets=new Map(inactive.map(option=>[option,previewStackTarget(option)]));
-      const uniqueTargets=[...new Set([...targets.values()].filter(Boolean))];
+      const stackInfo=new Map(inactive.map(option=>[option,previewStackInfo(option)]));
+      const uniqueTargets=[
+        ...new Set(
+          [...stackInfo.values()]
+            .map(info=>info?.target)
+            .filter(Boolean)
+        )
+      ];
       const targetBefore=captureRects(uniqueTargets);
 
       // Restore the real controls for layout, but keep them visually hidden
@@ -1867,8 +1897,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
       inactive.forEach(option=>{
         const to=inactiveAfter.get(option);
-        const target=targets.get(option);
-        const targetRect=target?targetBefore.get(target):null;
+        const info=stackInfo.get(option);
+        const targetRect=info?.target?targetBefore.get(info.target):null;
         if(!to)return;
 
         if(!targetRect){
@@ -1882,7 +1912,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         }
 
         const from=stackedRect(to,targetRect);
-        const clone=makePreviewClone(option,from,to);
+        const clone=makePreviewClone(option,from,to,info?.zIndex||1);
         // Match the footer's feel: the capsule moves first, then its label
         // resolves during the final fade interval instead of appearing inside
         // a still-narrow/clipped card.
