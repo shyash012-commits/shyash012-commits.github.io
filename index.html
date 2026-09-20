@@ -240,6 +240,7 @@ button{touch-action:manipulation}
   flex:1 1 auto;
   background:#cbd3dc;
 }
+.record-section .card{margin-top:10px;margin-bottom:0}
 .record-section .card:first-of-type{margin-top:0}
 .record-section .card:last-of-type{margin-bottom:0}
 
@@ -1133,7 +1134,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="card vt-prevhomework"><h2 class="card-title">前回の宿題</h2><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'">'+r+'</button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></section>'+
     '<section class="card vt-nexthomework"><h2 class="card-title">今回の宿題</h2><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></section>'+
     '</section>'+
-    '<section class="record-section" data-record-section="other"><h1 class="record-section-title">その他</h1>'+
+    '<section class="record-section" data-record-section="other"><h1 class="record-section-title">特記事項</h1>'+
     '<section class="card vt-forgot"><h2 class="card-title">忘れ物</h2><p class="hint">複数選択可</p><div class="chips" id="forgotChips">'+["なし","筆記用具","教材","宿題","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'">'+x+'</button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></section>'+
     '<section class="card vt-note"><h2 class="card-title">備考（内部用）</h2><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></section>'+
     '</section>'+
