@@ -204,6 +204,7 @@ button{touch-action:manipulation}
 .record-section{
   --record-list-inset:15px;
   --record-status-size:10.5px;
+  --record-mark-size:10.5px;
   --record-mark-stroke:1.75px;
   --record-label-gap:6.4px;
   --record-half-label-gap:3.2px;
@@ -212,6 +213,8 @@ button{touch-action:manipulation}
   --record-horizontal-space-preferred:10px;
   --record-horizontal-space-min:6px;
   --record-horizontal-space:var(--record-horizontal-space-preferred);
+  --record-color-dur:.15s;
+  --record-color-ease:cubic-bezier(.22,.72,.26,1);
 
   /* Body controls stay flat; header/footer own the glossy material language. */
   --record-control-height:42px;
@@ -266,7 +269,7 @@ button{touch-action:manipulation}
   border-radius:999px;
   background:#44515e;
   transform:translateY(.5px);
-  transition:background-color .15s cubic-bezier(.22,.72,.26,1);
+  transition:background-color var(--record-color-dur) var(--record-color-ease);
 }
 .record-section.is-current .record-section-title::before{
   background:#2278ef;
@@ -306,8 +309,8 @@ button{touch-action:manipulation}
   border-radius:25%;
   background:#fff;
   transition:
-    background-color .15s cubic-bezier(.22,.72,.26,1),
-    border-color .15s cubic-bezier(.22,.72,.26,1);
+    background-color var(--record-color-dur) var(--record-color-ease),
+    border-color var(--record-color-dur) var(--record-color-ease);
 }
 .record-section .card.is-complete .card-status{
   background:#56616e;
@@ -501,8 +504,28 @@ button{touch-action:manipulation}
   font-size:var(--record-control-font-size);
   font-weight:var(--record-control-font-weight);
 }
-input,textarea,select{width:100%;max-width:100%;min-width:0;border:1px solid #cbd3dc;border-radius:var(--body-radius);background:#fff;padding:12px 13px;outline:none}
-select{-webkit-appearance:none;appearance:none;background-image:none;padding-right:32px}
+input,textarea,select{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  border:1px solid #cbd3dc;
+  border-radius:var(--body-radius);
+  background:#fff;
+  padding:12px 13px;
+  outline:none;
+}
+input,
+select{
+  height:var(--record-control-height);
+  padding-top:0;
+  padding-bottom:0;
+}
+select{
+  -webkit-appearance:none;
+  appearance:none;
+  background-image:none;
+  padding-right:32px;
+}
 select.dt-block{padding-right:var(--record-horizontal-space)}
 
 .record-select-shell{
@@ -512,7 +535,7 @@ select.dt-block{padding-right:var(--record-horizontal-space)}
 .record-select-shell select{
   display:block;
   width:100%;
-  padding-right:38px;
+  padding-right:calc(var(--record-mark-size) + 30px);
   font-size:var(--record-control-font-size);
   font-weight:var(--record-control-font-weight);
   color:var(--record-control-text);
@@ -521,15 +544,15 @@ select.dt-block{padding-right:var(--record-horizontal-space)}
   position:absolute;
   top:50%;
   right:10px;
-  width:20px;
-  height:20px;
+  width:var(--record-mark-size);
+  height:var(--record-mark-size);
   transform:translateY(-50%);
   color:var(--record-control-text);
   pointer-events:none;
 }
 .record-select-icon svg{
-  width:20px;
-  height:20px;
+  width:100%;
+  height:100%;
   display:block;
   fill:none;
   stroke:currentColor;
@@ -567,10 +590,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .choice-scroll-affordance{
   display:none;
   align-items:center;
-  justify-content:flex-end;
+  align-self:center;
   gap:4px;
-  height:var(--record-status-size);
-  margin:0 0 6px;
+  margin-left:auto;
   color:var(--record-control-text);
   pointer-events:none;
 }
@@ -578,14 +600,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   display:flex;
 }
 .choice-scroll-chevron{
-  width:var(--record-status-size);
-  height:var(--record-status-size);
-  flex:0 0 var(--record-status-size);
-  opacity:1;
-  transition:opacity .12s ease;
+  width:var(--record-mark-size);
+  height:var(--record-mark-size);
+  flex:0 0 var(--record-mark-size);
+  color:var(--record-control-text);
+  transition:color var(--record-color-dur) var(--record-color-ease);
 }
 .choice-scroll-chevron.is-muted{
-  opacity:.28;
+  color:#b4bcc5;
 }
 .choice-scroll-chevron svg{
   display:block;
@@ -597,6 +619,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   stroke-linecap:round;
   stroke-linejoin:round;
   shape-rendering:geometricPrecision;
+}
+.choice-scroll-chevron[data-scroll-direction="left"] svg{
+  transform:rotate(90deg);
+}
+.choice-scroll-chevron[data-scroll-direction="right"] svg{
+  transform:rotate(-90deg);
 }
 .app.preview-mode .choice-scroll-affordance{
   display:none!important;
@@ -649,10 +677,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   gap:var(--record-horizontal-space);
 }
 .rating button{
+  height:var(--record-control-height);
+  display:flex;
+  align-items:center;
+  justify-content:center;
   border:1px solid var(--record-control-border);
   background:var(--record-control-bg);
   border-radius:var(--body-radius);
-  padding:12px var(--record-horizontal-space);
+  padding:0 var(--record-horizontal-space);
   font-size:19px;
   font-weight:700;
   color:var(--record-control-text);
@@ -683,10 +715,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .chips::-webkit-scrollbar{display:none}
 .chip{
   flex:0 0 auto;
+  height:var(--record-control-height);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
   border:1px solid var(--record-control-border);
   background:var(--record-control-bg);
   border-radius:var(--body-radius);
-  padding:10px var(--record-horizontal-space);
+  padding:0 var(--record-horizontal-space);
   white-space:nowrap;
 }
 .chip.active{
@@ -1496,7 +1532,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '<div class="material-entry">'+
         '<div class="record-select-shell">'+
           '<select id="material">'+allMaterials.map(x=>'<option value="'+esc(x)+'" '+(materialEntry.material===x?'selected':'')+'>'+esc(x)+'</option>').join("")+'<option value="__custom__" '+(materialEntry.material==="__custom__"?'selected':'')+'>自由入力</option></select>'+
-          '<span class="record-select-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5.8 7.8 10 12 14.2 7.8"/></svg></span>'+
+          '<span class="record-select-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M2.15 3.75 5.25 6.85 8.35 3.75"/></svg></span>'+
         '</div>'+
         '<div id="customMaterialWrap" class="field '+(materialEntry.material==="__custom__"?'':'hidden')+'"><label class="label">教材名</label><input id="customMaterial" value="'+esc(materialEntry.customMaterial||"")+'"></div>'+
         '<div class="material-detail-stack">'+
@@ -1525,7 +1561,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="card vt-nexthomework" data-card-status="nexthomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">今回の宿題</h2></div><div class="card-body"><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="other"><h1 class="record-section-title">特記事項</h1>'+
-    '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2></div><div class="card-body"><p class="hint">複数選択可</p><div class="chips" id="forgotChips" data-choice-scroll>'+["なし","筆記用具","教材","宿題","連絡帳","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></section>'+
+    '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2><p class="hint inline-auto-hint">*複数選択可</p></div><div class="card-body"><div class="chips" id="forgotChips" data-choice-scroll>'+["なし","筆記用具","教材","宿題","連絡帳","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></section>'+
     '<section class="card vt-note" data-card-status="note"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">備考（内部用）</h2></div><div class="card-body"><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></div></section>'+
     '</section>'+
     '<div class="record-footer-spacer" aria-hidden="true"></div>'+
@@ -1628,8 +1664,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   }
 
   function updateChoiceScrollAffordance(group){
-    const shell=group.previousElementSibling;
-    if(!shell?.classList.contains("choice-scroll-affordance"))return;
+    const shell=group.closest(".card")?.querySelector(".card-title-row .choice-scroll-affordance");
+    if(!shell)return;
 
     const maxScroll=Math.max(0,group.scrollWidth-group.clientWidth);
     const scrollable=maxScroll>1;
@@ -1646,18 +1682,22 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
   function setupChoiceScrollAffordances(){
     document.querySelectorAll("[data-choice-scroll]").forEach(group=>{
-      if(!group.previousElementSibling?.classList.contains("choice-scroll-affordance")){
-        const affordance=document.createElement("div");
+      const card=group.closest(".card");
+      const titleRow=card?.querySelector(".card-title-row");
+      let affordance=titleRow?.querySelector(".choice-scroll-affordance");
+
+      if(titleRow&&!affordance){
+        affordance=document.createElement("div");
         affordance.className="choice-scroll-affordance";
         affordance.setAttribute("aria-hidden","true");
         affordance.innerHTML=
           '<span class="choice-scroll-chevron" data-scroll-direction="left">'+
-            '<svg viewBox="0 0 10.5 10.5"><path d="M6.7 2.15 3.6 5.25l3.1 3.1"/></svg>'+
+            '<svg viewBox="0 0 10.5 10.5"><path d="M2.15 3.75 5.25 6.85 8.35 3.75"/></svg>'+
           '</span>'+
           '<span class="choice-scroll-chevron" data-scroll-direction="right">'+
-            '<svg viewBox="0 0 10.5 10.5"><path d="m3.8 2.15 3.1 3.1-3.1 3.1"/></svg>'+
+            '<svg viewBox="0 0 10.5 10.5"><path d="M2.15 3.75 5.25 6.85 8.35 3.75"/></svg>'+
           '</span>';
-        group.before(affordance);
+        titleRow.append(affordance);
 
         let raf=0;
         group.addEventListener("scroll",()=>{
