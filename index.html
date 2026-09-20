@@ -1544,9 +1544,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     let previewUnlockTimer=null;
 
     const PREVIEW_OPTION_SELECTOR=".choice-button, .rating button, .chip";
+    const PREVIEW_OPTION_GROUP_SELECTOR=".choice-grid, .rating, .chips";
     const PREVIEW_OPTION_MOTION={
       move:210,
-      fade:100,
       ease:"cubic-bezier(.22,.72,.26,1)"
     };
     let previewOptionMotionToken=0;
@@ -1595,6 +1595,36 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       return new Map(elements.map(element=>[element,element.getBoundingClientRect()]));
     }
 
+    function groupOptions(option){
+      const group=option.closest(PREVIEW_OPTION_GROUP_SELECTOR);
+      if(!group)return [];
+      return [...group.children].filter(child=>child.matches(PREVIEW_OPTION_SELECTOR));
+    }
+
+    // An unselected option folds into the nearest selected option on its left.
+    // Only when there is no selected option to the left does it fold right.
+    function previewStackTarget(option){
+      const options=groupOptions(option);
+      const index=options.indexOf(option);
+      if(index<0)return null;
+
+      for(let i=index-1;i>=0;i--){
+        if(options[i].classList.contains("active"))return options[i];
+      }
+      for(let i=index+1;i<options.length;i++){
+        if(options[i].classList.contains("active"))return options[i];
+      }
+      return null;
+    }
+
+    function raiseActiveOptions(elements){
+      elements.forEach(option=>{
+        rememberMotionStyle(option);
+        option.style.position="relative";
+        option.style.zIndex="2";
+      });
+    }
+
     function animatePreviewMove(elements,before){
       elements.forEach(element=>{
         const from=before.get(element);
@@ -1627,13 +1657,17 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       }
 
       const token=++previewOptionMotionToken;
-      const before=captureRects(active);
+      const activeBefore=captureRects(active);
+      const inactiveBefore=captureRects(inactive);
+      const targets=new Map(inactive.map(option=>[option,previewStackTarget(option)]));
 
-      // Match the footer's motion language: unselected controls only fade,
-      // while selected controls glide into their new positions with the same
-      // 210ms easing used by the footer.
+      raiseActiveOptions(active);
+
+      // Taking the unselected options out of flow creates the compact preview
+      // immediately. Their visual boxes remain at the old positions and slide
+      // underneath the selected option instead of fading away.
       inactive.forEach(option=>{
-        const rect=option.getBoundingClientRect();
+        const rect=inactiveBefore.get(option);
         rememberMotionStyle(option);
         Object.assign(option.style,{
           position:"fixed",
@@ -1643,24 +1677,58 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           height:rect.height+"px",
           margin:"0",
           pointerEvents:"none",
-          zIndex:"5",
-          transformOrigin:"50% 50%"
+          zIndex:"1",
+          overflow:"hidden",
+          transformOrigin:"0 50%"
         });
+      });
+
+      const activeAfter=captureRects(active);
+      animatePreviewMove(active,activeBefore);
+
+      inactive.forEach(option=>{
+        const from=inactiveBefore.get(option);
+        const target=targets.get(option);
+        const to=target?activeAfter.get(target):null;
+
+        if(!from||!to){
+          const animation=option.animate(
+            [{opacity:1},{opacity:0}],
+            {
+              duration:PREVIEW_OPTION_MOTION.move,
+              easing:PREVIEW_OPTION_MOTION.ease,
+              fill:"forwards"
+            }
+          );
+          previewOptionAnimations.push(animation);
+          return;
+        }
+
+        const endWidth=Math.min(from.width,to.width);
+        const targetLeft=to.left+(to.width-endWidth)/2;
+        const targetTop=to.top+(to.height-from.height)/2;
+        const dx=targetLeft-from.left;
+        const dy=targetTop-from.top;
+
         const animation=option.animate(
           [
-            {opacity:1},
-            {opacity:0}
+            {
+              transform:"translate(0, 0)",
+              width:from.width+"px"
+            },
+            {
+              transform:`translate(${dx}px, ${dy}px)`,
+              width:endWidth+"px"
+            }
           ],
           {
-            duration:PREVIEW_OPTION_MOTION.fade,
-            easing:"ease-out",
+            duration:PREVIEW_OPTION_MOTION.move,
+            easing:PREVIEW_OPTION_MOTION.ease,
             fill:"forwards"
           }
         );
         previewOptionAnimations.push(animation);
       });
-
-      animatePreviewMove(active,before);
 
       previewOptionCleanupTimer=setTimeout(()=>{
         if(token!==previewOptionMotionToken)return;
@@ -1668,8 +1736,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           option.classList.add("preview-option-hidden");
           restoreMotionStyle(option);
         });
+        active.forEach(restoreMotionStyle);
         previewOptionCleanupTimer=null;
-      },PREVIEW_OPTION_MOTION.move);
+      },PREVIEW_OPTION_MOTION.move+20);
     }
 
     function expandPreviewOptions(){
@@ -1681,24 +1750,75 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         return;
       }
 
-      const before=captureRects(active);
+      const token=++previewOptionMotionToken;
+      const activeBefore=captureRects(active);
+      const targets=new Map(inactive.map(option=>[option,previewStackTarget(option)]));
+      const targetBefore=new Map(
+        [...new Set([...targets.values()].filter(Boolean))].map(target=>[target,target.getBoundingClientRect()])
+      );
+
       inactive.forEach(option=>option.classList.remove("preview-option-hidden"));
-      animatePreviewMove(active,before);
+      const activeAfter=captureRects(active);
+      const inactiveAfter=captureRects(inactive);
+
+      raiseActiveOptions(active);
+      animatePreviewMove(active,activeBefore);
 
       inactive.forEach(option=>{
+        const to=inactiveAfter.get(option);
+        const target=targets.get(option);
+        const from=target?targetBefore.get(target):null;
+        if(!to)return;
+
+        rememberMotionStyle(option);
+        option.style.position="relative";
+        option.style.zIndex="1";
+        option.style.transformOrigin="0 50%";
+        option.style.overflow="hidden";
+
+        if(!from){
+          const animation=option.animate(
+            [{opacity:0},{opacity:1}],
+            {
+              duration:PREVIEW_OPTION_MOTION.move,
+              easing:PREVIEW_OPTION_MOTION.ease
+            }
+          );
+          previewOptionAnimations.push(animation);
+          return;
+        }
+
+        const startWidth=Math.min(to.width,from.width);
+        const startLeft=from.left+(from.width-startWidth)/2;
+        const startTop=from.top+(from.height-to.height)/2;
+        const dx=startLeft-to.left;
+        const dy=startTop-to.top;
+        const scaleX=startWidth/to.width;
+
+        // The option starts visually tucked underneath the selected option,
+        // then slides out while expanding back to its own natural width.
         const animation=option.animate(
           [
-            {opacity:0},
-            {opacity:1}
+            {
+              transform:`translate(${dx}px, ${dy}px) scaleX(${scaleX})`
+            },
+            {
+              transform:"translate(0, 0) scaleX(1)"
+            }
           ],
           {
-            duration:PREVIEW_OPTION_MOTION.fade,
-            easing:"ease-out",
-            fill:"backwards"
+            duration:PREVIEW_OPTION_MOTION.move,
+            easing:PREVIEW_OPTION_MOTION.ease
           }
         );
         previewOptionAnimations.push(animation);
       });
+
+      previewOptionCleanupTimer=setTimeout(()=>{
+        if(token!==previewOptionMotionToken)return;
+        [...active,...inactive].forEach(restoreMotionStyle);
+        previewOptionCleanupTimer=null;
+      },PREVIEW_OPTION_MOTION.move+20);
     }
 
     if(previewBtn&&recordFooter&&recordApp)previewBtn.onclick=()=>{
