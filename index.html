@@ -474,9 +474,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   display:block;
   white-space:nowrap;
   line-height:1;
-  transform:translateX(0);
-  transform-origin:50% 50%;
-  will-change:opacity,transform;
+  will-change:opacity;
 }
 .guide{font-size:13px;line-height:1.7;color:#4b5563;background:#faf9f5;border:1px solid #ebe4ce;border-radius:var(--body-radius);padding:10px 12px;margin-bottom:10px}
 .counter{text-align:right;font-size:12px;color:var(--sub);margin-top:6px}.link-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px}.link-btn{border:0;background:none;color:var(--primary);padding:8px 0;font-weight:600}
@@ -1696,17 +1694,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const label=optionLabel(option);
       if(!label)return;
 
+      // The card itself already moves and changes width. Moving the label too
+      // creates a doubled motion, so labels only fade while staying optically fixed.
       trackPreviewAnimation(
         label,
         show
-          ? [
-              {opacity:0,transform:"translateX(-4px)"},
-              {opacity:1,transform:"translateX(0)"}
-            ]
-          : [
-              {opacity:1,transform:"translateX(0)"},
-              {opacity:0,transform:"translateX(-4px)"}
-            ],
+          ? [{opacity:0},{opacity:1}]
+          : [{opacity:1},{opacity:0}],
         {
           duration:PREVIEW_OPTION_MOTION.fade,
           delay,
@@ -1882,7 +1876,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           animateOptionLabel(
             option,
             true,
-            Math.max(0,PREVIEW_OPTION_MOTION.move-PREVIEW_OPTION_MOTION.fade)
+            Math.max(0,PREVIEW_OPTION_MOTION.move-PREVIEW_OPTION_MOTION.fade-20)
           );
           return;
         }
@@ -1915,7 +1909,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         animateOptionLabel(
           option,
           true,
-          Math.max(0,PREVIEW_OPTION_MOTION.move-PREVIEW_OPTION_MOTION.fade)
+          Math.max(0,PREVIEW_OPTION_MOTION.move-PREVIEW_OPTION_MOTION.fade-20)
         );
       });
 
@@ -1924,7 +1918,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           const label=optionLabel(option);
           if(label){
             label.style.removeProperty("opacity");
-            label.style.removeProperty("transform");
           }
           restoreMotionStyle(option);
         });
