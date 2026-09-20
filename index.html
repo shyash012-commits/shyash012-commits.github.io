@@ -13,7 +13,7 @@
   --body-radius:10.5px
 }
 *{box-sizing:border-box;min-width:0}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",sans-serif;font-variant-numeric:tabular-nums}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",sans-serif;font-variant-numeric:tabular-nums;overflow-x:hidden}
 body{min-height:100vh}
 button,input,textarea,select{font:inherit;color:inherit}
 button{touch-action:manipulation}
@@ -869,11 +869,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   font-weight:700;
 }
 .hidden{display:none!important}
-
-.app.preview-mode .choice-grid,
-.app.preview-mode .chips{
-  overflow:visible;
-}
 
 /* Motion: layout itself moves; no page-level crossfade */
 @media (prefers-reduced-motion:no-preference){
@@ -2385,14 +2380,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const active=activePreviewOptions();
       const scrollGroups=[...document.querySelectorAll("[data-choice-scroll]")];
 
-      scrollGroups.forEach(group=>{
-        group.style.overflow="visible";
-        group.scrollLeft=0;
-      });
+      scrollGroups.forEach(group=>{group.scrollLeft=0});
 
       if(matchMedia("(prefers-reduced-motion: reduce)").matches){
         inactive.forEach(option=>option.classList.remove("preview-option-hidden"));
-        scrollGroups.forEach(group=>group.style.removeProperty("overflow"));
         return;
       }
 
@@ -2485,10 +2476,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           restoreMotionStyle(option);
         });
         active.forEach(restoreMotionStyle);
-        scrollGroups.forEach(group=>{
-          group.style.removeProperty("overflow");
-          updateChoiceScrollAffordance(group);
-        });
+        scrollGroups.forEach(updateChoiceScrollAffordance);
       });
     }
 
