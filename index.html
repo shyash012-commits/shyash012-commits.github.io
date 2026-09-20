@@ -247,8 +247,8 @@ button{touch-action:manipulation}
 /* Basic-info status grammar: rounded square = content / saved-input state. */
 .record-section[data-record-section="basic"] .card-title-row{
   display:flex;
-  align-items:center;
-  gap:6.4px; /* 16px title × 0.4 */
+  align-items:baseline;
+  gap:6.4px; /* □→title and title→hint use the same distance */
   min-height:21px;
   margin:0 0 4px;
 }
@@ -264,6 +264,7 @@ button{touch-action:manipulation}
   flex:0 0 10.5px;
   box-sizing:border-box;
   transform:translateY(.5px);
+  align-self:center;
   border:.875px solid #b8c1cb;
   border-radius:25%;
   background:#fff;
@@ -327,8 +328,8 @@ button{touch-action:manipulation}
 }
 .datetime-heading{
   display:flex;
-  align-items:center;
-  gap:6.4px; /* 16px label × 0.4 */
+  align-items:baseline;
+  gap:6.4px; /* □→title and title→hint use the same distance */
   min-height:21px;
 }
 .datetime-label{
