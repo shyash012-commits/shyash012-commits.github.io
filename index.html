@@ -416,6 +416,43 @@ button{touch-action:manipulation}
 .dt-block:active{background:#eef2f6}
 
 .field{margin-top:14px}.label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.material-entry{
+  display:grid;
+  gap:14px;
+}
+.material-entry>.field,
+.material-detail-field{
+  margin-top:0;
+}
+.material-range-controls{
+  display:flex;
+  align-items:center;
+  gap:var(--record-horizontal-space);
+}
+.material-page-input{
+  --page-input-digits:2;
+  flex:0 0 auto;
+  width:calc(var(--page-input-digits)*1ch + var(--record-horizontal-space)*2 + 2px);
+  min-width:calc(2ch + var(--record-horizontal-space)*2 + 2px);
+  height:var(--record-control-height);
+  padding:0 var(--record-horizontal-space);
+  font-size:var(--record-control-font-size);
+  font-weight:var(--record-control-font-weight);
+  color:var(--record-control-text);
+  text-align:center;
+  -moz-appearance:textfield;
+}
+.material-page-input::-webkit-inner-spin-button,
+.material-page-input::-webkit-outer-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+.material-range-separator{
+  flex:0 0 auto;
+  color:var(--record-control-text);
+  font-size:var(--record-control-font-size);
+  font-weight:var(--record-control-font-weight);
+}
 input,textarea,select{width:100%;max-width:100%;min-width:0;border:1px solid #cbd3dc;border-radius:var(--body-radius);background:#fff;padding:12px 13px;outline:none}
 select{-webkit-appearance:none;appearance:none;background-image:linear-gradient(45deg,transparent 50%,#333 50%),linear-gradient(135deg,#333 50%,transparent 50%);background-position:calc(100% - 17px) 52%,calc(100% - 12px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:32px}
 select.dt-block{-webkit-appearance:none;appearance:none;background-image:none;padding-right:var(--record-horizontal-space)}
@@ -1090,7 +1127,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       {date:"2026/09/10",text:"接続語に着目して段落関係を整理しました。記述問題では必要な要素を意識して書けるようになりました。"}]}
   ];
 
-  const state={lessonId:null,records:load(),forgot:new Set(),rating:"",manualUnit:false,showPrev:false,showHistory:false};
+  const state={lessonId:null,records:load(),forgot:new Set(),rating:"",showPrev:false,showHistory:false};
 
   function load(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")}catch(e){return {}}}
   function persist(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state.records))}
@@ -1100,7 +1137,68 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function getLesson(){return lessons.find(x=>x.id===state.lessonId)}
   function getRecord(){return state.records[state.lessonId]||null}
   function esc(s){return String(s??"").replace(/[&<>"']/g,c=>c==="&"?"&amp;":c==="<"?"&lt;":c===">"?"&gt;":c==="\""?"&quot;":"&#39;")}
-  function unitFor(material,from,to){const a=Number(from),b=Number(to||from);if(!Number.isFinite(a))return"";return(materialDb[material]||[]).filter(r=>a<=r.to&&b>=r.from).map(r=>r.unit).join(" / ")}
+  function unitFor(material,from,to){
+    const a=Number(from),b=Number(to||from);
+    if(!Number.isFinite(a))return "";
+    return (materialDb[material]||[])
+      .filter(r=>a<=r.to&&b>=r.from)
+      .map(r=>r.unit)
+      .join(" / ");
+  }
+
+  function unitsForRanges(material,ranges=[]){
+    return [...new Set(
+      ranges
+        .map(range=>unitFor(material,range.from,range.to))
+        .flatMap(unit=>unit?unit.split(" / "):[])
+        .filter(Boolean)
+    )].join(" / ");
+  }
+
+  function normalizeMaterialEntry(entry,fallbackMaterial=""){
+    const material=entry?.material||fallbackMaterial;
+    const customMaterial=entry?.customMaterial||"";
+    const ranges=Array.isArray(entry?.ranges)
+      ? entry.ranges
+          .map(range=>({
+            from:String(range?.from??""),
+            to:String(range?.to??"")
+          }))
+          .filter(range=>range.from||range.to)
+      : [];
+
+    return {
+      material,
+      customMaterial,
+      ranges,
+      unitOverride:String(entry?.unitOverride||"")
+    };
+  }
+
+  function materialsFromRecord(record,lesson){
+    if(Array.isArray(record?.materials)&&record.materials.length){
+      return record.materials.map((entry,index)=>
+        normalizeMaterialEntry(entry,index===0?lesson.materials[0]:"")
+      );
+    }
+
+    const material=record?.material||lesson.materials[0]||"";
+    const from=String(record?.pageFrom??"");
+    const to=String(record?.pageTo??"");
+
+    return [normalizeMaterialEntry({
+      material,
+      customMaterial:record?.customMaterial||"",
+      ranges:(from||to)?[{from,to}]:[],
+      unitOverride:record?.manualUnit?String(record?.unit||""):""
+    },material)];
+  }
+
+  function materialDisplayUnit(entry){
+    return String(entry?.unitOverride||"").trim() ||
+      unitsForRanges(entry?.material,entry?.ranges) ||
+      "";
+  }
   function toast(msg){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t)}t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1300)}
 
   function bindPressFeedback(el){
@@ -1124,7 +1222,16 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function writeRecord(v){
     if(!state.lessonId)return;
     const c=capture(v),l=getLesson(),prev=state.records[l.id]||{};
-    const {subject:_legacySubject,...current}=prev;
+    const {
+      subject:_legacySubject,
+      material:_legacyMaterial,
+      customMaterial:_legacyCustomMaterial,
+      pageFrom:_legacyPageFrom,
+      pageTo:_legacyPageTo,
+      unit:_legacyUnit,
+      manualUnit:_legacyManualUnit,
+      ...current
+    }=prev;
     state.records[l.id]={
       ...current,
       performedAt:c.dt,
@@ -1132,12 +1239,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       type:c.type,
       instructor:c.instructor,
       subjects:c.subjects,
-      material:c.material,
-      customMaterial:c.customMaterial,
-      pageFrom:c.pageFrom,
-      pageTo:c.pageTo,
-      unit:c.unit,
-      manualUnit:state.manualUnit,
+      materials:c.materials,
       review:c.review,
       rating:state.rating,
       homeworkComment:c.homeworkComment,
@@ -1189,21 +1291,44 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
   function openRecord(id){
     state.lessonId=id;state.showPrev=false;state.showHistory=false;
-    const l=getLesson(),r=getRecord();state.rating=r?.rating||"";state.forgot=new Set(r?.forgot||["なし"]);state.manualUnit=!!r?.manualUnit;
-    const dt=r?.performedAt||lessonBase(l),duration=Number(r?.duration||l.duration||70),material=r?.material||l.materials[0],pageFrom=r?.pageFrom||"",pageTo=r?.pageTo||"",unit=r?.unit||unitFor(material,pageFrom,pageTo);
+    const l=getLesson(),r=getRecord();
+    state.rating=r?.rating||"";
+    state.forgot=new Set(r?.forgot||["なし"]);
+
+    const dt=r?.performedAt||lessonBase(l),
+      duration=Number(r?.duration||l.duration||70),
+      materials=materialsFromRecord(r,l);
+
     const subjectOptions=subjectsForGrade(l.grade);
     const savedSubjects=(Array.isArray(r?.subjects)?r.subjects:(r?.subject?[r.subject]:[]))
       .map(subject=>normalizeSubjectForGrade(subject,l.grade));
     const subjects=subjectOptions.filter(subject=>savedSubjects.includes(subject));
     if(!subjects.length)subjects.push(normalizeSubjectForGrade(l.subject,l.grade));
+
     const instructor=INSTRUCTORS.includes(r?.instructor)?r.instructor:l.instructor;
-    renderRecord({dt,duration,material,pageFrom,pageTo,unit,review:r?.review||"",homeworkComment:r?.homeworkComment||"",nextHomework:r?.nextHomework||"",note:r?.note||"",customMaterial:r?.customMaterial||"",forgotOther:r?.forgotOther||"",type:r?.type||l.type,instructor,subjects});
+
+    renderRecord({
+      dt,
+      duration,
+      materials,
+      review:r?.review||"",
+      homeworkComment:r?.homeworkComment||"",
+      nextHomework:r?.nextHomework||"",
+      note:r?.note||"",
+      forgotOther:r?.forgotOther||"",
+      type:r?.type||l.type,
+      instructor,
+      subjects
+    });
   }
 
   function renderRecord(v){
     const l=getLesson(),
       subjectOptions=subjectsForGrade(l.grade),
-      allMaterials=[...new Set([...l.materials,...Object.keys(materialDb)])];
+      allMaterials=[...new Set([...l.materials,...Object.keys(materialDb)])],
+      materialEntry=v.materials[0]||normalizeMaterialEntry(null,l.materials[0]),
+      materialRange=materialEntry.ranges[0]||{from:"",to:""},
+      materialUnit=materialDisplayUnit(materialEntry);
     document.getElementById("app").innerHTML='<div class="app">'+
     '<div class="header"><div class="header-row">'+
       '<div class="header-left"><button class="header-action header-back" id="backBtn" aria-label="一覧に戻る">'+
@@ -1227,8 +1352,18 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
-    '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教材</h2><p class="hint inline-auto-hint">*登録済み教材を優先表示</p></div><div class="card-body"><select id="material">'+allMaterials.map(x=>'<option value="'+esc(x)+'" '+(v.material===x?'selected':'')+'>'+esc(x)+'</option>').join("")+'<option value="__custom__" '+(v.material==="__custom__"?'selected':'')+'>自由入力</option></select><div id="customMaterialWrap" class="field '+(v.material==="__custom__"?'':'hidden')+'"><label class="label">教材名</label><input id="customMaterial" value="'+esc(v.customMaterial||"")+'"></div></div></section>'+
-    '<section class="card vt-pages" data-card-status="pages"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">ページ</h2></div><div class="card-body"><div class="row"><div><label class="label">開始</label><input id="pageFrom" inputmode="numeric" type="number" min="1" value="'+esc(v.pageFrom)+'"></div><div><label class="label">終了</label><input id="pageTo" inputmode="numeric" type="number" min="1" value="'+esc(v.pageTo)+'"></div></div><div class="field"><label class="label">単元</label><div class="readonly" id="unitDisplay">'+esc(v.unit||"—")+'</div><button class="text-btn" id="editUnitBtn">変更</button><div id="unitManualWrap" class="soft-reveal"><input id="unitManual" value="'+esc(v.unit||"")+'" placeholder="単元名を入力"></div></div></div></section>'+
+    '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教材</h2><p class="hint inline-auto-hint">*登録済み教材を優先表示</p></div><div class="card-body">'+
+      '<div class="material-entry">'+
+        '<select id="material">'+allMaterials.map(x=>'<option value="'+esc(x)+'" '+(materialEntry.material===x?'selected':'')+'>'+esc(x)+'</option>').join("")+'<option value="__custom__" '+(materialEntry.material==="__custom__"?'selected':'')+'>自由入力</option></select>'+
+        '<div id="customMaterialWrap" class="field '+(materialEntry.material==="__custom__"?'':'hidden')+'"><label class="label">教材名</label><input id="customMaterial" value="'+esc(materialEntry.customMaterial||"")+'"></div>'+
+        '<div class="material-detail-field"><label class="label">範囲</label><div class="material-range-controls">'+
+          '<input class="material-page-input" id="pageFrom" inputmode="numeric" type="number" min="1" aria-label="開始ページ" value="'+esc(materialRange.from)+'">'+
+          '<span class="material-range-separator" aria-hidden="true">〜</span>'+
+          '<input class="material-page-input" id="pageTo" inputmode="numeric" type="number" min="1" aria-label="終了ページ" value="'+esc(materialRange.to)+'">'+
+        '</div></div>'+
+        '<div class="material-detail-field"><label class="label">単元</label><div class="readonly" id="unitDisplay">'+esc(materialUnit||"—")+'</div><button class="text-btn" id="editUnitBtn">変更</button><div id="unitManualWrap" class="soft-reveal '+(materialEntry.unitOverride?'open':'')+'"><input id="unitManual" value="'+esc(materialEntry.unitOverride||"")+'" placeholder="単元名を入力"></div></div>'+
+      '</div>'+
+    '</div></section>'+
     '<section class="card vt-review" data-card-status="review"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">講評</h2></div><div class="card-body"><div class="guide"><strong>書いてほしいこと</strong><br>・今日やったこと<br>・つまずいたこと／難しかったこと<br>・できたこと／できるようになったこと</div><textarea id="review" placeholder="授業の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter" id="reviewCount">'+String(v.review||"").length+'文字</div><div class="link-row"><button class="link-btn" id="prevBtn">前回の講評を見る</button><button class="link-btn" id="historyBtn">過去の講評を見る</button></div><div id="historyArea" class="history"></div></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="homework"><h1 class="record-section-title">宿題確認</h1>'+
@@ -1393,11 +1528,19 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     return {
       dt:v.dt,
       duration:Number(v.duration||70),
-      material:document.getElementById("material")?.value||v.material,
-      customMaterial:document.getElementById("customMaterial")?.value||v.customMaterial||"",
-      pageFrom:document.getElementById("pageFrom")?.value??v.pageFrom,
-      pageTo:document.getElementById("pageTo")?.value??v.pageTo,
-      unit:(document.getElementById("unitDisplay")?.textContent||v.unit||"").replace(/^—$/,""),
+      materials:[(()=>{
+        const material=document.getElementById("material")?.value||v.materials?.[0]?.material||"";
+        const customMaterial=document.getElementById("customMaterial")?.value||"";
+        const from=document.getElementById("pageFrom")?.value||"";
+        const to=document.getElementById("pageTo")?.value||"";
+        const unitOverride=document.getElementById("unitManual")?.value.trim()||"";
+        return {
+          material,
+          customMaterial,
+          ranges:(from||to)?[{from,to}]:[],
+          unitOverride
+        };
+      })()],
       review:document.getElementById("review")?.value??v.review,
       homeworkComment:document.getElementById("homeworkComment")?.value??v.homeworkComment,
       nextHomework:document.getElementById("nextHomework")?.value??v.nextHomework,
@@ -1428,13 +1571,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       type:!!String(c.type||"").trim(),
       instructor:!!String(c.instructor||"").trim(),
       subject:Array.isArray(c.subjects)&&c.subjects.length>0,
-      material:c.material==="__custom__"
-        ? !!String(c.customMaterial||"").trim()
-        : !!String(c.material||"").trim(),
-      pages:!!(
-        String(c.pageFrom||"").trim() ||
-        String(c.pageTo||"").trim() ||
-        String(c.unit||"").trim()
+      material:!!c.materials?.some(entry=>
+        entry.material==="__custom__"
+          ? !!String(entry.customMaterial||"").trim()
+          : !!String(entry.material||"").trim()
       ),
       review:!!String(c.review||"").trim(),
       prevhomework:!!(
@@ -1459,11 +1599,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const completed={
       basic:true,
       lesson:!!(
-        String(c.pageFrom||"").trim() ||
-        String(c.pageTo||"").trim() ||
         String(c.review||"").trim() ||
-        String(c.customMaterial||"").trim() ||
-        (state.manualUnit && String(c.unit||"").trim())
+        c.materials?.some(entry=>
+          String(entry.customMaterial||"").trim() ||
+          String(entry.unitOverride||"").trim() ||
+          entry.ranges?.some(range=>
+            String(range.from||"").trim() ||
+            String(range.to||"").trim()
+          )
+        )
       ),
       homework:!!(
         state.rating ||
@@ -2038,32 +2182,54 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     });
 
     const mat=document.getElementById("material");
-    const updateUnit=()=>{
-      if(state.manualUnit)return;
-      const u=unitFor(mat.value,document.getElementById("pageFrom").value,document.getElementById("pageTo").value);
-      document.getElementById("unitDisplay").textContent=u||"—";
-      document.getElementById("unitManual").value=u;
+    const pageInputs=[
+      document.getElementById("pageFrom"),
+      document.getElementById("pageTo")
+    ];
+    const unitManual=document.getElementById("unitManual");
+    const unitDisplay=document.getElementById("unitDisplay");
+
+    const fitPageInput=input=>{
+      if(!input)return;
+      const digits=Math.max(2,String(input.value||"").length);
+      input.style.setProperty("--page-input-digits",String(digits));
     };
+
+    const currentMaterialRanges=()=>{
+      const from=pageInputs[0]?.value||"";
+      const to=pageInputs[1]?.value||"";
+      return (from||to)?[{from,to}]:[];
+    };
+
+    const updateUnit=()=>{
+      const override=unitManual?.value.trim()||"";
+      const automatic=unitsForRanges(mat?.value,currentMaterialRanges());
+      if(unitDisplay)unitDisplay.textContent=override||automatic||"—";
+    };
+
+    pageInputs.forEach(input=>{
+      fitPageInput(input);
+      input.oninput=()=>{
+        fitPageInput(input);
+        updateUnit();
+        scheduleAutoSave(v);
+      };
+    });
 
     mat.onchange=()=>{
       document.getElementById("customMaterialWrap").classList.toggle("hidden",mat.value!=="__custom__");
-      state.manualUnit=false;
       updateUnit();
       autoSaveNow(v);
     };
 
-    document.getElementById("pageFrom").oninput=()=>{updateUnit();scheduleAutoSave(v)};
-    document.getElementById("pageTo").oninput=()=>{updateUnit();scheduleAutoSave(v)};
-
     document.getElementById("editUnitBtn").onclick=()=>{
-      const w=document.getElementById("unitManualWrap"),i=document.getElementById("unitManual");
+      const w=document.getElementById("unitManualWrap");
       w.classList.toggle("open");
-      if(w.classList.contains("open"))setTimeout(()=>i.focus(),160)
+      if(w.classList.contains("open"))setTimeout(()=>unitManual.focus(),160);
     };
 
-    document.getElementById("unitManual").oninput=e=>{
-      state.manualUnit=true;
-      document.getElementById("unitDisplay").textContent=e.target.value.trim()||"—";
+    unitManual.oninput=()=>{
+      updateUnit();
       scheduleAutoSave(v);
     };
 
