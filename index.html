@@ -332,18 +332,23 @@ button{touch-action:manipulation}
 /* Direct-edit date/time blocks */
 .datetime-blocks{
   display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,2fr);
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,3fr);
   gap:6px;
 }
 .datetime-time-range{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:6px;
   min-width:0;
 }
 .datetime-time-range .dt-block{
-  flex:1 1 auto;
   min-width:0;
+}
+.datetime-start-time{
+  flex:1 1 auto;
+}
+.datetime-duration{
+  flex:0 0 48px;
 }
 .datetime-end-time{
   flex:0 0 auto;
@@ -1064,6 +1069,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     state.records[l.id]={
       ...prev,
       performedAt:c.dt,
+      duration:c.duration,
       type:c.type,
       subject:c.subject,
       material:c.material,
@@ -1124,8 +1130,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function openRecord(id){
     state.lessonId=id;state.showPrev=false;state.showHistory=false;
     const l=getLesson(),r=getRecord();state.rating=r?.rating||"";state.forgot=new Set(r?.forgot||["なし"]);state.manualUnit=!!r?.manualUnit;
-    const dt=r?.performedAt||lessonBase(l),material=r?.material||l.materials[0],pageFrom=r?.pageFrom||"",pageTo=r?.pageTo||"",unit=r?.unit||unitFor(material,pageFrom,pageTo),subject=r?.subject||l.subject;
-    renderRecord({dt,material,pageFrom,pageTo,unit,review:r?.review||"",homeworkComment:r?.homeworkComment||"",nextHomework:r?.nextHomework||"",note:r?.note||"",customMaterial:r?.customMaterial||"",forgotOther:r?.forgotOther||"",type:r?.type||l.type,subject});
+    const dt=r?.performedAt||lessonBase(l),duration=Number(r?.duration||l.duration||70),material=r?.material||l.materials[0],pageFrom=r?.pageFrom||"",pageTo=r?.pageTo||"",unit=r?.unit||unitFor(material,pageFrom,pageTo),subject=r?.subject||l.subject;
+    renderRecord({dt,duration,material,pageFrom,pageTo,unit,review:r?.review||"",homeworkComment:r?.homeworkComment||"",nextHomework:r?.nextHomework||"",note:r?.note||"",customMaterial:r?.customMaterial||"",forgotOther:r?.forgotOther||"",type:r?.type||l.type,subject});
   }
 
   function renderRecord(v){
@@ -1145,7 +1151,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '</button></div>'+
     '</div></div>'+
     '<section class="record-section" data-record-section="basic"><h1 class="record-section-title">基本情報</h1>'+
-    '<section class="card vt-datetime" data-card-status="datetime"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">実施日時</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+datetimeBlocks(v.dt)+'</div></section>'+
+    '<section class="card vt-datetime" data-card-status="datetime"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">実施日時</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+datetimeBlocks(v)+'</div></section>'+
     '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="segment" id="typeSegment">'+["通常","振替","講習"].map(t=>'<button data-type="'+t+'" class="'+(v.type===t?'active':'')+'">'+t+'</button>').join("")+'</div></div></section>'+
     '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+
     '<select id="subjectSelect"><option value="国語" '+(v.subject==="国語"?"selected":"")+'>国語</option><option value="数学" '+(v.subject==="数学"?"selected":"")+'>数学</option><option value="英語" '+(v.subject==="英語"?"selected":"")+'>英語</option><option value="理科" '+(v.subject==="理科"?"selected":"")+'>理科</option><option value="社会" '+(v.subject==="社会"?"selected":"")+'>社会</option></select>'+
@@ -1205,31 +1211,36 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     bindRecord(v);
   }
 
-  function endTimeLabel(dt){
-    const total=(Number(dt.hour)*60+Number(dt.minute)+70)%(24*60);
+  function endTimeLabel(dt,duration){
+    const total=(Number(dt.hour)*60+Number(dt.minute)+Number(duration||70))%(24*60);
     return "〜"+pad(Math.floor(total/60))+":"+pad(total%60);
   }
 
-  function datetimeBlocks(dt){
+  function datetimeBlocks(v){
+    const dt=v.dt;
     return '<div class="datetime-blocks" aria-label="実施日時">'+
       '<button type="button" class="dt-block" data-dt-part="month" aria-label="月を変更"><span id="dtMonthValue">'+pad(dt.month)+'</span>月</button>'+
       '<button type="button" class="dt-block" data-dt-part="day" aria-label="日を変更"><span id="dtDayValue">'+pad(dt.day)+'</span>日</button>'+
       '<div class="datetime-time-range">'+
-        '<button type="button" class="dt-block" data-dt-part="time" aria-label="開始時刻を変更"><span id="dtTimeValue">'+pad(dt.hour)+':'+pad(dt.minute)+'</span></button>'+
-        '<span class="datetime-end-time" id="dtEndTimeValue" aria-label="終了時刻">'+endTimeLabel(dt)+'</span>'+
+        '<button type="button" class="dt-block datetime-start-time" data-dt-part="time" aria-label="開始時刻を変更"><span id="dtTimeValue">'+pad(dt.hour)+':'+pad(dt.minute)+'</span></button>'+
+        '<button type="button" class="dt-block datetime-duration" data-dt-part="duration" aria-label="授業時間を変更"><span id="dtDurationValue">'+Number(v.duration||70)+'</span>分</button>'+
+        '<span class="datetime-end-time" id="dtEndTimeValue" aria-label="終了時刻">'+endTimeLabel(dt,v.duration)+'</span>'+
       '</div>'+
     '</div>';
   }
 
-  function refreshDateTimeBlocks(dt){
+  function refreshDateTimeBlocks(v){
+    const dt=v.dt;
     const monthEl=document.getElementById("dtMonthValue");
     const dayEl=document.getElementById("dtDayValue");
     const timeEl=document.getElementById("dtTimeValue");
+    const durationEl=document.getElementById("dtDurationValue");
     const endTimeEl=document.getElementById("dtEndTimeValue");
     if(monthEl)monthEl.textContent=pad(dt.month);
     if(dayEl)dayEl.textContent=pad(dt.day);
     if(timeEl)timeEl.textContent=pad(dt.hour)+':'+pad(dt.minute);
-    if(endTimeEl)endTimeEl.textContent=endTimeLabel(dt);
+    if(durationEl)durationEl.textContent=Number(v.duration||70);
+    if(endTimeEl)endTimeEl.textContent=endTimeLabel(dt,v.duration);
   }
 
   function closeDateTimePopover(){
@@ -1237,16 +1248,18 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     document.querySelector(".dt-popover-backdrop")?.remove();
   }
 
-  function dateTimeChoices(part,dt){
+  function dateTimeChoices(part,v){
+    const dt=v.dt;
     if(part==="month")return {values:Array.from({length:12},(_,i)=>i+1),cols:4,suffix:"月"};
     if(part==="day")return {values:Array.from({length:new Date(dt.year,dt.month,0).getDate()},(_,i)=>i+1),cols:7,suffix:"日"};
+    if(part==="duration")return {values:[30,70],cols:2,suffix:"分"};
     return {values:["11:00","13:00","14:20","15:40","17:00","18:20","19:40"],cols:1,suffix:""};
   }
 
   function openDateTimePopover(part,anchor,v){
     closeDateTimePopover();
 
-    const {values,cols,suffix}=dateTimeChoices(part,v.dt);
+    const {values,cols,suffix}=dateTimeChoices(part,v);
     const backdrop=document.createElement("div");
     backdrop.className="dt-popover-backdrop";
 
@@ -1256,8 +1269,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     pop.setAttribute("aria-label",suffix+"を選択");
     const currentTime=pad(v.dt.hour)+':'+pad(v.dt.minute);
     pop.innerHTML='<div class="dt-options cols-'+cols+'">'+values.map(value=>{
-      const current=part==="time" ? currentTime===value : Number(v.dt[part])===value;
-      const label=part==="time" ? value : pad(value)+suffix;
+      const current=part==="time"
+        ? currentTime===value
+        : part==="duration"
+          ? Number(v.duration)===Number(value)
+          : Number(v.dt[part])===Number(value);
+      const label=part==="time" ? value : part==="duration" ? value+suffix : pad(value)+suffix;
       return '<button type="button" class="dt-option '+(current?'current':'')+'" data-dt-choice="'+value+'">'+label+'</button>';
     }).join("")+'</div>';
 
@@ -1295,6 +1312,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           const [hour,minute]=raw.split(":").map(Number);
           v.dt.hour=hour;
           v.dt.minute=minute;
+        }else if(part==="duration"){
+          v.duration=Number(raw);
         }else{
           v.dt[part]=Number(raw);
         }
@@ -1305,7 +1324,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           if(v.dt.day>maxDay)v.dt.day=maxDay;
         }
 
-        refreshDateTimeBlocks(v.dt);
+        refreshDateTimeBlocks(v);
         closeDateTimePopover();
         autoSaveNow(v);
       };
@@ -1316,6 +1335,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function capture(v){
     return {
       dt:v.dt,
+      duration:Number(v.duration||70),
       material:document.getElementById("material")?.value||v.material,
       customMaterial:document.getElementById("customMaterial")?.value||v.customMaterial||"",
       pageFrom:document.getElementById("pageFrom")?.value??v.pageFrom,
