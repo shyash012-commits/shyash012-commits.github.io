@@ -458,13 +458,32 @@ button{touch-action:manipulation}
   display:grid;
 }
 .material-entry-shell{
+  display:grid;
+  grid-template-rows:1fr;
   overflow:visible;
+  transition:grid-template-rows var(--footer-motion-dur) var(--footer-motion-ease);
+}
+.material-entry-shell.is-collapsed{
+  grid-template-rows:0fr;
+}
+.material-entry-clip{
+  min-height:0;
+  overflow:hidden;
 }
 .material-entry-content{
   position:relative;
   min-width:0;
   padding-top:calc(var(--record-item-gap) * 2 + 1px);
-  transition:padding-top var(--footer-motion-dur) var(--footer-motion-ease);
+  opacity:1;
+  transform:translateX(0);
+  transition:
+    padding-top var(--footer-motion-dur) var(--footer-motion-ease),
+    transform var(--footer-motion-dur) var(--footer-motion-ease),
+    opacity var(--footer-fade-dur) ease;
+}
+.material-entry-shell.is-collapsed .material-entry-content{
+  opacity:0;
+  transform:translateX(-4px);
 }
 .material-entry-content::before{
   content:"";
@@ -627,6 +646,7 @@ button{touch-action:manipulation}
 @media (prefers-reduced-motion:reduce){
   .material-card-number-slot,
   .material-delete-action,
+  .material-entry-shell,
   .material-entry-content,
   .material-entry-content::before,
   .material-entry-heading{
@@ -1536,6 +1556,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const units=unitListForRanges(entry.material,entry.ranges);
 
     return '<div class="material-entry-shell '+(isPrimary?'is-primary':'')+'" data-material-entry>'+
+      '<div class="material-entry-clip">'+
       '<div class="material-entry-content">'+
         '<div class="material-entry-heading">'+
           '<span class="material-entry-title" data-material-entry-title>使用教材</span>'+
@@ -1573,6 +1594,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           '</div>'+
         '</div>'+
       '</div>'+
+    '</div>'+
     '</div>'+
     '</div>';
   }
@@ -2125,8 +2147,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       fade:cssTimeToMs(footerMotionStyle.getPropertyValue("--footer-fade-dur"),100),
       ease:footerMotionStyle.getPropertyValue("--footer-motion-ease").trim()||"cubic-bezier(.22,.72,.26,1)"
     };
-    // Text-motion grammar is shared with the footer:
-    // size/layout 210ms, X -4px <-> 0 over 210ms, opacity over 100ms.
+    // Footer grammar is state-based CSS transition:
+    // layout 210ms, X -4px <-> 0 over 210ms, opacity over 100ms.
+    // Material add/remove uses the same DOM and toggles only state classes.
     const RECORD_TEXT_MOTION=PREVIEW_OPTION_MOTION;
 
     let previewOptionMotionToken=0;
@@ -2737,45 +2760,21 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         return;
       }
 
-      const content=entry.querySelector(".material-entry-content");
-      const startHeight=entry.getBoundingClientRect().height;
+      let finished=false;
+      const finishOnce=()=>{
+        if(finished)return;
+        finished=true;
+        finish();
+      };
 
-      entry.style.height=startHeight+"px";
-      entry.style.overflow="hidden";
-
-      content?.animate(
-        [{opacity:1},{opacity:0}],
-        {
-          duration:RECORD_TEXT_MOTION.fade,
-          easing:"ease",
-          fill:"forwards"
+      entry.addEventListener("transitionend",e=>{
+        if(e.target===entry && e.propertyName==="grid-template-rows"){
+          finishOnce();
         }
-      );
-      content?.animate(
-        [
-          {transform:"translateX(0)"},
-          {transform:"translateX(-4px)"}
-        ],
-        {
-          duration:RECORD_TEXT_MOTION.move,
-          easing:RECORD_TEXT_MOTION.ease,
-          fill:"forwards"
-        }
-      );
+      },{once:true});
 
-      const heightAnimation=entry.animate(
-        [
-          {height:startHeight+"px"},
-          {height:"0px"}
-        ],
-        {
-          duration:RECORD_TEXT_MOTION.move,
-          easing:RECORD_TEXT_MOTION.ease,
-          fill:"forwards"
-        }
-      );
-
-      heightAnimation.onfinish=finish;
+      entry.classList.add("is-collapsed");
+      setTimeout(finishOnce,RECORD_TEXT_MOTION.move+80);
     };
 
     const bindMaterialEntry=entry=>{
@@ -2838,52 +2837,18 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     refreshMaterialEntryLabels();
 
     const revealMaterialEntry=entry=>{
-      if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+      if(matchMedia("(prefers-reduced-motion: reduce)").matches){
+        entry.classList.remove("is-collapsed");
+        return;
+      }
 
-      const content=entry.querySelector(".material-entry-content");
-      const targetHeight=entry.scrollHeight;
-      entry.style.height="0px";
-      entry.style.overflow="hidden";
-
-      const fadeAnimation=content?.animate(
-        [{opacity:0},{opacity:1}],
-        {
-          duration:RECORD_TEXT_MOTION.fade,
-          easing:"ease",
-          fill:"both"
-        }
-      );
-      const moveAnimation=content?.animate(
-        [
-          {transform:"translateX(-4px)"},
-          {transform:"translateX(0)"}
-        ],
-        {
-          duration:RECORD_TEXT_MOTION.move,
-          easing:RECORD_TEXT_MOTION.ease,
-          fill:"both"
-        }
-      );
-
-      const heightAnimation=entry.animate(
-        [
-          {height:"0px"},
-          {height:targetHeight+"px"}
-        ],
-        {
-          duration:RECORD_TEXT_MOTION.move,
-          easing:RECORD_TEXT_MOTION.ease,
-          fill:"forwards"
-        }
-      );
-
-      heightAnimation.onfinish=()=>{
-        entry.style.removeProperty("height");
-        entry.style.removeProperty("overflow");
-        fadeAnimation?.cancel();
-        moveAnimation?.cancel();
-        heightAnimation.cancel();
-      };
+      // Footer grammar: append in the closed state, then let the same DOM
+      // transition to its open state on the next frame.
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          entry.classList.remove("is-collapsed");
+        });
+      });
     };
 
     document.getElementById("addMaterialBtn").onclick=()=>{
@@ -2899,6 +2864,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const holder=document.createElement("div");
       holder.innerHTML=materialEntryMarkup(newEntry,allMaterials,false);
       const entry=holder.firstElementChild;
+      entry.classList.add("is-collapsed");
       materialEntries.append(entry);
       bindMaterialEntry(entry);
       refreshMaterialEntryLabels();
