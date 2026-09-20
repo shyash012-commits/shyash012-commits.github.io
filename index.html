@@ -1470,7 +1470,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         if(!target)return;
 
         const headerH=document.querySelector(".header")?.getBoundingClientRect().height||0;
-        const rawY=window.scrollY+target.getBoundingClientRect().top-headerH-10;
+        // Align the section box directly below the sticky header.
+        // The section's own 20px top padding then becomes the visible header-to-title gap,
+        // so spacing has a single source of truth instead of a second scroll-only offset.
+        const rawY=window.scrollY+target.getBoundingClientRect().top-headerH;
         const maxY=Math.max(0,document.documentElement.scrollHeight-window.innerHeight);
         const y=Math.min(maxY,Math.max(0,rawY));
 
