@@ -406,10 +406,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 .record-nav-item{
   height:var(--footer-item-h);
+  width:var(--footer-item-h);
   min-width:var(--footer-item-h);
   border:0;
   border-radius:var(--footer-item-r);
-  padding:0 6px;
+  padding:0;
   background:transparent;
   color:#243140;
   display:flex;
@@ -417,17 +418,36 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   justify-content:flex-start;
   gap:0;
   flex:0 0 auto;
+  overflow:hidden;
   -webkit-tap-highlight-color:transparent;
   appearance:none;
   -webkit-appearance:none;
   transition:
+    width .34s cubic-bezier(.16,1,.3,1),
     background-color .24s ease,
     color .24s ease,
     padding .34s cubic-bezier(.16,1,.3,1),
     transform .14s ease;
 }
 .record-nav-item:active{transform:scale(.985)}
-.record-nav-item .record-icon-circle,
+.record-nav-item .record-icon-circle{
+  width:var(--footer-item-h);
+  height:var(--footer-item-h);
+  flex:0 0 var(--footer-item-h);
+  border-radius:50%;
+  border:1.25px solid #aeb8c3;
+  background:#fff;
+  color:#243140;
+  display:grid;
+  place-items:center;
+  transition:
+    width .34s cubic-bezier(.16,1,.3,1),
+    height .34s cubic-bezier(.16,1,.3,1),
+    flex-basis .34s cubic-bezier(.16,1,.3,1),
+    border-color .24s ease,
+    background-color .24s ease,
+    color .24s ease;
+}
 .record-save-state .record-icon-circle{
   width:var(--footer-icon-d);
   height:var(--footer-icon-d);
@@ -472,11 +492,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     transform .34s cubic-bezier(.16,1,.3,1);
 }
 .record-nav-item.active{
+  width:118px;
   padding:0 11px 0 6px;
   color:#fff;
   background:linear-gradient(180deg,#2f8cff 0%,#2278ef 100%);
 }
 .record-nav-item.active .record-icon-circle{
+  width:var(--footer-icon-d);
+  height:var(--footer-icon-d);
+  flex-basis:var(--footer-icon-d);
   border-color:#fff;
   background:#fff;
   color:#2278ef;
@@ -526,8 +550,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   .record-nav-shell{
     padding:10px;
   }
-  .record-nav-item{padding-left:6px;padding-right:6px}
-  .record-nav-item.active{padding-right:9px}
+  .record-nav-item{padding:0}
+  .record-nav-item.active{width:110px;padding:0 9px 0 6px}
   .record-nav-label{font-size:14px}
 }
 @media(max-width:380px){
