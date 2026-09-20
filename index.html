@@ -166,9 +166,12 @@ button{touch-action:manipulation}
     opacity .16s ease
 }
 .header-back .header-icon,
-.header-submit .header-icon,
-.record-nav-item.active .record-icon-circle{
+.header-submit .header-icon{
   background:#fff;
+  box-shadow:none;
+}
+.record-nav-item.active .record-icon-circle{
+  background:transparent;
   box-shadow:none;
 }
 /* 参照モックに合わせたタップ時の見え方 */
@@ -405,6 +408,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   border:1px solid var(--line);
   border-radius:var(--footer-outer-r);
   background:rgba(255,255,255,.96);
+  box-shadow:none;
   -webkit-backdrop-filter:blur(12px);
   backdrop-filter:blur(12px);
   padding:10px;
@@ -612,7 +616,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
 /* White control gloss — same material language as the blue actions */
 .header-back,
-.record-nav-shell,
 .record-save-state .record-icon-circle,
 .btn:not(.primary),
 .segment button:not(.active),
