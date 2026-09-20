@@ -206,6 +206,7 @@ button{touch-action:manipulation}
   --record-status-size:10.5px;
   --record-mark-size:10.5px;
   --record-mark-stroke:1.75px;
+  --record-mark-optical-y:.5px;
   --record-label-gap:6.4px;
   --record-half-label-gap:3.2px;
   --record-content-gap:10px;
@@ -268,7 +269,7 @@ button{touch-action:manipulation}
   flex:0 0 3px;
   border-radius:999px;
   background:#44515e;
-  transform:translateY(.5px);
+  transform:translateY(var(--record-mark-optical-y));
   transition:background-color var(--record-color-dur) var(--record-color-ease);
 }
 .record-section.is-current .record-section-title::before{
@@ -510,6 +511,7 @@ button{touch-action:manipulation}
   width:var(--record-status-size);
   height:var(--record-status-size);
   flex:0 0 var(--record-status-size);
+  transform:translateY(var(--record-mark-optical-y));
 }
 .material-add-icon svg{
   display:block;
