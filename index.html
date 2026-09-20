@@ -508,7 +508,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   stroke-width:1.83;
 }
 .record-preview-button .record-icon-circle svg{
-  transform:translateZ(0);
   stroke-width:1.9;
 }
 .record-preview-button .preview-eye{
@@ -640,6 +639,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   transition:
     width .34s cubic-bezier(.16,1,.3,1),
     border-radius .34s cubic-bezier(.16,1,.3,1),
+    background-color .24s ease,
+    border-color .24s ease,
     transform .14s ease;
   will-change:width;
 }
@@ -678,22 +679,25 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .preview-icon-slot::before{
   content:"";
   position:absolute;
-  left:50%;
-  top:50%;
-  width:var(--footer-icon-d);
-  height:var(--footer-icon-d);
+  inset:0;
   border-radius:50%;
   background:#fff;
-  transform:translate(-50%,-50%) scale(0);
-  opacity:0;
+  transform:scale(1);
+  transform-origin:50% 50%;
   z-index:0;
+  will-change:transform;
   transition:
     transform .34s cubic-bezier(.16,1,.3,1),
-    opacity .12s ease;
+    border-color .24s ease,
+    background .24s ease,
+    box-shadow .24s ease;
 }
-.preview-icon-slot svg{
-  position:relative;
+.record-preview-button .preview-icon-slot svg{
+  position:absolute;
+  left:50%;
+  top:50%;
   z-index:1;
+  transform:translate(-50%,-50%) translateZ(0);
 }
 .preview-label{
   position:absolute;
@@ -734,20 +738,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .record-footer.preview-mode .record-preview-button .record-icon-circle{
   width:var(--preview-inner-w);
   color:#fff;
-  border-color:var(--preview-green-border);
-  background:linear-gradient(
-    180deg,
-    var(--preview-green-top) 0%,
-    var(--preview-green-bottom) 100%
-  );
+  border-color:#20ad58;
+  background:linear-gradient(180deg,#39d779 0%,#21b95b 100%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.16);
 }
 .record-footer.preview-mode .record-preview-button .preview-icon-slot{
-  color:var(--preview-green-bottom);
+  color:#20ad58;
 }
 .record-footer.preview-mode .record-preview-button .preview-icon-slot::before{
-  transform:translate(-50%,-50%) scale(1);
-  opacity:1;
+  transform:scale(var(--footer-icon-scale));
 }
 .record-footer.preview-mode .preview-label{
   max-width:var(--preview-label-w);
