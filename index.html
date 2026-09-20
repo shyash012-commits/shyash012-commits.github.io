@@ -337,18 +337,22 @@ button{touch-action:manipulation}
   align-items:center;
   gap:6px;
   min-width:0;
+  width:100%;
 }
-.datetime-time-range{
+.datetime-main{
   display:flex;
   align-items:center;
   gap:6px;
   min-width:0;
 }
-.datetime-time-range .dt-block,
+.datetime-main .dt-block,
 .datetime-blocks > .dt-block{
   flex:0 0 auto;
   width:auto;
   min-width:0;
+}
+.datetime-duration{
+  margin-left:auto;
 }
 .datetime-end-time{
   flex:0 0 auto;
@@ -1223,13 +1227,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function datetimeBlocks(v){
     const dt=v.dt;
     return '<div class="datetime-blocks" aria-label="実施日時">'+
-      '<button type="button" class="dt-block" data-dt-part="month" aria-label="月を変更"><span id="dtMonthValue">'+pad(dt.month)+'</span>月</button>'+
-      '<button type="button" class="dt-block" data-dt-part="day" aria-label="日を変更"><span id="dtDayValue">'+pad(dt.day)+'</span>日</button>'+
-      '<div class="datetime-time-range">'+
+      '<div class="datetime-main">'+
+        '<button type="button" class="dt-block" data-dt-part="month" aria-label="月を変更"><span id="dtMonthValue">'+pad(dt.month)+'</span>月</button>'+
+        '<button type="button" class="dt-block" data-dt-part="day" aria-label="日を変更"><span id="dtDayValue">'+pad(dt.day)+'</span>日</button>'+
         '<button type="button" class="dt-block datetime-start-time" data-dt-part="time" aria-label="開始時刻を変更"><span id="dtTimeValue">'+pad(dt.hour)+':'+pad(dt.minute)+'</span></button>'+
-        '<button type="button" class="dt-block datetime-duration" data-dt-part="duration" aria-label="授業時間を変更"><span id="dtDurationValue">'+Number(v.duration||70)+'</span>分</button>'+
         '<span class="datetime-end-time" id="dtEndTimeValue" aria-label="終了時刻">'+endTimeLabel(dt,v.duration)+'</span>'+
       '</div>'+
+      '<button type="button" class="dt-block datetime-duration" data-dt-part="duration" aria-label="授業時間を変更"><span id="dtDurationValue">'+Number(v.duration||70)+'</span>分</button>'+
     '</div>';
   }
 
@@ -1238,22 +1242,26 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     if(!root)return;
 
     const buttons=[...root.querySelectorAll(".dt-block")];
-    const timeRange=root.querySelector(".datetime-time-range");
+    const main=root.querySelector(".datetime-main");
     const endTime=root.querySelector(".datetime-end-time");
-    if(buttons.length!==4||!timeRange||!endTime)return;
+    const duration=root.querySelector(".datetime-duration");
+    if(buttons.length!==4||!main||!endTime||!duration)return;
 
     const preferred=10;
     root.style.setProperty("--datetime-control-x","0px");
 
-    // Measure the row without horizontal control padding.
-    const outerGap=parseFloat(getComputedStyle(root).columnGap||getComputedStyle(root).gap)||0;
-    const innerGap=parseFloat(getComputedStyle(timeRange).columnGap||getComputedStyle(timeRange).gap)||0;
+    // Measure intrinsic widths first. Duration stays right-aligned via margin-left:auto.
+    const mainGap=parseFloat(getComputedStyle(main).columnGap||getComputedStyle(main).gap)||0;
+    const rootGap=parseFloat(getComputedStyle(root).columnGap||getComputedStyle(root).gap)||0;
     const controlsWidth=buttons.reduce((sum,button)=>sum+button.getBoundingClientRect().width,0);
     const endWidth=endTime.getBoundingClientRect().width;
-    const gapWidth=outerGap*2+innerGap*2;
+
+    // Main has: month / day / start / end = 3 internal gaps.
+    // Root has one minimum gap between the left group and duration.
+    const gapWidth=mainGap*3+rootGap;
     const available=root.clientWidth;
 
-    // Four controls each have left + right padding: 8 equal padding spaces.
+    // Four controls × left/right padding = 8 equal padding spaces.
     const fitted=(available-controlsWidth-endWidth-gapWidth)/(buttons.length*2);
     const padding=Math.max(0,Math.min(preferred,fitted));
 
