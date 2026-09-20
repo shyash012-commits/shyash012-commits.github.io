@@ -494,22 +494,22 @@ button{touch-action:manipulation}
   display:inline-flex;
   align-items:center;
   gap:6px;
-  margin-top:15px;
-  padding:8px 0;
+  margin-top:var(--record-item-gap);
+  padding:0;
   border:0;
   background:none;
   color:var(--primary);
-  font-size:var(--record-control-font-size);
+  font-size:16px;
   font-weight:700;
-  line-height:1;
+  line-height:1.2;
 }
 .material-add-action:active{
   opacity:.58;
 }
 .material-add-icon{
-  width:var(--record-mark-size);
-  height:var(--record-mark-size);
-  flex:0 0 var(--record-mark-size);
+  width:16px;
+  height:16px;
+  flex:0 0 16px;
 }
 .material-add-icon svg{
   display:block;
@@ -1558,7 +1558,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
-    '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教材</h2><p class="hint inline-auto-hint">*登録済み教材を優先表示</p></div><div class="card-body">'+
+    '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">使用教材</h2><p class="hint inline-auto-hint">*登録済み教材を優先表示</p></div><div class="card-body">'+
       '<div class="material-entry">'+
         '<div class="record-select-shell">'+
           '<select id="material">'+allMaterials.map(x=>'<option value="'+esc(x)+'" '+(materialEntry.material===x?'selected':'')+'>'+esc(x)+'</option>').join("")+'<option value="__custom__" '+(materialEntry.material==="__custom__"?'selected':'')+'>自由入力</option></select>'+
