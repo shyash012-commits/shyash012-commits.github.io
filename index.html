@@ -331,9 +331,12 @@ button{touch-action:manipulation}
 
 /* Direct-edit date/time blocks */
 .datetime-blocks{
-  display:grid;
-  grid-template-columns:max-content max-content minmax(0,1fr);
+  --datetime-control-x:10px;
+  --datetime-control-x-preferred:10px;
+  display:flex;
+  align-items:center;
   gap:6px;
+  min-width:0;
 }
 .datetime-time-range{
   display:flex;
@@ -341,13 +344,11 @@ button{touch-action:manipulation}
   gap:6px;
   min-width:0;
 }
-.datetime-time-range .dt-block{
+.datetime-time-range .dt-block,
+.datetime-blocks > .dt-block{
   flex:0 0 auto;
-  min-width:0;
-}
-.datetime-start-time,
-.datetime-duration{
   width:auto;
+  min-width:0;
 }
 .datetime-end-time{
   flex:0 0 auto;
@@ -359,11 +360,14 @@ button{touch-action:manipulation}
 }
 .dt-block{
   position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
   border:1px solid #cbd3dc;
   background:#f7f8fa;
   border-radius:12px;
   min-height:42px;
-  padding:8px 10px;
+  padding:0 var(--datetime-control-x);
   font-weight:700;
   font-size:14px;
   white-space:nowrap;
@@ -1208,6 +1212,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div>'+
     '</div>';
     bindRecord(v);
+    requestAnimationFrame(fitDateTimeControls);
   }
 
   function endTimeLabel(dt,duration){
@@ -1228,6 +1233,34 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div>';
   }
 
+  function fitDateTimeControls(){
+    const root=document.querySelector(".datetime-blocks");
+    if(!root)return;
+
+    const buttons=[...root.querySelectorAll(".dt-block")];
+    const timeRange=root.querySelector(".datetime-time-range");
+    const endTime=root.querySelector(".datetime-end-time");
+    if(buttons.length!==4||!timeRange||!endTime)return;
+
+    const preferred=10;
+    root.style.setProperty("--datetime-control-x","0px");
+
+    // Measure the row without horizontal control padding.
+    const outerGap=parseFloat(getComputedStyle(root).columnGap||getComputedStyle(root).gap)||0;
+    const innerGap=parseFloat(getComputedStyle(timeRange).columnGap||getComputedStyle(timeRange).gap)||0;
+    const controlsWidth=buttons.reduce((sum,button)=>sum+button.getBoundingClientRect().width,0);
+    const endWidth=endTime.getBoundingClientRect().width;
+    const gapWidth=outerGap*2+innerGap*2;
+    const available=root.clientWidth;
+
+    // Four controls each have left + right padding: 8 equal padding spaces.
+    const fitted=(available-controlsWidth-endWidth-gapWidth)/(buttons.length*2);
+    const padding=Math.max(0,Math.min(preferred,fitted));
+
+    root.style.setProperty("--datetime-control-x",padding.toFixed(3)+"px");
+    root.classList.toggle("datetime-padding-fitted",padding<preferred-.01);
+  }
+
   function refreshDateTimeBlocks(v){
     const dt=v.dt;
     const monthEl=document.getElementById("dtMonthValue");
@@ -1240,6 +1273,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     if(timeEl)timeEl.textContent=pad(dt.hour)+':'+pad(dt.minute);
     if(durationEl)durationEl.textContent=Number(v.duration||70);
     if(endTimeEl)endTimeEl.textContent=endTimeLabel(dt,v.duration);
+    requestAnimationFrame(fitDateTimeControls);
   }
 
   function closeDateTimePopover(){
@@ -1666,6 +1700,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       requestAnimationFrame(()=>{a.style.height="";a.style.overflow=""});
     };
   }
+  window.addEventListener("resize",()=>requestAnimationFrame(fitDateTimeControls),{passive:true});
   renderList();
 })();
 </script>
