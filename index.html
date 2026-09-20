@@ -612,36 +612,139 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     visibility 0s linear 0s;
 }
 .record-preview-button{
+  --preview-label-w:5em;
+  --preview-inner-w:calc(var(--footer-item-h) + 2px + var(--preview-label-w) + 11px);
+  --preview-outer-w:calc(var(--preview-inner-w) + 20px);
+  position:relative;
   width:var(--footer-outer-h);
   height:var(--footer-outer-h);
-  flex:0 0 var(--footer-outer-h);
+  flex:0 0 auto;
   padding:0;
-  border-radius:50%;
+  border-radius:var(--footer-outer-r);
   border:1px solid #c5cdd6;
   background:#e5e9ee;
   box-shadow:none;
   -webkit-backdrop-filter:blur(12px);
   backdrop-filter:blur(12px);
-  display:grid;
-  place-items:center;
+  display:block;
   color:#243140;
   cursor:pointer;
+  overflow:hidden;
+  font-size:15px;
   -webkit-tap-highlight-color:transparent;
+  transition:
+    width .34s cubic-bezier(.16,1,.3,1),
+    border-radius .34s cubic-bezier(.16,1,.3,1),
+    transform .14s ease;
+  will-change:width;
 }
+.record-preview-button:active{transform:none}
 .record-preview-button .record-icon-circle{
+  position:absolute;
+  left:10px;
+  top:10px;
   width:var(--footer-item-h);
   height:var(--footer-item-h);
-  border-radius:50%;
+  border-radius:var(--footer-item-r);
   border:1.25px solid #cbd3dc;
   background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,1),
     inset 0 -1px 0 rgba(31,41,51,.035);
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  overflow:hidden;
+  transition:
+    width .34s cubic-bezier(.16,1,.3,1),
+    border-radius .34s cubic-bezier(.16,1,.3,1),
+    background .18s ease;
+  will-change:width;
+}
+.preview-icon-slot{
+  width:var(--footer-item-h);
+  height:var(--footer-item-h);
+  flex:0 0 var(--footer-item-h);
   display:grid;
   place-items:center;
 }
+.preview-label{
+  width:var(--preview-label-w);
+  max-width:0;
+  opacity:0;
+  visibility:hidden;
+  overflow:hidden;
+  white-space:nowrap;
+  margin-left:0;
+  transform:translateX(-4px);
+  font-size:1em;
+  font-weight:700;
+  line-height:1;
+  will-change:max-width,opacity,transform;
+  transition:
+    opacity .07s ease 0s,
+    visibility 0s linear .07s,
+    max-width .28s cubic-bezier(.16,1,.3,1) .05s,
+    margin-left .28s cubic-bezier(.16,1,.3,1) .05s,
+    transform .18s ease 0s;
+}
 .record-preview-button:active .record-icon-circle{
   background:linear-gradient(180deg,#f7f9fb 0%,#e7ecf1 100%);
+}
+
+/* Preview mode: footer total width stays fixed; the two large capsules trade width. */
+.record-footer.preview-mode .record-preview-button{
+  width:var(--preview-outer-w);
+}
+.record-footer.preview-mode .record-preview-button .record-icon-circle{
+  width:var(--preview-inner-w);
+}
+.record-footer.preview-mode .preview-label{
+  max-width:var(--preview-label-w);
+  opacity:1;
+  visibility:visible;
+  margin-left:2px;
+  transform:translateX(0);
+  transition:
+    max-width .34s cubic-bezier(.16,1,.3,1) 0s,
+    margin-left .34s cubic-bezier(.16,1,.3,1) 0s,
+    transform .34s cubic-bezier(.16,1,.3,1) 0s,
+    opacity .14s ease .09s,
+    visibility 0s linear 0s;
+}
+
+/* In preview mode the TOC is icon-only; selection is shown by a blue circle only. */
+.record-footer.preview-mode .record-nav-item,
+.record-footer.preview-mode .record-nav-item.active{
+  width:var(--footer-item-h);
+  min-width:var(--footer-item-h);
+  padding:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+}
+.record-footer.preview-mode .record-nav-item .record-nav-label,
+.record-footer.preview-mode .record-nav-item.active .record-nav-label{
+  max-width:0;
+  opacity:0;
+  visibility:hidden;
+  margin-left:0;
+  transform:translateX(-4px);
+  transition:
+    opacity .07s ease 0s,
+    visibility 0s linear .07s,
+    max-width .2s cubic-bezier(.16,1,.3,1) 0s,
+    margin-left .2s cubic-bezier(.16,1,.3,1) 0s,
+    transform .16s ease 0s;
+}
+.record-footer.preview-mode .record-nav-item.active .record-icon-circle{
+  color:#fff;
+}
+.record-footer.preview-mode .record-nav-item.active .record-icon-circle::before{
+  transform:scale(1);
+  border-color:#2278ef;
+  background:linear-gradient(180deg,#3993ff 0%,#1f73e6 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16);
 }
 .record-footer-spacer{height:90px}
 .vt-datetime,.vt-material,.vt-prevhomework,.vt-forgot{scroll-margin-top:86px}
@@ -681,6 +784,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   }
   .record-nav-item{padding:0;font-size:14px}
   .record-nav-item.active{width:calc(var(--footer-item-h) + 2px + 4em + 9px);padding:0 9px 0 0}
+  .record-preview-button{
+    --preview-inner-w:calc(var(--footer-item-h) + 2px + var(--preview-label-w) + 9px);
+    --preview-outer-w:calc(var(--preview-inner-w) + 20px);
+    font-size:14px;
+  }
 }
 @media(max-width:380px){
   .app{padding-left:12px;padding-right:12px}
@@ -940,17 +1048,20 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           '<span class="record-nav-label record-nav-label-spaced"><span>そ</span><span>の</span><span>他</span></span>'+
         '</button>'+
       '</nav>'+
-      '<button type="button" class="record-preview-button" id="previewBtn" aria-label="プレビュー">'+
-        '<span class="record-icon-circle" aria-hidden="true">'+
-          '<svg viewBox="0 0 20 20">'+
-            '<g class="preview-frame">'+
-              '<path d="M5 2.8H2.8V5M15 2.8h2.2V5M5 17.2H2.8V15M15 17.2h2.2V15"/>'+
-            '</g>'+
-            '<g class="preview-eye">'+
-              '<path d="M3.9 10c1.65-2.45 3.7-3.7 6.1-3.7s4.45 1.25 6.1 3.7c-1.65 2.45-3.7 3.7-6.1 3.7S5.55 12.45 3.9 10Z"/>'+
-              '<circle class="preview-pupil" cx="10" cy="10" r="2.75"/>'+
-            '</g>'+
-          '</svg>'+
+      '<button type="button" class="record-preview-button" id="previewBtn" aria-label="プレビュー" aria-pressed="false">'+
+        '<span class="record-icon-circle">'+
+          '<span class="preview-icon-slot" aria-hidden="true">'+
+            '<svg viewBox="0 0 20 20">'+
+              '<g class="preview-frame">'+
+                '<path d="M5 2.8H2.8V5M15 2.8h2.2V5M5 17.2H2.8V15M15 17.2h2.2V15"/>'+
+              '</g>'+
+              '<g class="preview-eye">'+
+                '<path d="M3.9 10c1.65-2.45 3.7-3.7 6.1-3.7s4.45 1.25 6.1 3.7c-1.65 2.45-3.7 3.7-6.1 3.7S5.55 12.45 3.9 10Z"/>'+
+                '<circle class="preview-pupil" cx="10" cy="10" r="2.75"/>'+
+              '</g>'+
+            '</svg>'+
+          '</span>'+
+          '<span class="preview-label">プレビュー</span>'+
         '</span>'+
       '</button>'+
     '</div>'+
@@ -1188,9 +1299,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     };
 
     const previewBtn=document.getElementById("previewBtn");
-    if(previewBtn)previewBtn.onclick=()=>{
+    const recordFooter=document.querySelector(".record-footer");
+    if(previewBtn&&recordFooter)previewBtn.onclick=()=>{
       autoSaveNow(v);
-      toast("プレビュー画面は次に作ります");
+      const on=!recordFooter.classList.contains("preview-mode");
+      recordFooter.classList.toggle("preview-mode",on);
+      previewBtn.setAttribute("aria-pressed",String(on));
+      previewBtn.setAttribute("aria-label",on?"プレビューを閉じる":"プレビュー");
     };
 
     document.querySelectorAll("[data-dt-part]").forEach(btn=>{
