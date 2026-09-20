@@ -10,7 +10,10 @@
 :root{
   --bg:#f3f5f7;--card:#fff;--text:#1f2933;--sub:#6b7280;--line:#d7dde4;
   --primary:#315b8a;--primary-soft:#eaf1f8;
-  --body-radius:10.5px
+  --body-radius:10.5px;
+  --ui-motion-dur:.21s;
+  --ui-motion-ease:cubic-bezier(.22,.72,.26,1);
+  --ui-fade-dur:.10s
 }
 *{box-sizing:border-box;min-width:0}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",sans-serif;font-variant-numeric:tabular-nums;overflow-x:hidden}
@@ -300,11 +303,24 @@ button{touch-action:manipulation}
 }
 .material-card-number-slot{
   display:inline-block;
+  width:1em;
+  max-width:0;
   flex:0 0 auto;
+  overflow:hidden;
+  white-space:nowrap;
+  opacity:0;
   line-height:1.2;
+  transform:translateX(-4px);
+  will-change:max-width,opacity,transform;
+  transition:
+    max-width var(--ui-motion-dur) var(--ui-motion-ease),
+    transform var(--ui-motion-dur) var(--ui-motion-ease),
+    opacity var(--ui-fade-dur) ease;
 }
-.material-card-number-slot:empty{
-  display:none;
+.material-card-number-slot.is-visible{
+  max-width:1em;
+  opacity:1;
+  transform:translateX(0);
 }
 .record-section .inline-auto-hint{
   margin:0;
@@ -561,15 +577,36 @@ button{touch-action:manipulation}
   margin-top:var(--record-item-gap);
 }
 .material-delete-action{
+  width:2em;
+  max-width:0;
   margin-left:auto;
+  overflow:hidden;
   white-space:nowrap;
+  opacity:0;
+  transform:translateX(-4px);
+  pointer-events:none;
+  will-change:max-width,opacity,transform;
+  transition:
+    max-width var(--ui-motion-dur) var(--ui-motion-ease),
+    transform var(--ui-motion-dur) var(--ui-motion-ease),
+    opacity var(--ui-fade-dur) ease;
 }
-.material-delete-action.hidden{
-  display:none;
+.material-delete-action.is-visible{
+  max-width:2em;
+  opacity:1;
+  transform:translateX(0);
+  pointer-events:auto;
 }
 .app.preview-mode .material-add-action,
 .app.preview-mode .material-delete-action{
   display:none;
+}
+
+@media (prefers-reduced-motion:reduce){
+  .material-card-number-slot,
+  .material-delete-action{
+    transition:none;
+  }
 }
 
 .material-add-icon{
@@ -879,9 +916,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   --footer-icon-scale:.7142857;
 
   /* Motion */
-  --footer-motion-dur:.21s;
-  --footer-motion-ease:cubic-bezier(.22,.72,.26,1);
-  --footer-fade-dur:.10s;
+  --footer-motion-dur:var(--ui-motion-dur);
+  --footer-motion-ease:var(--ui-motion-ease);
+  --footer-fade-dur:var(--ui-fade-dur);
   --footer-color-dur:.15s;
   --footer-color-ease:cubic-bezier(.22,.72,.26,1);
 
@@ -1480,7 +1517,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '<div class="material-entry-content">'+
         '<div class="material-entry-heading">'+
           '<span class="material-entry-title" data-material-entry-title>使用教材</span>'+
-          '<button type="button" class="material-text-action material-delete-action" data-delete-material>削除</button>'+
+          '<button type="button" class="material-text-action material-delete-action is-visible" data-delete-material>削除</button>'+
         '</div>'+
         '<div class="material-entry">'+
         '<div class="record-select-shell">'+
@@ -1671,7 +1708,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
-    '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title material-card-title"><span>使用教材</span><span class="material-card-number-slot" id="materialCardNumber" aria-hidden="true"></span></h2><p class="hint inline-auto-hint">*登録済み教材を優先表示</p><button type="button" class="material-text-action material-delete-action hidden" id="deleteFirstMaterialBtn">削除</button></div><div class="card-body">'+
+    '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title material-card-title"><span>使用教材</span><span class="material-card-number-slot" id="materialCardNumber" aria-hidden="true"></span></h2><p class="hint inline-auto-hint">*登録済み教材を優先表示</p><button type="button" class="material-text-action material-delete-action" id="deleteFirstMaterialBtn">削除</button></div><div class="card-body">'+
       '<div class="material-entries" id="materialEntries">'+
         materialEntries.map(entry=>materialEntryMarkup(entry,allMaterials)).join("")+
       '</div>'+
@@ -2529,8 +2566,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const entries=materialEntryList();
       const multiple=entries.length>1;
 
-      materialCardNumber.textContent=multiple?"①":"";
-      deleteFirstMaterialBtn.classList.toggle("hidden",!multiple);
+      materialCardNumber.textContent="①";
+      materialCardNumber.classList.toggle("is-visible",multiple);
+      deleteFirstMaterialBtn.classList.toggle("is-visible",multiple);
+      deleteFirstMaterialBtn.setAttribute("aria-hidden",String(!multiple));
 
       entries.forEach((entry,index)=>{
         const number=materialNumberLabel(index+1);
@@ -2540,6 +2579,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         if(title)title.textContent="使用教材"+number;
         if(deleteBtn){
           deleteBtn.textContent="削除";
+          deleteBtn.classList.add("is-visible");
           deleteBtn.setAttribute("aria-label","教材"+number+"を削除");
         }
       });
@@ -2585,6 +2625,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     };
 
     const removeMaterialEntry=entry=>{
+      const entriesBefore=materialEntryList();
+      if(entriesBefore.length===2){
+        materialCardNumber.classList.remove("is-visible");
+        deleteFirstMaterialBtn.classList.remove("is-visible");
+        deleteFirstMaterialBtn.setAttribute("aria-hidden","true");
+      }
+
       const finish=()=>{
         entry.remove();
         refreshMaterialEntryLabels();
@@ -2605,9 +2652,17 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       entry.style.overflow="hidden";
 
       content?.animate(
+        [{opacity:1},{opacity:0}],
+        {
+          duration:PREVIEW_OPTION_MOTION.fade,
+          easing:"ease",
+          fill:"forwards"
+        }
+      );
+      content?.animate(
         [
-          {opacity:1,transform:"translateY(0)"},
-          {opacity:0,transform:"translateY(-8px)"}
+          {transform:"translateY(0)"},
+          {transform:"translateY(-4px)"}
         ],
         {
           duration:PREVIEW_OPTION_MOTION.move,
@@ -2698,14 +2753,23 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       entry.style.height="0px";
       entry.style.overflow="hidden";
 
-      content?.animate(
+      const fadeAnimation=content?.animate(
+        [{opacity:0},{opacity:1}],
+        {
+          duration:PREVIEW_OPTION_MOTION.fade,
+          easing:"ease",
+          fill:"both"
+        }
+      );
+      const moveAnimation=content?.animate(
         [
-          {opacity:0,transform:"translateY(-8px)"},
-          {opacity:1,transform:"translateY(0)"}
+          {transform:"translateY(-4px)"},
+          {transform:"translateY(0)"}
         ],
         {
-          duration:210,
-          easing:"cubic-bezier(.22,.72,.26,1)"
+          duration:PREVIEW_OPTION_MOTION.move,
+          easing:PREVIEW_OPTION_MOTION.ease,
+          fill:"both"
         }
       );
 
@@ -2715,8 +2779,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           {height:targetHeight+"px"}
         ],
         {
-          duration:210,
-          easing:"cubic-bezier(.22,.72,.26,1)",
+          duration:PREVIEW_OPTION_MOTION.move,
+          easing:PREVIEW_OPTION_MOTION.ease,
           fill:"forwards"
         }
       );
@@ -2724,6 +2788,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       heightAnimation.onfinish=()=>{
         entry.style.removeProperty("height");
         entry.style.removeProperty("overflow");
+        fadeAnimation?.cancel();
+        moveAnimation?.cancel();
         heightAnimation.cancel();
       };
     };
