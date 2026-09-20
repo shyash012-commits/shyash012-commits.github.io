@@ -332,8 +332,26 @@ button{touch-action:manipulation}
 /* Direct-edit date/time blocks */
 .datetime-blocks{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,2fr);
   gap:6px;
+}
+.datetime-time-range{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+.datetime-time-range .dt-block{
+  flex:1 1 auto;
+  min-width:0;
+}
+.datetime-end-time{
+  flex:0 0 auto;
+  font-size:14px;
+  font-weight:700;
+  color:#56616e;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
 }
 .dt-block{
   position:relative;
@@ -1187,11 +1205,19 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     bindRecord(v);
   }
 
+  function endTimeLabel(dt){
+    const total=(Number(dt.hour)*60+Number(dt.minute)+70)%(24*60);
+    return "〜"+pad(Math.floor(total/60))+":"+pad(total%60);
+  }
+
   function datetimeBlocks(dt){
     return '<div class="datetime-blocks" aria-label="実施日時">'+
       '<button type="button" class="dt-block" data-dt-part="month" aria-label="月を変更"><span id="dtMonthValue">'+pad(dt.month)+'</span>月</button>'+
       '<button type="button" class="dt-block" data-dt-part="day" aria-label="日を変更"><span id="dtDayValue">'+pad(dt.day)+'</span>日</button>'+
-      '<button type="button" class="dt-block" data-dt-part="time" aria-label="時刻を変更"><span id="dtTimeValue">'+pad(dt.hour)+':'+pad(dt.minute)+'</span></button>'+
+      '<div class="datetime-time-range">'+
+        '<button type="button" class="dt-block" data-dt-part="time" aria-label="開始時刻を変更"><span id="dtTimeValue">'+pad(dt.hour)+':'+pad(dt.minute)+'</span></button>'+
+        '<span class="datetime-end-time" id="dtEndTimeValue" aria-label="終了時刻">'+endTimeLabel(dt)+'</span>'+
+      '</div>'+
     '</div>';
   }
 
@@ -1199,9 +1225,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const monthEl=document.getElementById("dtMonthValue");
     const dayEl=document.getElementById("dtDayValue");
     const timeEl=document.getElementById("dtTimeValue");
+    const endTimeEl=document.getElementById("dtEndTimeValue");
     if(monthEl)monthEl.textContent=pad(dt.month);
     if(dayEl)dayEl.textContent=pad(dt.day);
     if(timeEl)timeEl.textContent=pad(dt.hour)+':'+pad(dt.minute);
+    if(endTimeEl)endTimeEl.textContent=endTimeLabel(dt);
   }
 
   function closeDateTimePopover(){
