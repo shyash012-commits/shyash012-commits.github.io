@@ -253,25 +253,16 @@ button{touch-action:manipulation}
   margin:0 0 4px;
 }
 .record-section[data-record-section="basic"] .card-title-row .card-title{margin:0}
-.record-section[data-record-section="basic"] .card-status-slot{
+.record-section[data-record-section="basic"] .card-status{
   position:relative;
   width:10.5px;
-  height:21px;
+  height:10.5px;
   flex:0 0 10.5px;
-}
-.record-section[data-record-section="basic"] .card-status{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:21px;
-  height:21px;
   box-sizing:border-box;
-  border:1.75px solid #b8c1cb;
+  border:.875px solid #b8c1cb;
   border-radius:25%;
   background:#fff;
   color:#fff;
-  transform:translate(-50%,-50%) scale(.5);
-  transform-origin:center;
   transition:
     background-color .15s cubic-bezier(.22,.72,.26,1),
     border-color .15s cubic-bezier(.22,.72,.26,1);
@@ -311,10 +302,10 @@ button{touch-action:manipulation}
 .datetime-heading{
   display:flex;
   align-items:center;
-  gap:6px; /* 15px label × 0.4 */
+  gap:6.4px; /* 16px label × 0.4 */
 }
 .datetime-label{
-  font-size:15px;
+  font-size:16px;
   font-weight:700;
   white-space:nowrap;
 }
@@ -1175,9 +1166,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '</button></div>'+
     '</div></div>'+
     '<section class="record-section" data-record-section="basic"><h1 class="record-section-title">基本情報</h1>'+
-    '<section class="card vt-datetime" data-card-status="datetime"><div class="datetime-row"><div class="datetime-heading"><span class="card-status-slot" aria-hidden="true"><span class="card-status"></span></span><div class="datetime-label">実施日時</div></div>'+datetimeBlocks(v.dt)+'</div></section>'+
-    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status-slot" aria-hidden="true"><span class="card-status"></span></span><h2 class="card-title">授業区分</h2></div><p class="hint">予定から自動表示（変更可）</p><div class="segment" id="typeSegment">'+["通常","振替","講習"].map(t=>'<button data-type="'+t+'" class="'+(v.type===t?'active':'')+'">'+t+'</button>').join("")+'</div></section>'+
-    '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status-slot" aria-hidden="true"><span class="card-status"></span></span><h2 class="card-title">教科</h2></div><p class="hint">生徒情報から自動表示（変更可）</p>'+
+    '<section class="card vt-datetime" data-card-status="datetime"><div class="datetime-row"><div class="datetime-heading"><span class="card-status" aria-hidden="true"></span><div class="datetime-label">実施日時</div></div>'+datetimeBlocks(v.dt)+'</div></section>'+
+    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2></div><p class="hint">予定から自動表示（変更可）</p><div class="segment" id="typeSegment">'+["通常","振替","講習"].map(t=>'<button data-type="'+t+'" class="'+(v.type===t?'active':'')+'">'+t+'</button>').join("")+'</div></section>'+
+    '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2></div><p class="hint">生徒情報から自動表示（変更可）</p>'+
     (state.editSubject
       ? '<select id="subjectSelect"><option value="国語" '+(state.draftSubject==="国語"?"selected":"")+'>国語</option><option value="数学" '+(state.draftSubject==="数学"?"selected":"")+'>数学</option><option value="英語" '+(state.draftSubject==="英語"?"selected":"")+'>英語</option><option value="理科" '+(state.draftSubject==="理科"?"selected":"")+'>理科</option><option value="社会" '+(state.draftSubject==="社会"?"selected":"")+'>社会</option></select><div class="btn-stack"><button class="btn primary full" id="applySubject">変更を反映</button><button class="btn full" id="cancelSubject">キャンセル</button></div>'
       : '<div class="readonly">'+esc(v.subject)+'</div><div style="margin-top:8px"><button class="text-btn" id="editSubjectBtn">教科を変更</button></div>')+
