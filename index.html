@@ -203,6 +203,21 @@ button{touch-action:manipulation}
 .lesson-list{display:grid;gap:12px;margin-top:14px}
 .lesson-card{width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:16px;display:grid;grid-template-columns:66px 1fr auto;gap:12px;align-items:center}
 .lesson-time{font-weight:700}.lesson-name{font-size:17px;font-weight:700}.lesson-meta{font-size:13px;color:var(--sub);margin-top:3px}
+.record-section{
+  margin:30px 0 0;
+  scroll-margin-top:86px;
+}
+.record-section:first-of-type{margin-top:14px}
+.record-section-title{
+  margin:0 4px 10px;
+  font-size:20px;
+  font-weight:800;
+  line-height:1.2;
+  letter-spacing:.01em;
+}
+.record-section .card:first-of-type{margin-top:0}
+.record-section .card:last-of-type{margin-bottom:0}
+
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:14px 0}
 .card-title{font-size:16px;font-weight:700;margin:0 0 4px}.hint{font-size:13px;color:var(--sub);margin:0 0 12px}
 .readonly{border:1px solid var(--line);background:#f7f8fa;border-radius:12px;padding:13px 14px;line-height:1.45}
@@ -421,7 +436,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     inset 0 -1px 0 rgba(31,41,51,.05);
   position:fixed;
   left:50%;
-  bottom:0;
+  bottom:10px;
   z-index:30;
   transform:translateX(-50%);
   display:flex;
@@ -821,7 +836,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   box-shadow:none;
 }
 .record-footer-spacer{height:90px}
-.vt-datetime,.vt-material,.vt-prevhomework,.vt-forgot{scroll-margin-top:86px}
+
 
 .app.preview-mode .card input,
 .app.preview-mode .card textarea,
@@ -1075,6 +1090,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         '<span class="header-icon" aria-hidden="true"><svg class="icon-submit-svg" viewBox="0 0 20 20"><path d="M5.4 8.7 10 4.7 14.6 8.7"/><path d="M5.4 15.3 10 11.3 14.6 15.3"/></svg></span>'+
       '</button></div>'+
     '</div></div>'+
+    '<section class="record-section" data-record-section="basic"><h1 class="record-section-title">基本情報</h1>'+
     '<section class="card vt-datetime"><div class="datetime-row"><div class="datetime-label">実施日時</div>'+datetimeBlocks(v.dt)+'</div></section>'+
     '<section class="card vt-type"><h2 class="card-title">授業区分</h2><p class="hint">予定から自動表示（変更可）</p><div class="segment" id="typeSegment">'+["通常","振替","講習"].map(t=>'<button data-type="'+t+'" class="'+(v.type===t?'active':'')+'">'+t+'</button>').join("")+'</div></section>'+
     '<section class="card vt-subject"><h2 class="card-title">教科</h2><p class="hint">生徒情報から自動表示（変更可）</p>'+
@@ -1082,13 +1098,20 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       ? '<select id="subjectSelect"><option value="国語" '+(state.draftSubject==="国語"?"selected":"")+'>国語</option><option value="数学" '+(state.draftSubject==="数学"?"selected":"")+'>数学</option><option value="英語" '+(state.draftSubject==="英語"?"selected":"")+'>英語</option><option value="理科" '+(state.draftSubject==="理科"?"selected":"")+'>理科</option><option value="社会" '+(state.draftSubject==="社会"?"selected":"")+'>社会</option></select><div class="btn-stack"><button class="btn primary full" id="applySubject">変更を反映</button><button class="btn full" id="cancelSubject">キャンセル</button></div>'
       : '<div class="readonly">'+esc(v.subject)+'</div><div style="margin-top:8px"><button class="text-btn" id="editSubjectBtn">教科を変更</button></div>')+
     '</section>'+
+    '</section>'+
+    '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
     '<section class="card vt-material"><h2 class="card-title">教材</h2><p class="hint">登録教材を優先表示</p><select id="material">'+allMaterials.map(x=>'<option value="'+esc(x)+'" '+(v.material===x?'selected':'')+'>'+esc(x)+'</option>').join("")+'<option value="__custom__" '+(v.material==="__custom__"?'selected':'')+'>自由入力</option></select><div id="customMaterialWrap" class="field '+(v.material==="__custom__"?'':'hidden')+'"><label class="label">教材名</label><input id="customMaterial" value="'+esc(v.customMaterial||"")+'"></div></section>'+
     '<section class="card vt-pages"><h2 class="card-title">ページ</h2><div class="row"><div><label class="label">開始</label><input id="pageFrom" inputmode="numeric" type="number" min="1" value="'+esc(v.pageFrom)+'"></div><div><label class="label">終了</label><input id="pageTo" inputmode="numeric" type="number" min="1" value="'+esc(v.pageTo)+'"></div></div><div class="field"><label class="label">単元</label><div class="readonly" id="unitDisplay">'+esc(v.unit||"—")+'</div><button class="text-btn" id="editUnitBtn">変更</button><div id="unitManualWrap" class="soft-reveal"><input id="unitManual" value="'+esc(v.unit||"")+'" placeholder="単元名を入力"></div></div></section>'+
     '<section class="card vt-review"><h2 class="card-title">講評</h2><div class="guide"><strong>書いてほしいこと</strong><br>・今日やったこと<br>・つまずいたこと／難しかったこと<br>・できたこと／できるようになったこと</div><textarea id="review" placeholder="授業の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter" id="reviewCount">'+String(v.review||"").length+'文字</div><div class="link-row"><button class="link-btn" id="prevBtn">前回の講評を見る</button><button class="link-btn" id="historyBtn">過去の講評を見る</button></div><div id="historyArea" class="history"></div></section>'+
+    '</section>'+
+    '<section class="record-section" data-record-section="homework"><h1 class="record-section-title">宿題確認</h1>'+
     '<section class="card vt-prevhomework"><h2 class="card-title">前回の宿題</h2><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'">'+r+'</button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></section>'+
     '<section class="card vt-nexthomework"><h2 class="card-title">今回の宿題</h2><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></section>'+
+    '</section>'+
+    '<section class="record-section" data-record-section="other"><h1 class="record-section-title">その他</h1>'+
     '<section class="card vt-forgot"><h2 class="card-title">忘れ物</h2><p class="hint">複数選択可</p><div class="chips" id="forgotChips">'+["なし","筆記用具","教材","宿題","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'">'+x+'</button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></section>'+
     '<section class="card vt-note"><h2 class="card-title">備考（内部用）</h2><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></section>'+
+    '</section>'+
     '<div class="record-footer-spacer" aria-hidden="true"></div>'+
     '<div class="record-footer" aria-label="授業記録の目次">'+
       '<nav class="record-nav-shell">'+
@@ -1285,10 +1308,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
   function bindRecordFooter(v){
     const targets={
-      basic:document.querySelector(".vt-datetime"),
-      lesson:document.querySelector(".vt-material"),
-      homework:document.querySelector(".vt-prevhomework"),
-      other:document.querySelector(".vt-forgot")
+      basic:document.querySelector('[data-record-section="basic"]'),
+      lesson:document.querySelector('[data-record-section="lesson"]'),
+      homework:document.querySelector('[data-record-section="homework"]'),
+      other:document.querySelector('[data-record-section="other"]')
     };
 
     const unlockFooterScroll=(runSpy=true)=>{
