@@ -589,8 +589,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   gap:.5em;
 }
 .record-nav-item.active{
-  width:calc(var(--footer-item-h) + 2px + 4em + 11px);
-  padding:0 11px 0 0;
+  width:calc(var(--footer-item-h) + 2px + 4em + 12px);
+  padding:0 12px 0 0;
   color:#fff;
   background:var(--footer-blue-bg);
   box-shadow:var(--footer-blue-shadow);
@@ -854,7 +854,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     padding:10px;
   }
   .record-nav-item{padding:0;font-size:14px}
-  .record-nav-item.active{width:calc(var(--footer-item-h) + 2px + 4em + 9px);padding:0 9px 0 0}
+  .record-nav-item.active{width:calc(var(--footer-item-h) + 2px + 4em + 10px);padding:0 10px 0 0}
   .record-preview-button{
     --preview-text-pad:10px;
     --preview-inner-w:calc(var(--preview-text-pad) + var(--preview-label-w) + var(--preview-text-gap) + var(--footer-item-h));
@@ -1060,7 +1060,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   }
 
   function renderRecord(v){
-    const l=getLesson(),status=state.records[l.id]?"記録済み":"未記録",allMaterials=[...new Set([...l.materials,...Object.keys(materialDb)])];
+    const l=getLesson(),allMaterials=[...new Set([...l.materials,...Object.keys(materialDb)])];
     document.getElementById("app").innerHTML='<div class="app">'+
     '<div class="header"><div class="header-row">'+
       '<div class="header-left"><button class="header-action header-back" id="backBtn" aria-label="一覧に戻る">'+
