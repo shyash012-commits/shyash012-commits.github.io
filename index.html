@@ -2079,6 +2079,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   }
 
   function bindRecord(v){
+    const l=getLesson();
+    const allMaterials=[...new Set([...l.materials,...Object.keys(materialDb)])];
+
     bindRecordFooter(v);
     updateFooterCompletion(capture(v));
     const backBtn=document.getElementById("backBtn");
