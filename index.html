@@ -306,21 +306,32 @@ button{touch-action:manipulation}
 }
 .material-card-number-slot{
   display:inline-block;
-  width:1em;
-  max-width:0;
+  width:0;
   flex:0 0 auto;
   overflow:hidden;
   white-space:nowrap;
-  opacity:0;
   line-height:1.2;
+  transition:width var(--footer-motion-dur) var(--footer-motion-ease);
+  will-change:width;
+}
+.material-card-number-slot.is-visible{
+  width:1em;
+}
+.material-card-number-label{
+  display:inline-block;
+  width:1em;
+  max-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+  opacity:0;
   transform:translateX(-4px);
-  will-change:max-width,opacity,transform;
   transition:
     max-width var(--footer-motion-dur) var(--footer-motion-ease),
     transform var(--footer-motion-dur) var(--footer-motion-ease),
     opacity var(--footer-fade-dur) ease;
+  will-change:max-width,opacity,transform;
 }
-.material-card-number-slot.is-visible{
+.material-card-number-slot.is-visible .material-card-number-label{
   max-width:1em;
   opacity:1;
   transform:translateX(0);
@@ -328,6 +339,9 @@ button{touch-action:manipulation}
 .record-section .inline-auto-hint{
   margin:0;
   white-space:nowrap;
+}
+.vt-material .inline-auto-hint{
+  will-change:auto;
 }
 
 /* Rounded square = content/input state. */
@@ -474,14 +488,13 @@ button{touch-action:manipulation}
   position:relative;
   min-width:0;
   padding-top:calc(var(--record-item-gap) * 2 + 1px);
-  opacity:1;
-  transform:translateX(0);
-  transition:
-    padding-top var(--footer-motion-dur) var(--footer-motion-ease),
-    transform var(--footer-motion-dur) var(--footer-motion-ease),
-    opacity var(--footer-fade-dur) ease;
+  transition:padding-top var(--footer-motion-dur) var(--footer-motion-ease);
 }
-.material-entry-shell.is-collapsed .material-entry-content{
+
+/* Footer grammar:
+   the shell clips the content while its size changes.
+   Do not fade the whole material set; only label-like text fades/moves. */
+.material-entry-shell.is-collapsed .material-entry-heading{
   opacity:0;
   transform:translateX(-4px);
 }
@@ -618,25 +631,36 @@ button{touch-action:manipulation}
   margin-top:var(--record-item-gap);
 }
 .material-delete-action{
+  width:0;
+  margin-left:auto;
+  overflow:hidden;
+  white-space:nowrap;
+  pointer-events:none;
+  transition:width var(--footer-motion-dur) var(--footer-motion-ease);
+  will-change:width;
+}
+.material-delete-action.is-visible{
+  width:2em;
+  pointer-events:auto;
+}
+.material-delete-label{
+  display:inline-block;
   width:2em;
   max-width:0;
-  margin-left:auto;
   overflow:hidden;
   white-space:nowrap;
   opacity:0;
   transform:translateX(-4px);
-  pointer-events:none;
-  will-change:max-width,opacity,transform;
   transition:
     max-width var(--footer-motion-dur) var(--footer-motion-ease),
     transform var(--footer-motion-dur) var(--footer-motion-ease),
     opacity var(--footer-fade-dur) ease;
+  will-change:max-width,opacity,transform;
 }
-.material-delete-action.is-visible{
+.material-delete-action.is-visible .material-delete-label{
   max-width:2em;
   opacity:1;
   transform:translateX(0);
-  pointer-events:auto;
 }
 .app.preview-mode .material-add-action,
 .app.preview-mode .material-delete-action{
@@ -645,7 +669,9 @@ button{touch-action:manipulation}
 
 @media (prefers-reduced-motion:reduce){
   .material-card-number-slot,
+  .material-card-number-label,
   .material-delete-action,
+  .material-delete-label,
   .material-entry-shell,
   .material-entry-content,
   .material-entry-content::before,
@@ -1560,7 +1586,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '<div class="material-entry-content">'+
         '<div class="material-entry-heading">'+
           '<span class="material-entry-title" data-material-entry-title>使用教材</span>'+
-          '<button type="button" class="material-text-action material-delete-action is-visible" data-delete-material>削除</button>'+
+          '<button type="button" class="material-text-action material-delete-action is-visible" data-delete-material><span class="material-delete-label">削除</span></button>'+
         '</div>'+
         '<div class="material-entry">'+
         '<div class="record-select-shell">'+
@@ -1752,7 +1778,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
-    '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title material-card-title"><span>使用教材</span><span class="material-card-number-slot" id="materialCardNumber" aria-hidden="true"></span></h2><p class="hint inline-auto-hint">*登録済み教材を優先表示</p><button type="button" class="material-text-action material-delete-action" id="deleteFirstMaterialBtn">削除</button></div><div class="card-body">'+
+    '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title material-card-title"><span>使用教材</span><span class="material-card-number-slot" id="materialCardNumber" aria-hidden="true"><span class="material-card-number-label">①</span></span></h2><p class="hint inline-auto-hint">*登録済み教材を優先表示</p><button type="button" class="material-text-action material-delete-action" id="deleteFirstMaterialBtn"><span class="material-delete-label">削除</span></button></div><div class="card-body">'+
       '<div class="material-entries" id="materialEntries">'+
         materialEntries.map((entry,index)=>materialEntryMarkup(entry,allMaterials,index===0)).join("")+
       '</div>'+
@@ -2148,7 +2174,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       ease:footerMotionStyle.getPropertyValue("--footer-motion-ease").trim()||"cubic-bezier(.22,.72,.26,1)"
     };
     // Footer grammar is state-based CSS transition:
-    // layout 210ms, X -4px <-> 0 over 210ms, opacity over 100ms.
+    // the container dimension changes for 210ms and clips its contents;
+    // only label-like text uses X -4px <-> 0 for 210ms + opacity for 100ms.
     // Material add/remove uses the same DOM and toggles only state classes.
     const RECORD_TEXT_MOTION=PREVIEW_OPTION_MOTION;
 
@@ -2614,7 +2641,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const entries=materialEntryList();
       const multiple=entries.length>1;
 
-      materialCardNumber.textContent="①";
       materialCardNumber.classList.toggle("is-visible",multiple);
       deleteFirstMaterialBtn.classList.toggle("is-visible",multiple);
       deleteFirstMaterialBtn.setAttribute("aria-hidden",String(!multiple));
@@ -2627,14 +2653,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         entry.classList.toggle("is-primary",index===0);
         if(title)title.textContent="使用教材"+number;
         if(deleteBtn){
-          deleteBtn.textContent="削除";
           deleteBtn.classList.add("is-visible");
           deleteBtn.setAttribute("aria-label","教材"+number+"を削除");
         }
       });
 
       if(multiple){
-        deleteFirstMaterialBtn.textContent="削除";
         deleteFirstMaterialBtn.setAttribute("aria-label","教材①を削除");
       }
     };
