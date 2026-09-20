@@ -244,11 +244,26 @@ button{touch-action:manipulation}
 .record-section .card:first-of-type{margin-top:0}
 .record-section .card:last-of-type{margin-bottom:0}
 
+/* Basic-info list geometry. */
+.record-section[data-record-section="basic"]{
+  --basic-list-inset:15px;
+  --basic-status-size:10.5px;
+  --basic-label-gap:6.4px;
+  --basic-control-inset:13.7px; /* status + half of the label gap */
+  --basic-divider-start:28.7px; /* list inset + control inset */
+  --basic-divider-gap:5px;
+  display:grid;
+  row-gap:var(--basic-divider-gap);
+}
+.record-section[data-record-section="basic"] > .record-section-title{
+  margin-bottom:var(--basic-divider-gap);
+}
+
 /* Basic-info status grammar: rounded square = content / saved-input state. */
 .record-section[data-record-section="basic"] .card-title-row{
   display:flex;
   align-items:baseline;
-  gap:6.4px; /* □→title and title→hint use the same distance */
+  gap:var(--basic-label-gap);
   min-height:21px;
   margin:0 0 10px;
 }
@@ -259,9 +274,9 @@ button{touch-action:manipulation}
 }
 .record-section[data-record-section="basic"] .card-status{
   position:relative;
-  width:10.5px;
-  height:10.5px;
-  flex:0 0 10.5px;
+  width:var(--basic-status-size);
+  height:var(--basic-status-size);
+  flex:0 0 var(--basic-status-size);
   box-sizing:border-box;
   transform:translateY(.5px);
   align-self:center;
@@ -294,32 +309,30 @@ button{touch-action:manipulation}
   border-color:#2faa68;
 }
 
-/* Basic-info list: no enclosing card, only a quiet item separator. */
+/* No enclosing card: each item ends with a quiet separator. */
 .record-section[data-record-section="basic"] .card{
   position:relative;
   background:transparent;
   border:0;
   border-radius:0;
-  padding:0 4px 10px 15px;
+  margin:0;
+  padding:0 4px var(--basic-divider-gap) var(--basic-list-inset);
 }
 .record-section[data-record-section="basic"] .card::after{
   content:"";
   position:absolute;
-  left:28.7px; /* midpoint between status square and item title */
+  left:var(--basic-divider-start);
   right:4px;
   bottom:0;
   height:1px;
   background:#d7dde4;
 }
-.record-section[data-record-section="basic"] .card:last-of-type{
-  padding-bottom:10px;
-}
 
-/* Basic-info controls align with the item-title / separator start line. */
+/* Controls and separators share the same visual start line. */
 .record-section[data-record-section="basic"] .datetime-row > :not(.datetime-heading),
 .record-section[data-record-section="basic"] .vt-type > :not(.card-title-row),
 .record-section[data-record-section="basic"] .vt-subject > :not(.card-title-row){
-  margin-left:13.7px;
+  margin-left:var(--basic-control-inset);
 }
 
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:14px 0}
@@ -336,7 +349,7 @@ button{touch-action:manipulation}
 .datetime-heading{
   display:flex;
   align-items:baseline;
-  gap:6.4px; /* □→title and title→hint use the same distance */
+  gap:var(--basic-label-gap); /* □→title and title→hint use the same distance */
   min-height:21px;
 }
 .datetime-label{
@@ -1026,7 +1039,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       {date:"2026/09/10",text:"接続語に着目して段落関係を整理しました。記述問題では必要な要素を意識して書けるようになりました。"}]}
   ];
 
-  const state={lessonId:null,records:load(),forgot:new Set(),rating:"",manualUnit:false,editSubject:false,draftSubject:"",showPrev:false,showHistory:false};
+  const state={lessonId:null,records:load(),forgot:new Set(),rating:"",manualUnit:false,showPrev:false,showHistory:false};
 
   function load(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")}catch(e){return {}}}
   function persist(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state.records))}
@@ -1093,12 +1106,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     autoSaveTimer=setTimeout(()=>{writeRecord(v);autoSaveTimer=null},delay);
   }
 
-  function findCard(title){
-    return [...document.querySelectorAll(".card")].find(card=>
-      card.querySelector(".card-title")?.textContent.trim()===title
-    );
-  }
-
   function springProgress(t){
     if(t<=0)return 0;
     if(t>=1)return 1;
@@ -1112,60 +1119,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     });
   }
 
-  function smoothSectionSwap(title, renderFn){
-    const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const oldCard=findCard(title);
-    const oldHeight=oldCard?.getBoundingClientRect().height;
-    const oldTop=oldCard?.getBoundingClientRect().top;
-
-    renderFn();
-    if(reduce||!oldCard||!Number.isFinite(oldHeight))return;
-
-    const newCard=findCard(title);
-    if(!newCard)return;
-    const newHeight=newCard.getBoundingClientRect().height;
-    const newTop=newCard.getBoundingClientRect().top;
-
-    /* Keep the tapped card visually anchored while its real height changes.
-       Because we animate the actual height, every card below is pushed smoothly
-       by normal layout instead of cross-fading between screenshots. */
-    if(Number.isFinite(oldTop)&&Math.abs(newTop-oldTop)>0.5){
-      window.scrollBy(0,newTop-oldTop);
-    }
-
-    newCard.style.height=oldHeight+"px";
-    newCard.style.overflow="hidden";
-    newCard.style.willChange="height";
-
-    const h=newCard.animate(heightSpringFrames(oldHeight,newHeight),{
-      duration:460,
-      easing:"linear",
-      fill:"both"
-    });
-
-    /* Headings remain fixed; only the changing controls settle into place. */
-    [...newCard.children].slice(2).forEach((el,i)=>{
-      el.animate([
-        {opacity:.18,transform:"translateY(7px) scale(.995)"},
-        {opacity:1,transform:"translateY(0) scale(1)"}
-      ],{
-        duration:230,
-        delay:35+Math.min(i,3)*18,
-        easing:"cubic-bezier(.16,1,.3,1)",
-        fill:"both"
-      });
-    });
-
-    h.onfinish=()=>{
-      newCard.style.height=newHeight+"px";
-      h.cancel();
-      requestAnimationFrame(()=>{
-        newCard.style.height="";
-        newCard.style.overflow="";
-        newCard.style.willChange="";
-      });
-    };
-  }
 
   function renderList(){
     if(footerScrollHandler){
@@ -1181,7 +1134,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   }
 
   function openRecord(id){
-    state.lessonId=id;state.editSubject=false;state.draftSubject="";state.showPrev=false;state.showHistory=false;
+    state.lessonId=id;state.showPrev=false;state.showHistory=false;
     const l=getLesson(),r=getRecord();state.rating=r?.rating||"";state.forgot=new Set(r?.forgot||["なし"]);state.manualUnit=!!r?.manualUnit;
     const dt=r?.performedAt||lessonBase(l),material=r?.material||l.materials[0],pageFrom=r?.pageFrom||"",pageTo=r?.pageTo||"",unit=r?.unit||unitFor(material,pageFrom,pageTo),subject=r?.subject||l.subject;
     renderRecord({dt,material,pageFrom,pageTo,unit,review:r?.review||"",homeworkComment:r?.homeworkComment||"",nextHomework:r?.nextHomework||"",note:r?.note||"",customMaterial:r?.customMaterial||"",forgotOther:r?.forgotOther||"",type:r?.type||l.type,subject});
@@ -1207,9 +1160,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="card vt-datetime" data-card-status="datetime"><div class="datetime-row"><div class="datetime-heading"><span class="card-status" aria-hidden="true"></span><div class="datetime-label">実施日時</div><p class="hint inline-auto-hint">*自動表示（変更可）</p></div>'+datetimeBlocks(v.dt)+'</div></section>'+
     '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="segment" id="typeSegment">'+["通常","振替","講習"].map(t=>'<button data-type="'+t+'" class="'+(v.type===t?'active':'')+'">'+t+'</button>').join("")+'</div></section>'+
     '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div>'+
-    (state.editSubject
-      ? '<select id="subjectSelect"><option value="国語" '+(state.draftSubject==="国語"?"selected":"")+'>国語</option><option value="数学" '+(state.draftSubject==="数学"?"selected":"")+'>数学</option><option value="英語" '+(state.draftSubject==="英語"?"selected":"")+'>英語</option><option value="理科" '+(state.draftSubject==="理科"?"selected":"")+'>理科</option><option value="社会" '+(state.draftSubject==="社会"?"selected":"")+'>社会</option></select><div class="btn-stack"><button class="btn primary full" id="applySubject">変更を反映</button><button class="btn full" id="cancelSubject">キャンセル</button></div>'
-      : '<div class="readonly">'+esc(v.subject)+'</div><div style="margin-top:8px"><button class="text-btn" id="editSubjectBtn">教科を変更</button></div>')+
+    '<select id="subjectSelect"><option value="国語" '+(v.subject==="国語"?"selected":"")+'>国語</option><option value="数学" '+(v.subject==="数学"?"selected":"")+'>数学</option><option value="英語" '+(v.subject==="英語"?"selected":"")+'>英語</option><option value="理科" '+(v.subject==="理科"?"selected":"")+'>理科</option><option value="社会" '+(v.subject==="社会"?"selected":"")+'>社会</option></select>'+
     '</section>'+
     '</section>'+
     '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
@@ -1378,7 +1329,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       note:document.getElementById("note")?.value??v.note,
       forgotOther:document.getElementById("forgotOther")?.value??v.forgotOther,
       type:document.querySelector("#typeSegment .active")?.dataset.type||v.type,
-      subject:v.subject
+      subject:document.getElementById("subjectSelect")?.value||v.subject
     };
   }
 
@@ -1578,30 +1529,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       autoSaveNow(v);
     });
 
-    const editSubjectBtn=document.getElementById("editSubjectBtn");
-    if(editSubjectBtn) editSubjectBtn.onclick=()=>{
-      const cur=capture(v);
-      state.draftSubject=v.subject;
-      state.editSubject=true;
-      smoothSectionSwap("教科",()=>renderRecord(cur));
-    };
-
-    const applySubject=document.getElementById("applySubject");
-    if(applySubject) applySubject.onclick=()=>{
-      const cur=capture(v);
-      cur.subject=document.getElementById("subjectSelect").value;
-      state.editSubject=false;
-      state.draftSubject="";
-      autoSaveNow(cur);
-      smoothSectionSwap("教科",()=>renderRecord(cur));
-    };
-
-    const cancelSubject=document.getElementById("cancelSubject");
-    if(cancelSubject) cancelSubject.onclick=()=>{
-      const cur=capture(v);
-      state.editSubject=false;
-      state.draftSubject="";
-      smoothSectionSwap("教科",()=>renderRecord(cur));
+    const subjectSelect=document.getElementById("subjectSelect");
+    if(subjectSelect) subjectSelect.onchange=e=>{
+      v.subject=e.target.value;
+      autoSaveNow(v);
     };
 
     const mat=document.getElementById("material");
