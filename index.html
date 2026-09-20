@@ -204,12 +204,22 @@ button{touch-action:manipulation}
 .lesson-card{width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:16px;display:grid;grid-template-columns:66px 1fr auto;gap:12px;align-items:center}
 .lesson-time{font-weight:700}.lesson-name{font-size:17px;font-weight:700}.lesson-meta{font-size:13px;color:var(--sub);margin-top:3px}
 .record-section{
+  --record-list-inset:15px;
+  --record-status-size:10.5px;
+  --record-label-gap:6.4px;
+  --record-half-label-gap:3.2px;
+  --record-content-gap:10px;
+  --record-item-gap:15px;
+  --record-control-inset:calc(var(--record-status-size) + var(--record-half-label-gap));
+  --record-divider-start:calc(var(--record-list-inset) + var(--record-control-inset));
   margin:0;
   padding-top:20px;
   scroll-margin-top:86px;
+  display:grid;
+  row-gap:var(--record-item-gap);
 }
 .record-section-title{
-  margin:0 4px 10px;
+  margin:0 4px 0;
   display:flex;
   align-items:center;
   gap:8px;
@@ -240,104 +250,79 @@ button{touch-action:manipulation}
   flex:1 1 auto;
   background:#cbd3dc;
 }
-.record-section .card{margin-top:10px;margin-bottom:0}
-.record-section .card:first-of-type{margin-top:0}
-.record-section .card:last-of-type{margin-bottom:0}
-
-/* Basic-info list geometry. */
-.record-section[data-record-section="basic"]{
-  --basic-list-inset:15px;
-  --basic-status-size:10.5px;
-  --basic-label-gap:6.4px;
-  --basic-half-label-gap:3.2px;
-  --basic-content-gap:10px;
-  --basic-item-gap:15px;
-  --basic-control-inset:calc(var(--basic-status-size) + var(--basic-half-label-gap));
-  --basic-divider-start:calc(var(--basic-list-inset) + var(--basic-control-inset));
-  display:grid;
-  row-gap:var(--basic-item-gap);
-}
-.record-section[data-record-section="basic"] > .record-section-title{
-  margin-bottom:0;
-}
-
-/* Basic-info status grammar: rounded square = content / saved-input state. */
-.record-section[data-record-section="basic"] .card-title-row{
+.record-section .card-title-row{
   display:flex;
   align-items:baseline;
-  gap:var(--basic-label-gap);
+  gap:var(--record-label-gap);
   min-height:21px;
-  margin:0 0 var(--basic-content-gap);
+  margin:0 0 var(--record-content-gap);
 }
-.record-section[data-record-section="basic"] .card-title-row .card-title{margin:0}
-.record-section[data-record-section="basic"] .inline-auto-hint{
+.record-section .card-title-row .card-title{margin:0}
+.record-section .inline-auto-hint{
   margin:0;
   white-space:nowrap;
 }
-.record-section[data-record-section="basic"] .card-status{
+
+/* Rounded square = content/input state. */
+.record-section .card-status{
   position:relative;
-  width:var(--basic-status-size);
-  height:var(--basic-status-size);
-  flex:0 0 var(--basic-status-size);
+  width:var(--record-status-size);
+  height:var(--record-status-size);
+  flex:0 0 var(--record-status-size);
   box-sizing:border-box;
   transform:translateY(.5px);
   align-self:center;
   border:.875px solid #b8c1cb;
   border-radius:25%;
   background:#fff;
-  color:#fff;
   transition:
     background-color .15s cubic-bezier(.22,.72,.26,1),
     border-color .15s cubic-bezier(.22,.72,.26,1);
 }
-.record-section[data-record-section="basic"] .card.is-complete .card-status{
+.record-section .card.is-complete .card-status{
   background:#56616e;
   border-color:#56616e;
 }
 
 /* Color means current location, not completion. */
-.record-section[data-record-section="basic"].is-current .card-status{
+.record-section.is-current .card-status{
   border-color:#2278ef;
 }
-.record-section[data-record-section="basic"].is-current .card.is-complete .card-status{
+.record-section.is-current .card.is-complete .card-status{
   background:#2278ef;
   border-color:#2278ef;
 }
-.app.preview-mode .record-section[data-record-section="basic"].is-current .card-status{
+.app.preview-mode .record-section.is-current .card-status{
   border-color:#2faa68;
 }
-.app.preview-mode .record-section[data-record-section="basic"].is-current .card.is-complete .card-status{
+.app.preview-mode .record-section.is-current .card.is-complete .card-status{
   background:#2faa68;
   border-color:#2faa68;
 }
 
-/* No enclosing card: each item ends with a quiet separator. */
-.record-section[data-record-section="basic"] .card{
+/* Record cards are list items, not enclosing boxes. */
+.record-section .card{
   position:relative;
   background:transparent;
   border:0;
   border-radius:0;
   margin:0;
-  padding:0 4px var(--basic-item-gap) var(--basic-list-inset);
+  padding:0 4px var(--record-item-gap) var(--record-list-inset);
 }
-.record-section[data-record-section="basic"] .card::after{
+.record-section .card::after{
   content:"";
   position:absolute;
-  left:var(--basic-divider-start);
+  left:var(--record-divider-start);
   right:4px;
   bottom:0;
   height:1px;
   background:#d7dde4;
 }
 
-/* Controls and separators share the same visual start line. */
-.record-section[data-record-section="basic"] .datetime-row > :not(.datetime-heading),
-.record-section[data-record-section="basic"] .vt-type > :not(.card-title-row),
-.record-section[data-record-section="basic"] .vt-subject > :not(.card-title-row){
-  margin-left:var(--basic-control-inset);
-}
-.record-section[data-record-section="basic"] .vt-subject > select{
-  width:calc(100% - var(--basic-control-inset));
+/* Body and separator share the midpoint between status square and title. */
+.record-section .card-body{
+  margin-left:var(--record-control-inset);
+  min-width:0;
 }
 
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:14px 0}
@@ -345,26 +330,6 @@ button{touch-action:manipulation}
 .readonly{border:1px solid var(--line);background:#f7f8fa;border-radius:12px;padding:13px 14px;line-height:1.45}
 
 /* Direct-edit date/time blocks */
-.datetime-row{
-  display:flex;
-  flex-direction:column;
-  align-items:stretch;
-  gap:var(--basic-content-gap);
-}
-.datetime-heading{
-  display:flex;
-  align-items:baseline;
-  gap:var(--basic-label-gap); /* □→title and title→hint use the same distance */
-  min-height:21px;
-}
-.datetime-label{
-  font-size:16px;
-  font-weight:700;
-  white-space:nowrap;
-}
-.record-section[data-record-section="basic"] .datetime-blocks{
-  align-self:stretch;
-}
 .datetime-blocks{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
@@ -1162,24 +1127,24 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '</button></div>'+
     '</div></div>'+
     '<section class="record-section" data-record-section="basic"><h1 class="record-section-title">基本情報</h1>'+
-    '<section class="card vt-datetime" data-card-status="datetime"><div class="datetime-row"><div class="datetime-heading"><span class="card-status" aria-hidden="true"></span><div class="datetime-label">実施日時</div><p class="hint inline-auto-hint">*自動表示（変更可）</p></div>'+datetimeBlocks(v.dt)+'</div></section>'+
-    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="segment" id="typeSegment">'+["通常","振替","講習"].map(t=>'<button data-type="'+t+'" class="'+(v.type===t?'active':'')+'">'+t+'</button>').join("")+'</div></section>'+
-    '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div>'+
+    '<section class="card vt-datetime" data-card-status="datetime"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">実施日時</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+datetimeBlocks(v.dt)+'</div></section>'+
+    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="segment" id="typeSegment">'+["通常","振替","講習"].map(t=>'<button data-type="'+t+'" class="'+(v.type===t?'active':'')+'">'+t+'</button>').join("")+'</div></div></section>'+
+    '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+
     '<select id="subjectSelect"><option value="国語" '+(v.subject==="国語"?"selected":"")+'>国語</option><option value="数学" '+(v.subject==="数学"?"selected":"")+'>数学</option><option value="英語" '+(v.subject==="英語"?"selected":"")+'>英語</option><option value="理科" '+(v.subject==="理科"?"selected":"")+'>理科</option><option value="社会" '+(v.subject==="社会"?"selected":"")+'>社会</option></select>'+
-    '</section>'+
+    '</div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
-    '<section class="card vt-material"><h2 class="card-title">教材</h2><p class="hint">登録教材を優先表示</p><select id="material">'+allMaterials.map(x=>'<option value="'+esc(x)+'" '+(v.material===x?'selected':'')+'>'+esc(x)+'</option>').join("")+'<option value="__custom__" '+(v.material==="__custom__"?'selected':'')+'>自由入力</option></select><div id="customMaterialWrap" class="field '+(v.material==="__custom__"?'':'hidden')+'"><label class="label">教材名</label><input id="customMaterial" value="'+esc(v.customMaterial||"")+'"></div></section>'+
-    '<section class="card vt-pages"><h2 class="card-title">ページ</h2><div class="row"><div><label class="label">開始</label><input id="pageFrom" inputmode="numeric" type="number" min="1" value="'+esc(v.pageFrom)+'"></div><div><label class="label">終了</label><input id="pageTo" inputmode="numeric" type="number" min="1" value="'+esc(v.pageTo)+'"></div></div><div class="field"><label class="label">単元</label><div class="readonly" id="unitDisplay">'+esc(v.unit||"—")+'</div><button class="text-btn" id="editUnitBtn">変更</button><div id="unitManualWrap" class="soft-reveal"><input id="unitManual" value="'+esc(v.unit||"")+'" placeholder="単元名を入力"></div></div></section>'+
-    '<section class="card vt-review"><h2 class="card-title">講評</h2><div class="guide"><strong>書いてほしいこと</strong><br>・今日やったこと<br>・つまずいたこと／難しかったこと<br>・できたこと／できるようになったこと</div><textarea id="review" placeholder="授業の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter" id="reviewCount">'+String(v.review||"").length+'文字</div><div class="link-row"><button class="link-btn" id="prevBtn">前回の講評を見る</button><button class="link-btn" id="historyBtn">過去の講評を見る</button></div><div id="historyArea" class="history"></div></section>'+
+    '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教材</h2></div><div class="card-body"><p class="hint">登録教材を優先表示</p><select id="material">'+allMaterials.map(x=>'<option value="'+esc(x)+'" '+(v.material===x?'selected':'')+'>'+esc(x)+'</option>').join("")+'<option value="__custom__" '+(v.material==="__custom__"?'selected':'')+'>自由入力</option></select><div id="customMaterialWrap" class="field '+(v.material==="__custom__"?'':'hidden')+'"><label class="label">教材名</label><input id="customMaterial" value="'+esc(v.customMaterial||"")+'"></div></div></section>'+
+    '<section class="card vt-pages" data-card-status="pages"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">ページ</h2></div><div class="card-body"><div class="row"><div><label class="label">開始</label><input id="pageFrom" inputmode="numeric" type="number" min="1" value="'+esc(v.pageFrom)+'"></div><div><label class="label">終了</label><input id="pageTo" inputmode="numeric" type="number" min="1" value="'+esc(v.pageTo)+'"></div></div><div class="field"><label class="label">単元</label><div class="readonly" id="unitDisplay">'+esc(v.unit||"—")+'</div><button class="text-btn" id="editUnitBtn">変更</button><div id="unitManualWrap" class="soft-reveal"><input id="unitManual" value="'+esc(v.unit||"")+'" placeholder="単元名を入力"></div></div></div></section>'+
+    '<section class="card vt-review" data-card-status="review"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">講評</h2></div><div class="card-body"><div class="guide"><strong>書いてほしいこと</strong><br>・今日やったこと<br>・つまずいたこと／難しかったこと<br>・できたこと／できるようになったこと</div><textarea id="review" placeholder="授業の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter" id="reviewCount">'+String(v.review||"").length+'文字</div><div class="link-row"><button class="link-btn" id="prevBtn">前回の講評を見る</button><button class="link-btn" id="historyBtn">過去の講評を見る</button></div><div id="historyArea" class="history"></div></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="homework"><h1 class="record-section-title">宿題確認</h1>'+
-    '<section class="card vt-prevhomework"><h2 class="card-title">前回の宿題</h2><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'">'+r+'</button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></section>'+
-    '<section class="card vt-nexthomework"><h2 class="card-title">今回の宿題</h2><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></section>'+
+    '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'">'+r+'</button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
+    '<section class="card vt-nexthomework" data-card-status="nexthomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">今回の宿題</h2></div><div class="card-body"><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="other"><h1 class="record-section-title">特記事項</h1>'+
-    '<section class="card vt-forgot"><h2 class="card-title">忘れ物</h2><p class="hint">複数選択可</p><div class="chips" id="forgotChips">'+["なし","筆記用具","教材","宿題","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'">'+x+'</button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></section>'+
-    '<section class="card vt-note"><h2 class="card-title">備考（内部用）</h2><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></section>'+
+    '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2></div><div class="card-body"><p class="hint">複数選択可</p><div class="chips" id="forgotChips">'+["なし","筆記用具","教材","宿題","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'">'+x+'</button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></section>'+
+    '<section class="card vt-note" data-card-status="note"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">備考（内部用）</h2></div><div class="card-body"><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></div></section>'+
     '</section>'+
     '<div class="record-footer-spacer" aria-hidden="true"></div>'+
     '<div class="record-footer" aria-label="授業記録の目次">'+
@@ -1350,22 +1315,41 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     });
   }
 
-  function updateBasicCardCompletion(v){
-    if(!document.querySelector('[data-record-section="basic"] [data-card-status]'))return;
+  function updateCardCompletion(v){
+    if(!document.querySelector("[data-card-status]"))return;
     const c=capture(v);
     const completed={
       datetime:true,
       type:!!String(c.type||"").trim(),
-      subject:!!String(c.subject||"").trim()
+      subject:!!String(c.subject||"").trim(),
+      material:c.material==="__custom__"
+        ? !!String(c.customMaterial||"").trim()
+        : !!String(c.material||"").trim(),
+      pages:!!(
+        String(c.pageFrom||"").trim() ||
+        String(c.pageTo||"").trim() ||
+        String(c.unit||"").trim()
+      ),
+      review:!!String(c.review||"").trim(),
+      prevhomework:!!(
+        state.rating ||
+        String(c.homeworkComment||"").trim()
+      ),
+      nexthomework:!!String(c.nextHomework||"").trim(),
+      forgot:state.forgot.size>0 && (
+        !state.forgot.has("その他") ||
+        !!String(c.forgotOther||"").trim()
+      ),
+      note:!!String(c.note||"").trim()
     };
-    document.querySelectorAll('[data-record-section="basic"] [data-card-status]').forEach(card=>{
+    document.querySelectorAll("[data-card-status]").forEach(card=>{
       card.classList.toggle("is-complete",!!completed[card.dataset.cardStatus]);
     });
   }
 
   function updateFooterCompletion(v){
     if(!document.querySelector("[data-footer-section]"))return;
-    updateBasicCardCompletion(v);
+    updateCardCompletion(v);
     const c=capture(v);
     const completed={
       basic:true,
