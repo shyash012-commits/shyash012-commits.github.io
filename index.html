@@ -249,20 +249,22 @@ button{touch-action:manipulation}
   display:flex;
   align-items:center;
   gap:10px;
-  min-height:10.5px;
+  min-height:21px;
   margin:0 0 4px;
 }
 .record-section[data-record-section="basic"] .card-title-row .card-title{margin:0}
 .record-section[data-record-section="basic"] .card-status{
   position:relative;
-  width:10.5px;
+  width:21px;
   height:21px;
-  flex:0 0 10.5px;
+  flex:0 0 21px;
   box-sizing:border-box;
-  border:1px solid #b8c1cb;
+  border:1.75px solid #b8c1cb;
   border-radius:25%;
   background:#fff;
   color:#fff;
+  transform:scale(.5);
+  transform-origin:center;
   transition:
     background-color .15s cubic-bezier(.22,.72,.26,1),
     border-color .15s cubic-bezier(.22,.72,.26,1);
@@ -295,7 +297,7 @@ button{touch-action:manipulation}
 /* Direct-edit date/time blocks */
 .datetime-row{
   display:grid;
-  grid-template-columns:10.5px auto minmax(0,1fr);
+  grid-template-columns:21px auto minmax(0,1fr);
   align-items:center;
   gap:10px;
 }
