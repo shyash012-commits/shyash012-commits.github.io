@@ -424,16 +424,22 @@ button{touch-action:manipulation}
 .material-detail-field{
   margin-top:0;
 }
+.material-range-row{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  min-width:0;
+}
 .material-range-controls{
   display:flex;
   align-items:center;
   gap:var(--record-horizontal-space);
+  flex:0 0 auto;
 }
 .material-page-input{
-  --page-input-digits:2;
   flex:0 0 auto;
-  width:calc(var(--page-input-digits)*1ch + var(--record-horizontal-space)*2 + 2px);
-  min-width:calc(2ch + var(--record-horizontal-space)*2 + 2px);
+  width:calc(3ch + var(--record-horizontal-space)*2 + 2px);
+  min-width:calc(3ch + var(--record-horizontal-space)*2 + 2px);
   height:var(--record-control-height);
   padding:0 var(--record-horizontal-space);
   font-size:var(--record-control-font-size);
@@ -441,6 +447,21 @@ button{touch-action:manipulation}
   color:var(--record-control-text);
   text-align:center;
   -moz-appearance:textfield;
+}
+.material-unit-text{
+  min-width:0;
+  display:grid;
+  gap:2px;
+  color:var(--record-control-text);
+  font-size:var(--record-control-font-size);
+  font-weight:var(--record-control-font-weight);
+  line-height:1.25;
+}
+.material-unit-text span{
+  display:block;
+}
+.material-unit-edit{
+  padding-top:6px;
 }
 .material-page-input::-webkit-inner-spin-button,
 .material-page-input::-webkit-outer-spin-button{
@@ -1146,13 +1167,17 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       .join(" / ");
   }
 
-  function unitsForRanges(material,ranges=[]){
+  function unitListForRanges(material,ranges=[]){
     return [...new Set(
       ranges
         .map(range=>unitFor(material,range.from,range.to))
         .flatMap(unit=>unit?unit.split(" / "):[])
         .filter(Boolean)
-    )].join(" / ");
+    )];
+  }
+
+  function unitsForRanges(material,ranges=[]){
+    return unitListForRanges(material,ranges).join(" / ");
   }
 
   function normalizeMaterialEntry(entry,fallbackMaterial=""){
@@ -1328,7 +1353,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       allMaterials=[...new Set([...l.materials,...Object.keys(materialDb)])],
       materialEntry=v.materials[0]||normalizeMaterialEntry(null,l.materials[0]),
       materialRange=materialEntry.ranges[0]||{from:"",to:""},
-      materialUnit=materialDisplayUnit(materialEntry);
+      materialUnit=materialDisplayUnit(materialEntry),
+      materialUnitLines=materialEntry.unitOverride
+        ? [materialEntry.unitOverride]
+        : unitListForRanges(materialEntry.material,materialEntry.ranges);
     document.getElementById("app").innerHTML='<div class="app">'+
     '<div class="header"><div class="header-row">'+
       '<div class="header-left"><button class="header-action header-back" id="backBtn" aria-label="一覧に戻る">'+
@@ -1356,12 +1384,20 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '<div class="material-entry">'+
         '<select id="material">'+allMaterials.map(x=>'<option value="'+esc(x)+'" '+(materialEntry.material===x?'selected':'')+'>'+esc(x)+'</option>').join("")+'<option value="__custom__" '+(materialEntry.material==="__custom__"?'selected':'')+'>自由入力</option></select>'+
         '<div id="customMaterialWrap" class="field '+(materialEntry.material==="__custom__"?'':'hidden')+'"><label class="label">教材名</label><input id="customMaterial" value="'+esc(materialEntry.customMaterial||"")+'"></div>'+
-        '<div class="material-detail-field"><label class="label">範囲</label><div class="material-range-controls">'+
-          '<input class="material-page-input" id="pageFrom" inputmode="numeric" type="number" min="1" aria-label="開始ページ" value="'+esc(materialRange.from)+'">'+
-          '<span class="material-range-separator" aria-hidden="true">〜</span>'+
-          '<input class="material-page-input" id="pageTo" inputmode="numeric" type="number" min="1" aria-label="終了ページ" value="'+esc(materialRange.to)+'">'+
-        '</div></div>'+
-        '<div class="material-detail-field"><label class="label">単元</label><div class="readonly" id="unitDisplay">'+esc(materialUnit||"—")+'</div><button class="text-btn" id="editUnitBtn">変更</button><div id="unitManualWrap" class="soft-reveal '+(materialEntry.unitOverride?'open':'')+'"><input id="unitManual" value="'+esc(materialEntry.unitOverride||"")+'" placeholder="単元名を入力"></div></div>'+
+        '<div class="material-detail-field"><label class="label">範囲</label><div class="material-range-row">'+
+          '<div class="material-range-controls">'+
+            '<input class="material-page-input" id="pageFrom" inputmode="numeric" type="number" min="1" aria-label="開始ページ" value="'+esc(materialRange.from)+'">'+
+            '<span class="material-range-separator" aria-hidden="true">〜</span>'+
+            '<input class="material-page-input" id="pageTo" inputmode="numeric" type="number" min="1" aria-label="終了ページ" value="'+esc(materialRange.to)+'">'+
+          '</div>'+
+          '<div class="material-unit-text" id="unitDisplay">'+
+            (materialUnitLines.length
+              ? materialUnitLines.map(unit=>'<span>'+esc(unit)+'</span>').join("")
+              : '<span>—</span>')+
+          '</div>'+
+        '</div>'+
+        '<button class="text-btn material-unit-edit" id="editUnitBtn">単元名を変更</button>'+
+        '<div id="unitManualWrap" class="soft-reveal '+(materialEntry.unitOverride?'open':'')+'"><input id="unitManual" value="'+esc(materialEntry.unitOverride||"")+'" placeholder="単元名を入力"></div></div>'+
       '</div>'+
     '</div></section>'+
     '<section class="card vt-review" data-card-status="review"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">講評</h2></div><div class="card-body"><div class="guide"><strong>書いてほしいこと</strong><br>・今日やったこと<br>・つまずいたこと／難しかったこと<br>・できたこと／できるようになったこと</div><textarea id="review" placeholder="授業の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter" id="reviewCount">'+String(v.review||"").length+'文字</div><div class="link-row"><button class="link-btn" id="prevBtn">前回の講評を見る</button><button class="link-btn" id="historyBtn">過去の講評を見る</button></div><div id="historyArea" class="history"></div></div></section>'+
@@ -2189,12 +2225,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const unitManual=document.getElementById("unitManual");
     const unitDisplay=document.getElementById("unitDisplay");
 
-    const fitPageInput=input=>{
-      if(!input)return;
-      const digits=Math.max(2,String(input.value||"").length);
-      input.style.setProperty("--page-input-digits",String(digits));
-    };
-
     const currentMaterialRanges=()=>{
       const from=pageInputs[0]?.value||"";
       const to=pageInputs[1]?.value||"";
@@ -2203,15 +2233,20 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     const updateUnit=()=>{
       const override=unitManual?.value.trim()||"";
-      const automatic=unitsForRanges(mat?.value,currentMaterialRanges());
-      if(unitDisplay)unitDisplay.textContent=override||automatic||"—";
+      const units=override
+        ? [override]
+        : unitListForRanges(mat?.value,currentMaterialRanges());
+
+      if(unitDisplay){
+        unitDisplay.innerHTML=(units.length?units:["—"])
+          .map(unit=>"<span>"+esc(unit)+"</span>")
+          .join("");
+      }
     };
 
     pageInputs.forEach(input=>{
-      fitPageInput(input);
       input.oninput=()=>{
-        fitPageInput(input);
-        updateUnit();
+          updateUnit();
         scheduleAutoSave(v);
       };
     });
