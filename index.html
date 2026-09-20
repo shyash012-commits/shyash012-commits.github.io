@@ -474,7 +474,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   display:block;
   white-space:nowrap;
   line-height:1;
-  will-change:opacity;
+  transform:translateX(0);
+  will-change:opacity,transform;
 }
 .guide{font-size:13px;line-height:1.7;color:#4b5563;background:#faf9f5;border:1px solid #ebe4ce;border-radius:var(--body-radius);padding:10px 12px;margin-bottom:10px}
 .counter{text-align:right;font-size:12px;color:var(--sub);margin-top:6px}.link-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px}.link-btn{border:0;background:none;color:var(--primary);padding:8px 0;font-weight:600}
@@ -1690,21 +1691,31 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       });
     }
 
-    function animateOptionLabel(option,show,delay=0){
+    function animateOptionLabel(option,show){
       const label=optionLabel(option);
       if(!label)return;
 
-      // The card itself already moves and changes width. Moving the label too
-      // creates a doubled motion, so labels only fade while staying optically fixed.
+      // Same motion language as the footer:
+      // opacity resolves quickly, while the 4px position shift runs for the
+      // full capsule-motion duration.
+      trackPreviewAnimation(
+        label,
+        show ? [{opacity:0},{opacity:1}] : [{opacity:1},{opacity:0}],
+        {
+          duration:PREVIEW_OPTION_MOTION.fade,
+          easing:"ease",
+          fill:show?"both":"forwards"
+        }
+      );
+
       trackPreviewAnimation(
         label,
         show
-          ? [{opacity:0},{opacity:1}]
-          : [{opacity:1},{opacity:0}],
+          ? [{transform:"translateX(-4px)"},{transform:"translateX(0)"}]
+          : [{transform:"translateX(0)"},{transform:"translateX(-4px)"}],
         {
-          duration:PREVIEW_OPTION_MOTION.fade,
-          delay,
-          easing:"ease",
+          duration:PREVIEW_OPTION_MOTION.move,
+          easing:PREVIEW_OPTION_MOTION.ease,
           fill:show?"both":"forwards"
         }
       );
@@ -1873,11 +1884,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         option.style.overflow="hidden";
 
         if(!targetRect){
-          animateOptionLabel(
-            option,
-            true,
-            Math.max(0,PREVIEW_OPTION_MOTION.move-PREVIEW_OPTION_MOTION.fade-20)
-          );
+          animateOptionLabel(option,true);
           return;
         }
 
@@ -1906,11 +1913,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           }
         );
 
-        animateOptionLabel(
-          option,
-          true,
-          Math.max(0,PREVIEW_OPTION_MOTION.move-PREVIEW_OPTION_MOTION.fade-20)
-        );
+        animateOptionLabel(option,true);
       });
 
       schedulePreviewCleanup(token,()=>{
@@ -1918,6 +1921,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           const label=optionLabel(option);
           if(label){
             label.style.removeProperty("opacity");
+            label.style.removeProperty("transform");
           }
           restoreMotionStyle(option);
         });
