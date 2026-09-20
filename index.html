@@ -2663,6 +2663,16 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       }
     };
 
+    const NATIVE_CONFIRM_DISMISS_MS=180;
+
+    const runAfterNativeConfirmDismiss=callback=>{
+      setTimeout(()=>{
+        requestAnimationFrame(()=>{
+          requestAnimationFrame(callback);
+        });
+      },NATIVE_CONFIRM_DISMISS_MS);
+    };
+
     const requestMaterialDelete=entry=>{
       const entries=materialEntryList();
       if(entries.length<=1)return;
@@ -2672,7 +2682,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
       const number=materialNumberLabel(index+1);
       if(window.confirm("教材"+number+"を削除しますか？")){
-        removeMaterialEntry(entry);
+        runAfterNativeConfirmDismiss(()=>removeMaterialEntry(entry));
       }
     };
 
