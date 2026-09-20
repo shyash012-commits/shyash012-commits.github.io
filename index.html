@@ -1532,7 +1532,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '<div class="material-entry">'+
         '<div class="record-select-shell">'+
           '<select id="material">'+allMaterials.map(x=>'<option value="'+esc(x)+'" '+(materialEntry.material===x?'selected':'')+'>'+esc(x)+'</option>').join("")+'<option value="__custom__" '+(materialEntry.material==="__custom__"?'selected':'')+'>自由入力</option></select>'+
-          '<span class="record-select-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M2.15 3.75 5.25 6.85 8.35 3.75"/></svg></span>'+
+          '<span class="record-select-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M.875 2.65 5.25 7.025 9.625 2.65"/></svg></span>'+
         '</div>'+
         '<div id="customMaterialWrap" class="field '+(materialEntry.material==="__custom__"?'':'hidden')+'"><label class="label">教材名</label><input id="customMaterial" value="'+esc(materialEntry.customMaterial||"")+'"></div>'+
         '<div class="material-detail-stack">'+
@@ -1692,10 +1692,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         affordance.setAttribute("aria-hidden","true");
         affordance.innerHTML=
           '<span class="choice-scroll-chevron" data-scroll-direction="left">'+
-            '<svg viewBox="0 0 10.5 10.5"><path d="M2.15 3.75 5.25 6.85 8.35 3.75"/></svg>'+
+            '<svg viewBox="0 0 10.5 10.5"><path d="M.875 2.65 5.25 7.025 9.625 2.65"/></svg>'+
           '</span>'+
           '<span class="choice-scroll-chevron" data-scroll-direction="right">'+
-            '<svg viewBox="0 0 10.5 10.5"><path d="M2.15 3.75 5.25 6.85 8.35 3.75"/></svg>'+
+            '<svg viewBox="0 0 10.5 10.5"><path d="M.875 2.65 5.25 7.025 9.625 2.65"/></svg>'+
           '</span>';
         titleRow.append(affordance);
 
