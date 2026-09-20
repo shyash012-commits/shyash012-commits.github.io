@@ -549,14 +549,19 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   padding-right:var(--record-horizontal-space);
 }
 .choice-grid{
+  --record-horizontal-space:var(--record-horizontal-space-preferred);
   display:flex;
   flex-wrap:nowrap;
   gap:var(--record-horizontal-space);
   min-width:0;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-x;
+  overscroll-behavior-x:contain;
 }
-.choice-grid.adaptive-wrap{
-  flex-wrap:wrap;
-}
+.choice-grid::-webkit-scrollbar{display:none}
 .choice-button{
   flex:0 0 auto;
   width:auto;
@@ -623,14 +628,19 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   border-color:var(--record-control-active-pressed-border);
 }
 .chips{
+  --record-horizontal-space:var(--record-horizontal-space-preferred);
   display:flex;
   flex-wrap:nowrap;
   gap:var(--record-horizontal-space);
   min-width:0;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-x;
+  overscroll-behavior-x:contain;
 }
-.chips.adaptive-wrap{
-  flex-wrap:wrap;
-}
+.chips::-webkit-scrollbar{display:none}
 .chip{
   flex:0 0 auto;
   border:1px solid var(--record-control-border);
@@ -646,6 +656,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   font-weight:700;
 }
 .hidden{display:none!important}
+
+.app.preview-mode .choice-grid,
+.app.preview-mode .chips{
+  overflow:visible;
+}
 
 /* Motion: layout itself moves; no page-level crossfade */
 @media (prefers-reduced-motion:no-preference){
@@ -1430,10 +1445,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div></div>'+
     '<section class="record-section" data-record-section="basic"><h1 class="record-section-title">基本情報</h1>'+
     '<section class="card vt-datetime" data-card-status="datetime"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">実施日時</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+datetimeBlocks(v)+'</div></section>'+
-    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="typeSegment" data-adaptive-horizontal="choices" role="group" aria-label="授業区分">'+["通常","振替","講習"].map(t=>'<button type="button" class="choice-button '+(v.type===t?'active':'')+'" data-type="'+t+'" aria-pressed="'+(v.type===t)+'"><span class="record-option-label">'+t+'</span></button>').join("")+'</div></div></section>'+
-    '<section class="card vt-instructor" data-card-status="instructor"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">担当講師</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="instructorChoices" data-adaptive-horizontal="choices" role="group" aria-label="担当講師">'+INSTRUCTORS.map(instructor=>'<button type="button" class="choice-button '+(v.instructor===instructor?'active':'')+'" data-instructor="'+instructor+'" aria-pressed="'+(v.instructor===instructor)+'"><span class="record-option-label">'+instructor+'</span></button>').join("")+'</div></div></section>'+
+    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="typeSegment" data-choice-scroll role="group" aria-label="授業区分">'+["通常","振替","講習"].map(t=>'<button type="button" class="choice-button '+(v.type===t?'active':'')+'" data-type="'+t+'" aria-pressed="'+(v.type===t)+'"><span class="record-option-label">'+t+'</span></button>').join("")+'</div></div></section>'+
+    '<section class="card vt-instructor" data-card-status="instructor"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">担当講師</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="instructorChoices" data-choice-scroll role="group" aria-label="担当講師">'+INSTRUCTORS.map(instructor=>'<button type="button" class="choice-button '+(v.instructor===instructor?'active':'')+'" data-instructor="'+instructor+'" aria-pressed="'+(v.instructor===instructor)+'"><span class="record-option-label">'+instructor+'</span></button>').join("")+'</div></div></section>'+
     '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+
-    '<div class="choice-grid" id="subjectChoices" data-adaptive-horizontal="choices" role="group" aria-label="教科（複数選択可）">'+subjectOptions.map(subject=>'<button type="button" class="choice-button '+(v.subjects.includes(subject)?'active':'')+'" data-subject="'+subject+'" aria-pressed="'+v.subjects.includes(subject)+'"><span class="record-option-label">'+subject+'</span></button>').join("")+'</div>'+
+    '<div class="choice-grid" id="subjectChoices" data-choice-scroll role="group" aria-label="教科（複数選択可）">'+subjectOptions.map(subject=>'<button type="button" class="choice-button '+(v.subjects.includes(subject)?'active':'')+'" data-subject="'+subject+'" aria-pressed="'+v.subjects.includes(subject)+'"><span class="record-option-label">'+subject+'</span></button>').join("")+'</div>'+
     '</div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
@@ -1470,7 +1485,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="card vt-nexthomework" data-card-status="nexthomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">今回の宿題</h2></div><div class="card-body"><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="other"><h1 class="record-section-title">特記事項</h1>'+
-    '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2></div><div class="card-body"><p class="hint">複数選択可</p><div class="chips" id="forgotChips" data-adaptive-horizontal="choices">'+["なし","筆記用具","教材","宿題","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></section>'+
+    '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2></div><div class="card-body"><p class="hint">複数選択可</p><div class="chips" id="forgotChips" data-choice-scroll>'+["なし","筆記用具","教材","宿題","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></section>'+
     '<section class="card vt-note" data-card-status="note"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">備考（内部用）</h2></div><div class="card-body"><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></div></section>'+
     '</section>'+
     '<div class="record-footer-spacer" aria-hidden="true"></div>'+
@@ -1572,33 +1587,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     root.classList.toggle("datetime-wrap",fitted<minimum);
   }
 
-  function fitAdaptiveChoiceRows(){
-    document.querySelectorAll('[data-adaptive-horizontal="choices"]').forEach(root=>{
-      const items=[...root.children].filter(el=>el.matches("button"));
-      if(items.length<2)return;
-
-      const {preferred,minimum}=horizontalSpacingLimits(root);
-
-      // Measure one-line intrinsic content first.
-      root.classList.remove("adaptive-wrap");
-      root.style.setProperty("--record-horizontal-space","0px");
-
-      const intrinsicWidth=items.reduce((sum,item)=>sum+item.getBoundingClientRect().width,0);
-      const available=root.clientWidth;
-
-      // Every item contributes left/right padding; adjacent items share one gap.
-      const spacingSlots=items.length*2+(items.length-1);
-      const fitted=(available-intrinsicWidth)/spacingSlots;
-      const spacing=Math.max(minimum,Math.min(preferred,fitted));
-
-      root.style.setProperty("--record-horizontal-space",spacing.toFixed(3)+"px");
-      root.classList.toggle("adaptive-wrap",fitted<minimum);
-    });
-  }
-
   function fitRecordHorizontalControls(){
     fitDateTimeControls();
-    fitAdaptiveChoiceRows();
   }
 
   function refreshDateTimeBlocks(v){
@@ -1693,31 +1683,18 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function updateFooterCompletion(c){
     if(!document.querySelector("[data-footer-section]"))return;
     updateCardCompletion(c);
-    const completed={
-      basic:true,
-      lesson:!!(
-        String(c.review||"").trim() ||
-        c.materials?.some(entry=>
-          String(entry.customMaterial||"").trim() ||
-          entry.ranges?.some(range=>
-            String(range.from||"").trim() ||
-            String(range.to||"").trim()
-          )
-        )
-      ),
-      homework:!!(
-        state.rating ||
-        String(c.homeworkComment||"").trim() ||
-        String(c.nextHomework||"").trim()
-      ),
-      other:!!(
-        String(c.note||"").trim() ||
-        String(c.forgotOther||"").trim() ||
-        [...state.forgot].some(x=>x!=="なし")
-      )
-    };
+
     document.querySelectorAll("[data-footer-section]").forEach(btn=>{
-      btn.classList.toggle("completed",!!completed[btn.dataset.footerSection]);
+      const section=document.querySelector(
+        '[data-record-section="'+btn.dataset.footerSection+'"]'
+      );
+      const items=section
+        ? [...section.querySelectorAll("[data-card-status]")]
+        : [];
+      const completed=items.length>0 &&
+        items.every(item=>item.classList.contains("is-complete"));
+
+      btn.classList.toggle("completed",completed);
     });
   }
 
@@ -2088,15 +2065,25 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           restoreMotionStyle(option);
         });
         active.forEach(restoreMotionStyle);
+        document.querySelectorAll("[data-choice-scroll]").forEach(group=>{
+          group.scrollLeft=0;
+        });
       });
     }
 
     function expandPreviewOptions(){
       const inactive=inactivePreviewOptions();
       const active=activePreviewOptions();
+      const scrollGroups=[...document.querySelectorAll("[data-choice-scroll]")];
+
+      scrollGroups.forEach(group=>{
+        group.style.overflow="visible";
+        group.scrollLeft=0;
+      });
 
       if(matchMedia("(prefers-reduced-motion: reduce)").matches){
         inactive.forEach(option=>option.classList.remove("preview-option-hidden"));
+        scrollGroups.forEach(group=>group.style.removeProperty("overflow"));
         return;
       }
 
@@ -2189,6 +2176,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           restoreMotionStyle(option);
         });
         active.forEach(restoreMotionStyle);
+        scrollGroups.forEach(group=>group.style.removeProperty("overflow"));
       });
     }
 
