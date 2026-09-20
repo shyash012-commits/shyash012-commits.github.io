@@ -1052,9 +1052,26 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   const STORAGE_KEY="lesson-record-v01-github";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
+
+  function isElementaryGrade(grade){
+    return String(grade||"").startsWith("小");
+  }
+
+  function subjectsForGrade(grade){
+    return SUBJECTS.map(subject=>
+      isElementaryGrade(grade)&&subject==="数学"?"算数":subject
+    );
+  }
+
+  function normalizeSubjectForGrade(subject,grade){
+    if(isElementaryGrade(grade)&&subject==="数学")return "算数";
+    if(!isElementaryGrade(grade)&&subject==="算数")return "数学";
+    return subject;
+  }
   const now=new Date(), Y=now.getFullYear(), M=now.getMonth()+1, D=now.getDate();
 
   const materialDb={
+    "小学5年 算数 標準問題集":[{from:42,to:49,unit:"分数のたし算・ひき算"},{from:50,to:57,unit:"分数と小数"},{from:58,to:65,unit:"割合"}],
     "新中学問題集 数学2年":[{from:36,to:47,unit:"連立方程式"},{from:48,to:55,unit:"連立方程式の利用"},{from:56,to:73,unit:"一次関数"}],
     "計算トレーニング 数学2年":[{from:22,to:33,unit:"連立方程式の計算"}],
     "新中学問題集 英語2年":[{from:40,to:51,unit:"不定詞"},{from:52,to:63,unit:"動名詞"}],
@@ -1062,6 +1079,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   };
 
   const lessons=[
+    {id:"l0",student:"山田 葵",familyName:"山田",givenName:"葵",familyKana:"やまだ",givenKana:"あおい",grade:"小5",subject:"算数",instructor:"石井",hour:15,minute:40,type:"通常",materials:["小学5年 算数 標準問題集"],prevHomework:"小学5年 算数 標準問題集 p.46〜47",history:[
+      {date:"2026/09/12",text:"通分してから計算する手順を確認しました。分母をそろえる理由を図でも確認し、自力で解ける問題が増えました。"}]},
     {id:"l1",student:"佐藤 陽菜",familyName:"佐藤",givenName:"陽菜",familyKana:"さとう",givenKana:"ひな",grade:"中2",subject:"数学",instructor:"石井",hour:17,minute:0,type:"通常",materials:["新中学問題集 数学2年","計算トレーニング 数学2年"],prevHomework:"新中学問題集 数学2年 p.46〜47 の残り（大問3・4）",history:[
       {date:"2026/09/12",text:"加減法で係数をそろえる手順を確認しました。途中式を省略するとミスが出るため、一行ずつ書く練習を行いました。"},
       {date:"2026/09/05",text:"分数を含む連立方程式を扱いました。分母をはらう処理を確認した後は、自力で解ける問題が増えました。"}]},
@@ -1172,15 +1191,19 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     state.lessonId=id;state.showPrev=false;state.showHistory=false;
     const l=getLesson(),r=getRecord();state.rating=r?.rating||"";state.forgot=new Set(r?.forgot||["なし"]);state.manualUnit=!!r?.manualUnit;
     const dt=r?.performedAt||lessonBase(l),duration=Number(r?.duration||l.duration||70),material=r?.material||l.materials[0],pageFrom=r?.pageFrom||"",pageTo=r?.pageTo||"",unit=r?.unit||unitFor(material,pageFrom,pageTo);
-    const savedSubjects=Array.isArray(r?.subjects)?r.subjects:(r?.subject?[r.subject]:[]);
-    const subjects=SUBJECTS.filter(subject=>savedSubjects.includes(subject));
-    if(!subjects.length)subjects.push(l.subject);
+    const subjectOptions=subjectsForGrade(l.grade);
+    const savedSubjects=(Array.isArray(r?.subjects)?r.subjects:(r?.subject?[r.subject]:[]))
+      .map(subject=>normalizeSubjectForGrade(subject,l.grade));
+    const subjects=subjectOptions.filter(subject=>savedSubjects.includes(subject));
+    if(!subjects.length)subjects.push(normalizeSubjectForGrade(l.subject,l.grade));
     const instructor=INSTRUCTORS.includes(r?.instructor)?r.instructor:l.instructor;
     renderRecord({dt,duration,material,pageFrom,pageTo,unit,review:r?.review||"",homeworkComment:r?.homeworkComment||"",nextHomework:r?.nextHomework||"",note:r?.note||"",customMaterial:r?.customMaterial||"",forgotOther:r?.forgotOther||"",type:r?.type||l.type,instructor,subjects});
   }
 
   function renderRecord(v){
-    const l=getLesson(),allMaterials=[...new Set([...l.materials,...Object.keys(materialDb)])];
+    const l=getLesson(),
+      subjectOptions=subjectsForGrade(l.grade),
+      allMaterials=[...new Set([...l.materials,...Object.keys(materialDb)])];
     document.getElementById("app").innerHTML='<div class="app">'+
     '<div class="header"><div class="header-row">'+
       '<div class="header-left"><button class="header-action header-back" id="backBtn" aria-label="一覧に戻る">'+
@@ -1200,7 +1223,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="typeSegment" data-adaptive-horizontal="choices" role="group" aria-label="授業区分">'+["通常","振替","講習"].map(t=>'<button type="button" class="choice-button '+(v.type===t?'active':'')+'" data-type="'+t+'" aria-pressed="'+(v.type===t)+'"><span class="record-option-label">'+t+'</span></button>').join("")+'</div></div></section>'+
     '<section class="card vt-instructor" data-card-status="instructor"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">担当講師</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="instructorChoices" data-adaptive-horizontal="choices" role="group" aria-label="担当講師">'+INSTRUCTORS.map(instructor=>'<button type="button" class="choice-button '+(v.instructor===instructor?'active':'')+'" data-instructor="'+instructor+'" aria-pressed="'+(v.instructor===instructor)+'"><span class="record-option-label">'+instructor+'</span></button>').join("")+'</div></div></section>'+
     '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+
-    '<div class="choice-grid" id="subjectChoices" data-adaptive-horizontal="choices" role="group" aria-label="教科（複数選択可）">'+SUBJECTS.map(subject=>'<button type="button" class="choice-button '+(v.subjects.includes(subject)?'active':'')+'" data-subject="'+subject+'" aria-pressed="'+v.subjects.includes(subject)+'"><span class="record-option-label">'+subject+'</span></button>').join("")+'</div>'+
+    '<div class="choice-grid" id="subjectChoices" data-adaptive-horizontal="choices" role="group" aria-label="教科（複数選択可）">'+subjectOptions.map(subject=>'<button type="button" class="choice-button '+(v.subjects.includes(subject)?'active':'')+'" data-subject="'+subject+'" aria-pressed="'+v.subjects.includes(subject)+'"><span class="record-option-label">'+subject+'</span></button>').join("")+'</div>'+
     '</div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
