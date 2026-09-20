@@ -451,6 +451,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     color .24s ease,
     padding .34s cubic-bezier(.16,1,.3,1),
     transform .14s ease;
+  will-change:width;
 }
 .record-nav-item:active{transform:scale(.985)}
 .record-nav-item .record-icon-circle{
@@ -682,6 +683,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
   let autoSaveTimer=null;
   let footerScrollHandler=null;
+  let footerScrollLock=null;
+  let footerScrollUnlockTimer=null;
 
   function setSaveIndicator(mode){
     const el=document.getElementById("recordSaveState");
@@ -809,6 +812,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       window.removeEventListener("scroll",footerScrollHandler);
       footerScrollHandler=null;
     }
+    footerScrollLock=null;
+    clearTimeout(footerScrollUnlockTimer);
+    footerScrollUnlockTimer=null;
     document.getElementById("app").innerHTML='<div class="app"><div class="header"><div class="header-row"><div></div><div class="header-center"><div class="header-title">授業記録システム v0.1</div><div class="header-meta">架空データ・試作版</div></div><div></div></div></div>'+
     '<h1 class="page-title">今日の授業</h1><div class="page-sub">'+Y+'年'+M+'月'+D+'日</div><div class="lesson-list">'+lessons.map(l=>{const done=!!state.records[l.id];return '<button class="lesson-card" data-open="'+l.id+'"><div class="lesson-time">'+pad(l.hour)+':'+pad(l.minute)+'</div><div><div class="lesson-name">'+esc(l.student)+'</div><div class="lesson-meta">'+esc(l.grade)+'・'+esc(l.subject)+'・'+esc(l.type)+'</div></div><span class="badge '+(done?'done':'')+'">'+(done?'記録済み':'未記録')+'</span></button>'}).join("")+'</div><p class="note" style="margin-top:18px">この試作版は架空データを使用し、入力内容はこのiPhoneのブラウザ内に保存されます。</p></div>';
     document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openRecord(b.dataset.open));
@@ -1029,14 +1035,33 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       other:document.querySelector(".vt-forgot")
     };
 
+    const unlockFooterScroll=(runSpy=true)=>{
+      footerScrollLock=null;
+      clearTimeout(footerScrollUnlockTimer);
+      footerScrollUnlockTimer=null;
+      if(runSpy && footerScrollHandler)requestAnimationFrame(footerScrollHandler);
+    };
+
     document.querySelectorAll("[data-footer-section]").forEach(btn=>{
       btn.onclick=()=>{
         const key=btn.dataset.footerSection,target=targets[key];
         if(!target)return;
-        setFooterActive(key);
+
         const headerH=document.querySelector(".header")?.getBoundingClientRect().height||0;
-        const y=window.scrollY+target.getBoundingClientRect().top-headerH-10;
-        window.scrollTo({top:Math.max(0,y),behavior:"smooth"});
+        const rawY=window.scrollY+target.getBoundingClientRect().top-headerH-10;
+        const maxY=Math.max(0,document.documentElement.scrollHeight-window.innerHeight);
+        const y=Math.min(maxY,Math.max(0,rawY));
+
+        // During a tap-triggered smooth scroll, keep the tapped tab selected.
+        // This prevents the scroll-spy from activating sections merely passed en route.
+        footerScrollLock={key,targetY:y,started:performance.now()};
+        clearTimeout(footerScrollUnlockTimer);
+        setFooterActive(key);
+
+        window.scrollTo({top:y,behavior:"smooth"});
+
+        // Safety unlock for interrupted/older Safari smooth-scroll behavior.
+        footerScrollUnlockTimer=setTimeout(()=>unlockFooterScroll(true),1100);
       };
     });
 
@@ -1047,6 +1072,20 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       ticking=true;
       requestAnimationFrame(()=>{
         ticking=false;
+
+        if(footerScrollLock){
+          const distance=Math.abs(window.scrollY-footerScrollLock.targetY);
+          const elapsed=performance.now()-footerScrollLock.started;
+
+          // Keep the requested section active until the scroll actually arrives.
+          setFooterActive(footerScrollLock.key);
+
+          if(distance<=2 || elapsed>1050){
+            unlockFooterScroll(true);
+          }
+          return;
+        }
+
         const headerH=document.querySelector(".header")?.getBoundingClientRect().height||0;
         const probe=window.scrollY+headerH+24;
         let active="basic";
