@@ -989,7 +989,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       homeworkComment:c.homeworkComment,
       nextHomework:c.nextHomework,
       forgot:[...state.forgot],
-      forgotOther:state.forgot.has("特記事項")?c.forgotOther:"",
+      forgotOther:state.forgot.has("その他")?c.forgotOther:"",
       note:c.note,
       savedAt:new Date().toISOString()
     };
@@ -1135,7 +1135,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="card vt-nexthomework"><h2 class="card-title">今回の宿題</h2><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="other"><h1 class="record-section-title">特記事項</h1>'+
-    '<section class="card vt-forgot"><h2 class="card-title">忘れ物</h2><p class="hint">複数選択可</p><div class="chips" id="forgotChips">'+["なし","筆記用具","教材","宿題","特記事項"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'">'+x+'</button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("特記事項")?'open':'')+'" id="forgotOtherWrap"><label class="label">特記事項の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></section>'+
+    '<section class="card vt-forgot"><h2 class="card-title">忘れ物</h2><p class="hint">複数選択可</p><div class="chips" id="forgotChips">'+["なし","筆記用具","教材","宿題","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'">'+x+'</button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></section>'+
     '<section class="card vt-note"><h2 class="card-title">備考（内部用）</h2><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></section>'+
     '</section>'+
     '<div class="record-footer-spacer" aria-hidden="true"></div>'+
@@ -1155,7 +1155,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         '</button>'+
         '<button type="button" class="record-nav-item" data-footer-section="other" aria-label="特記事項">'+
           '<span class="record-icon-circle" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="5" cy="10" r="1.15" fill="currentColor" stroke="none"/><circle cx="10" cy="10" r="1.15" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.15" fill="currentColor" stroke="none"/></svg></span>'+
-          '<span class="record-nav-label record-nav-label-spaced"><span>そ</span><span>の</span><span>他</span></span>'+
+          '<span class="record-nav-label">特記事項</span>'+
         '</button>'+
       '</nav>'+
       '<button type="button" class="record-preview-button" id="previewBtn" aria-label="プレビュー" aria-pressed="false">'+
@@ -1556,7 +1556,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         if(!state.forgot.size)state.forgot.add("なし");
       }
       document.querySelectorAll("[data-forgot]").forEach(z=>z.classList.toggle("active",state.forgot.has(z.dataset.forgot)));
-      document.getElementById("forgotOtherWrap").classList.toggle("open",state.forgot.has("特記事項"));
+      document.getElementById("forgotOtherWrap").classList.toggle("open",state.forgot.has("その他"));
       autoSaveNow(v);
     });
 
