@@ -448,20 +448,30 @@ button{touch-action:manipulation}
   text-align:center;
   -moz-appearance:textfield;
 }
-.material-unit-text{
+.material-unit-window{
+  flex:1 1 auto;
   min-width:0;
-  display:grid;
-  gap:2px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  white-space:nowrap;
   color:var(--record-control-text);
   font-size:var(--record-control-font-size);
   font-weight:var(--record-control-font-weight);
-  line-height:1.25;
+  line-height:var(--record-control-height);
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-x;
 }
-.material-unit-text span{
-  display:block;
+.material-unit-window::-webkit-scrollbar{
+  display:none;
 }
-.material-unit-edit{
-  padding-top:6px;
+.material-unit-track{
+  display:inline-block;
+  min-width:max-content;
+  padding-right:2px;
+}
+.review-unit-prompt{
+  color:#8a5b22;
 }
 .material-page-input::-webkit-inner-spin-button,
 .material-page-input::-webkit-outer-spin-button{
@@ -1176,10 +1186,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     )];
   }
 
-  function unitsForRanges(material,ranges=[]){
-    return unitListForRanges(material,ranges).join(" / ");
-  }
-
   function normalizeMaterialEntry(entry,fallbackMaterial=""){
     const material=entry?.material||fallbackMaterial;
     const customMaterial=entry?.customMaterial||"";
@@ -1192,12 +1198,22 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           .filter(range=>range.from||range.to)
       : [];
 
-    return {
-      material,
-      customMaterial,
-      ranges,
-      unitOverride:String(entry?.unitOverride||"")
-    };
+    return {material,customMaterial,ranges};
+  }
+
+  function rangeHasUnitData(material,range){
+    const from=Number(range?.from);
+    const to=Number(range?.to||range?.from);
+    if(!Number.isFinite(from))return false;
+    return (materialDb[material]||[]).some(unit=>
+      from<=unit.to&&to>=unit.from
+    );
+  }
+
+  function materialNeedsUnitPrompt(material,ranges=[]){
+    const enteredRanges=ranges.filter(range=>range?.from||range?.to);
+    return enteredRanges.length>0 &&
+      enteredRanges.some(range=>!rangeHasUnitData(material,range));
   }
 
   function materialsFromRecord(record,lesson){
@@ -1214,15 +1230,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     return [normalizeMaterialEntry({
       material,
       customMaterial:record?.customMaterial||"",
-      ranges:(from||to)?[{from,to}]:[],
-      unitOverride:record?.manualUnit?String(record?.unit||""):""
+      ranges:(from||to)?[{from,to}]:[]
     },material)];
-  }
-
-  function materialDisplayUnit(entry){
-    return String(entry?.unitOverride||"").trim() ||
-      unitsForRanges(entry?.material,entry?.ranges) ||
-      "";
   }
   function toast(msg){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t)}t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1300)}
 
@@ -1353,10 +1362,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       allMaterials=[...new Set([...l.materials,...Object.keys(materialDb)])],
       materialEntry=v.materials[0]||normalizeMaterialEntry(null,l.materials[0]),
       materialRange=materialEntry.ranges[0]||{from:"",to:""},
-      materialUnit=materialDisplayUnit(materialEntry),
-      materialUnitLines=materialEntry.unitOverride
-        ? [materialEntry.unitOverride]
-        : unitListForRanges(materialEntry.material,materialEntry.ranges);
+      materialUnitLines=unitListForRanges(materialEntry.material,materialEntry.ranges),
+      showUnitPrompt=materialNeedsUnitPrompt(materialEntry.material,materialEntry.ranges);
     document.getElementById("app").innerHTML='<div class="app">'+
     '<div class="header"><div class="header-row">'+
       '<div class="header-left"><button class="header-action header-back" id="backBtn" aria-label="一覧に戻る">'+
@@ -1390,17 +1397,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
             '<span class="material-range-separator" aria-hidden="true">〜</span>'+
             '<input class="material-page-input" id="pageTo" inputmode="numeric" type="number" min="1" aria-label="終了ページ" value="'+esc(materialRange.to)+'">'+
           '</div>'+
-          '<div class="material-unit-text" id="unitDisplay">'+
+          '<div class="material-unit-window" id="unitDisplay" aria-label="単元名">'+
             (materialUnitLines.length
-              ? materialUnitLines.map(unit=>'<span>'+esc(unit)+'</span>').join("")
-              : '<span>—</span>')+
+              ? '<span class="material-unit-track">'+materialUnitLines.map(esc).join(" ／ ")+'</span>'
+              : '')+
           '</div>'+
         '</div>'+
-        '<button class="text-btn material-unit-edit" id="editUnitBtn">単元名を変更</button>'+
-        '<div id="unitManualWrap" class="soft-reveal '+(materialEntry.unitOverride?'open':'')+'"><input id="unitManual" value="'+esc(materialEntry.unitOverride||"")+'" placeholder="単元名を入力"></div></div>'+
       '</div>'+
     '</div></section>'+
-    '<section class="card vt-review" data-card-status="review"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">講評</h2></div><div class="card-body"><div class="guide"><strong>書いてほしいこと</strong><br>・今日やったこと<br>・つまずいたこと／難しかったこと<br>・できたこと／できるようになったこと</div><textarea id="review" placeholder="授業の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter" id="reviewCount">'+String(v.review||"").length+'文字</div><div class="link-row"><button class="link-btn" id="prevBtn">前回の講評を見る</button><button class="link-btn" id="historyBtn">過去の講評を見る</button></div><div id="historyArea" class="history"></div></div></section>'+
+    '<section class="card vt-review" data-card-status="review"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">講評</h2></div><div class="card-body"><div class="guide"><strong>書いてほしいこと</strong><br>・今日やったこと<br>・つまずいたこと／難しかったこと<br>・できたこと／できるようになったこと<span class="review-unit-prompt '+(showUnitPrompt?'':'hidden')+'" id="reviewUnitPrompt"><br>・単元情報が登録されていません。必要に応じて単元名を補足してください</span></div><textarea id="review" placeholder="授業の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter" id="reviewCount">'+String(v.review||"").length+'文字</div><div class="link-row"><button class="link-btn" id="prevBtn">前回の講評を見る</button><button class="link-btn" id="historyBtn">過去の講評を見る</button></div><div id="historyArea" class="history"></div></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="homework"><h1 class="record-section-title">宿題確認</h1>'+
     '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'"><span class="record-option-label">'+r+'</span></button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
@@ -1569,12 +1574,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         const customMaterial=document.getElementById("customMaterial")?.value||"";
         const from=document.getElementById("pageFrom")?.value||"";
         const to=document.getElementById("pageTo")?.value||"";
-        const unitOverride=document.getElementById("unitManual")?.value.trim()||"";
         return {
           material,
           customMaterial,
-          ranges:(from||to)?[{from,to}]:[],
-          unitOverride
+          ranges:(from||to)?[{from,to}]:[]
         };
       })()],
       review:document.getElementById("review")?.value??v.review,
@@ -1638,7 +1641,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         String(c.review||"").trim() ||
         c.materials?.some(entry=>
           String(entry.customMaterial||"").trim() ||
-          String(entry.unitOverride||"").trim() ||
           entry.ranges?.some(range=>
             String(range.from||"").trim() ||
             String(range.to||"").trim()
@@ -2222,8 +2224,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       document.getElementById("pageFrom"),
       document.getElementById("pageTo")
     ];
-    const unitManual=document.getElementById("unitManual");
     const unitDisplay=document.getElementById("unitDisplay");
+    const reviewUnitPrompt=document.getElementById("reviewUnitPrompt");
 
     const currentMaterialRanges=()=>{
       const from=pageInputs[0]?.value||"";
@@ -2232,21 +2234,25 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     };
 
     const updateUnit=()=>{
-      const override=unitManual?.value.trim()||"";
-      const units=override
-        ? [override]
-        : unitListForRanges(mat?.value,currentMaterialRanges());
+      const ranges=currentMaterialRanges();
+      const units=unitListForRanges(mat?.value,ranges);
 
       if(unitDisplay){
-        unitDisplay.innerHTML=(units.length?units:["—"])
-          .map(unit=>"<span>"+esc(unit)+"</span>")
-          .join("");
+        unitDisplay.innerHTML=units.length
+          ? '<span class="material-unit-track">'+units.map(esc).join(" ／ ")+'</span>'
+          : "";
+        unitDisplay.scrollLeft=0;
       }
+
+      reviewUnitPrompt?.classList.toggle(
+        "hidden",
+        !materialNeedsUnitPrompt(mat?.value,ranges)
+      );
     };
 
     pageInputs.forEach(input=>{
       input.oninput=()=>{
-          updateUnit();
+        updateUnit();
         scheduleAutoSave(v);
       };
     });
@@ -2255,17 +2261,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       document.getElementById("customMaterialWrap").classList.toggle("hidden",mat.value!=="__custom__");
       updateUnit();
       autoSaveNow(v);
-    };
-
-    document.getElementById("editUnitBtn").onclick=()=>{
-      const w=document.getElementById("unitManualWrap");
-      w.classList.toggle("open");
-      if(w.classList.contains("open"))setTimeout(()=>unitManual.focus(),160);
-    };
-
-    unitManual.oninput=()=>{
-      updateUnit();
-      scheduleAutoSave(v);
     };
 
     document.getElementById("review").oninput=e=>{
