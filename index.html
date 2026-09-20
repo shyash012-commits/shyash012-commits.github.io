@@ -292,6 +292,17 @@ button{touch-action:manipulation}
   margin:0 0 var(--record-content-gap);
 }
 .record-section .card-title-row .card-title{margin:0}
+.material-card-title{
+  display:inline-flex;
+  align-items:baseline;
+  flex:0 0 auto;
+}
+.material-card-number-slot{
+  display:inline-block;
+  width:1em;
+  flex:0 0 1em;
+  text-align:center;
+}
 .record-section .inline-auto-hint{
   margin:0;
   white-space:nowrap;
@@ -428,7 +439,9 @@ button{touch-action:manipulation}
   overflow:visible;
 }
 .material-entry-shell:not(:first-child){
+  margin-top:var(--record-item-gap);
   padding-top:var(--record-item-gap);
+  border-top:1px solid var(--line);
 }
 .material-entry-content{
   min-width:0;
@@ -547,71 +560,6 @@ button{touch-action:manipulation}
   display:none;
 }
 
-.material-confirm{
-  position:fixed;
-  inset:0;
-  z-index:300;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:24px;
-  background:rgba(31,41,51,.24);
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-  transition:
-    opacity var(--record-color-dur) var(--record-color-ease),
-    visibility 0s linear var(--record-color-dur);
-}
-.material-confirm.open{
-  opacity:1;
-  visibility:visible;
-  pointer-events:auto;
-  transition-delay:0s;
-}
-.material-confirm-panel{
-  width:min(100%,292px);
-  border:1px solid rgba(99,111,123,.16);
-  border-radius:16px;
-  background:#fff;
-  box-shadow:0 18px 48px rgba(31,41,51,.18);
-  padding:18px;
-  transform:translateY(6px) scale(.985);
-  transition:transform var(--footer-motion-dur) var(--footer-motion-ease);
-}
-.material-confirm.open .material-confirm-panel{
-  transform:translateY(0) scale(1);
-}
-.material-confirm-message{
-  margin:0 0 16px;
-  font-size:15px;
-  font-weight:700;
-  line-height:1.5;
-  text-align:center;
-}
-.material-confirm-actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-.material-confirm-button{
-  height:var(--record-control-height);
-  border:1px solid var(--record-control-border);
-  border-radius:var(--body-radius);
-  background:var(--record-control-bg);
-  color:var(--record-control-text);
-  font-size:var(--record-control-font-size);
-  font-weight:var(--record-control-font-weight);
-}
-.material-confirm-button.yes{
-  border-color:var(--record-control-active-border);
-  background:var(--record-control-active-bg);
-  color:var(--record-control-active-text);
-}
-.material-confirm-button:active{
-  background:var(--record-control-pressed-bg);
-  border-color:var(--record-control-pressed-border);
-}
 .material-add-icon{
   width:var(--record-status-size);
   height:var(--record-status-size);
@@ -1520,7 +1468,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '<div class="material-entry-content">'+
         '<div class="material-entry-heading">'+
           '<span class="material-entry-title" data-material-entry-title>使用教材</span>'+
-          '<button type="button" class="material-text-action material-delete-action" data-delete-material>教材を削除</button>'+
+          '<button type="button" class="material-text-action material-delete-action" data-delete-material>削除</button>'+
         '</div>'+
         '<div class="material-entry">'+
         '<div class="record-select-shell">'+
@@ -1711,7 +1659,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
-    '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title" id="materialCardTitle">使用教材</h2><p class="hint inline-auto-hint">*登録済み教材を優先表示</p><button type="button" class="material-text-action material-delete-action hidden" id="deleteFirstMaterialBtn">教材①を削除</button></div><div class="card-body">'+
+    '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title material-card-title"><span>使用教材</span><span class="material-card-number-slot" id="materialCardNumber" aria-hidden="true"></span></h2><p class="hint inline-auto-hint">*登録済み教材を優先表示</p><button type="button" class="material-text-action material-delete-action hidden" id="deleteFirstMaterialBtn">削除</button></div><div class="card-body">'+
       '<div class="material-entries" id="materialEntries">'+
         materialEntries.map(entry=>materialEntryMarkup(entry,allMaterials)).join("")+
       '</div>'+
@@ -1730,15 +1678,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2><p class="hint inline-auto-hint">*複数選択可</p></div><div class="card-body"><div class="chips" id="forgotChips" data-choice-scroll>'+["なし","筆記用具","教材","宿題","連絡帳","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></section>'+
     '<section class="card vt-note" data-card-status="note"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">備考（内部用）</h2></div><div class="card-body"><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></div></section>'+
     '</section>'+
-    '<div class="material-confirm" id="materialDeleteConfirm" aria-hidden="true">'+
-      '<div class="material-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="materialDeleteMessage">'+
-        '<p class="material-confirm-message" id="materialDeleteMessage"></p>'+
-        '<div class="material-confirm-actions">'+
-          '<button type="button" class="material-confirm-button" id="materialDeleteNo">いいえ</button>'+
-          '<button type="button" class="material-confirm-button yes" id="materialDeleteYes">はい</button>'+
-        '</div>'+
-      '</div>'+
-    '</div>'+
     '<div class="record-footer-spacer" aria-hidden="true"></div>'+
     '<div class="record-footer" aria-label="授業記録の目次">'+
       '<nav class="record-nav-shell">'+
@@ -2567,13 +2506,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     const reviewUnitPrompt=document.getElementById("reviewUnitPrompt");
     const materialEntries=document.getElementById("materialEntries");
-    const materialCardTitle=document.getElementById("materialCardTitle");
+    const materialCardNumber=document.getElementById("materialCardNumber");
     const deleteFirstMaterialBtn=document.getElementById("deleteFirstMaterialBtn");
-    const materialDeleteConfirm=document.getElementById("materialDeleteConfirm");
-    const materialDeleteMessage=document.getElementById("materialDeleteMessage");
-    const materialDeleteYes=document.getElementById("materialDeleteYes");
-    const materialDeleteNo=document.getElementById("materialDeleteNo");
-    let pendingMaterialDelete=null;
 
     const materialEntryList=()=>[
       ...materialEntries.querySelectorAll("[data-material-entry]")
@@ -2583,7 +2517,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const entries=materialEntryList();
       const multiple=entries.length>1;
 
-      materialCardTitle.textContent=multiple?"使用教材①":"使用教材";
+      materialCardNumber.textContent=multiple?"①":"";
       deleteFirstMaterialBtn.classList.toggle("hidden",!multiple);
 
       entries.forEach((entry,index)=>{
@@ -2593,21 +2527,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
         if(title)title.textContent="使用教材"+number;
         if(deleteBtn){
-          deleteBtn.textContent="教材"+number+"を削除";
+          deleteBtn.textContent="削除";
           deleteBtn.setAttribute("aria-label","教材"+number+"を削除");
         }
       });
 
       if(multiple){
-        deleteFirstMaterialBtn.textContent="教材①を削除";
+        deleteFirstMaterialBtn.textContent="削除";
         deleteFirstMaterialBtn.setAttribute("aria-label","教材①を削除");
       }
-    };
-
-    const closeMaterialDeleteConfirm=()=>{
-      pendingMaterialDelete=null;
-      materialDeleteConfirm.classList.remove("open");
-      materialDeleteConfirm.setAttribute("aria-hidden","true");
     };
 
     const requestMaterialDelete=entry=>{
@@ -2618,11 +2546,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       if(index<0)return;
 
       const number=materialNumberLabel(index+1);
-      pendingMaterialDelete=entry;
-      materialDeleteMessage.textContent="教材"+number+"を削除しますか？";
-      materialDeleteConfirm.classList.add("open");
-      materialDeleteConfirm.setAttribute("aria-hidden","false");
-      setTimeout(()=>materialDeleteNo.focus(),0);
+      if(window.confirm("教材"+number+"を削除しますか？")){
+        removeMaterialEntry(entry);
+      }
     };
 
     const readMaterialEntry=entry=>{
@@ -2748,16 +2674,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     deleteFirstMaterialBtn.onclick=()=>{
       const first=materialEntryList()[0];
       if(first)requestMaterialDelete(first);
-    };
-
-    materialDeleteNo.onclick=closeMaterialDeleteConfirm;
-    materialDeleteYes.onclick=()=>{
-      const entry=pendingMaterialDelete;
-      closeMaterialDeleteConfirm();
-      if(entry)removeMaterialEntry(entry);
-    };
-    materialDeleteConfirm.onclick=e=>{
-      if(e.target===materialDeleteConfirm)closeMaterialDeleteConfirm();
     };
 
     refreshMaterialEntryLabels();
