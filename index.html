@@ -244,10 +244,8 @@ button{touch-action:manipulation}
   --record-control-active-pressed-bg:#d2f3e1;
   --record-control-active-pressed-border:#6fc095;
 }
-.app.preview-mode .choice-button:not(.active),
-.app.preview-mode .rating button:not(.active),
-.app.preview-mode .chip:not(.active){
-  display:none;
+.preview-option-hidden{
+  display:none!important;
 }
 .record-section-title{
   margin:0 4px 0;
@@ -1545,6 +1543,166 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const recordApp=document.querySelector("#app > .app");
     let previewUnlockTimer=null;
 
+    const PREVIEW_OPTION_SELECTOR=".choice-button, .rating button, .chip";
+    const PREVIEW_OPTION_MOTION={
+      move:180,
+      fade:115,
+      revealDelay:35,
+      ease:"cubic-bezier(.22,.72,.26,1)"
+    };
+    let previewOptionMotionToken=0;
+    let previewOptionCleanupTimer=null;
+    let previewOptionAnimations=[];
+
+    function previewOptions(){
+      return [...document.querySelectorAll(PREVIEW_OPTION_SELECTOR)];
+    }
+
+    function activePreviewOptions(){
+      return previewOptions().filter(option=>option.classList.contains("active"));
+    }
+
+    function inactivePreviewOptions(){
+      return previewOptions().filter(option=>!option.classList.contains("active"));
+    }
+
+    function rememberMotionStyle(option){
+      if(!option.hasAttribute("data-preview-motion-style")){
+        option.setAttribute("data-preview-motion-style",option.getAttribute("style")||"");
+      }
+    }
+
+    function restoreMotionStyle(option){
+      if(!option.hasAttribute("data-preview-motion-style"))return;
+      const style=option.getAttribute("data-preview-motion-style");
+      if(style)option.setAttribute("style",style);
+      else option.removeAttribute("style");
+      option.removeAttribute("data-preview-motion-style");
+    }
+
+    function stopPreviewOptionMotion(compact){
+      previewOptionMotionToken+=1;
+      clearTimeout(previewOptionCleanupTimer);
+      previewOptionCleanupTimer=null;
+      previewOptionAnimations.forEach(animation=>animation.cancel());
+      previewOptionAnimations=[];
+      previewOptions().forEach(option=>{
+        restoreMotionStyle(option);
+        option.classList.toggle("preview-option-hidden",compact&&!option.classList.contains("active"));
+      });
+    }
+
+    function captureRects(elements){
+      return new Map(elements.map(element=>[element,element.getBoundingClientRect()]));
+    }
+
+    function animatePreviewMove(elements,before){
+      elements.forEach(element=>{
+        const from=before.get(element);
+        if(!from)return;
+        const to=element.getBoundingClientRect();
+        const dx=from.left-to.left;
+        const dy=from.top-to.top;
+        if(Math.abs(dx)<.5&&Math.abs(dy)<.5)return;
+        const animation=element.animate(
+          [
+            {transform:`translate(${dx}px, ${dy}px)`},
+            {transform:"translate(0, 0)"}
+          ],
+          {
+            duration:PREVIEW_OPTION_MOTION.move,
+            easing:PREVIEW_OPTION_MOTION.ease
+          }
+        );
+        previewOptionAnimations.push(animation);
+      });
+    }
+
+    function collapsePreviewOptions(){
+      const inactive=inactivePreviewOptions();
+      const active=activePreviewOptions();
+
+      if(matchMedia("(prefers-reduced-motion: reduce)").matches){
+        inactive.forEach(option=>option.classList.add("preview-option-hidden"));
+        return;
+      }
+
+      const token=++previewOptionMotionToken;
+      const before=captureRects(active);
+
+      // Remove unselected controls from layout immediately, but leave their visual
+      // copies in place long enough to fade. Selected controls can therefore glide
+      // into their final preview positions at the same time.
+      inactive.forEach(option=>{
+        const rect=option.getBoundingClientRect();
+        rememberMotionStyle(option);
+        Object.assign(option.style,{
+          position:"fixed",
+          left:rect.left+"px",
+          top:rect.top+"px",
+          width:rect.width+"px",
+          height:rect.height+"px",
+          margin:"0",
+          pointerEvents:"none",
+          zIndex:"5",
+          transformOrigin:"50% 50%"
+        });
+        const animation=option.animate(
+          [
+            {opacity:1,transform:"scale(1)"},
+            {opacity:0,transform:"scale(.94)"}
+          ],
+          {
+            duration:PREVIEW_OPTION_MOTION.fade,
+            easing:"ease-out",
+            fill:"forwards"
+          }
+        );
+        previewOptionAnimations.push(animation);
+      });
+
+      animatePreviewMove(active,before);
+
+      previewOptionCleanupTimer=setTimeout(()=>{
+        if(token!==previewOptionMotionToken)return;
+        inactive.forEach(option=>{
+          option.classList.add("preview-option-hidden");
+          restoreMotionStyle(option);
+        });
+        previewOptionCleanupTimer=null;
+      },PREVIEW_OPTION_MOTION.move);
+    }
+
+    function expandPreviewOptions(){
+      const inactive=inactivePreviewOptions();
+      const active=activePreviewOptions();
+
+      if(matchMedia("(prefers-reduced-motion: reduce)").matches){
+        inactive.forEach(option=>option.classList.remove("preview-option-hidden"));
+        return;
+      }
+
+      const before=captureRects(active);
+      inactive.forEach(option=>option.classList.remove("preview-option-hidden"));
+      animatePreviewMove(active,before);
+
+      inactive.forEach(option=>{
+        const animation=option.animate(
+          [
+            {opacity:0,transform:"scale(.94)"},
+            {opacity:1,transform:"scale(1)"}
+          ],
+          {
+            duration:PREVIEW_OPTION_MOTION.fade,
+            delay:PREVIEW_OPTION_MOTION.revealDelay,
+            easing:"ease-out",
+            fill:"backwards"
+          }
+        );
+        previewOptionAnimations.push(animation);
+      });
+    }
+
     if(previewBtn&&recordFooter&&recordApp)previewBtn.onclick=()=>{
       autoSaveNow(v);
 
@@ -1557,19 +1715,21 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           document.activeElement.blur();
         }
 
+        stopPreviewOptionMotion(false);
         recordApp.classList.add("preview-mode");
         document.querySelectorAll(".card").forEach(card=>card.setAttribute("inert",""));
         recordFooter.classList.add("preview-mode");
+        collapsePreviewOptions();
 
         previewBtn.setAttribute("aria-pressed","true");
         previewBtn.setAttribute("aria-label","プレビューを閉じる");
         return;
       }
 
-      // No special close animation: the same CSS transition runs back to the base state.
-      // This also means an interrupted motion reverses smoothly from its current position.
+      stopPreviewOptionMotion(true);
       recordFooter.classList.remove("preview-mode");
       recordApp.classList.remove("preview-mode");
+      expandPreviewOptions();
       previewBtn.setAttribute("aria-pressed","false");
       previewBtn.setAttribute("aria-label","プレビュー");
 
