@@ -331,19 +331,25 @@ button{touch-action:manipulation}
 
 /* Direct-edit date/time blocks */
 .datetime-blocks{
-  --datetime-control-x:10px;
-  --datetime-control-x-preferred:10px;
+  --datetime-horizontal-space:10px;
+  --datetime-horizontal-space-min:6px;
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:var(--datetime-horizontal-space);
   min-width:0;
   width:100%;
 }
 .datetime-main{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:var(--datetime-horizontal-space);
   min-width:0;
+}
+.datetime-blocks.datetime-wrap{
+  flex-wrap:wrap;
+}
+.datetime-blocks.datetime-wrap .datetime-duration{
+  margin-left:var(--record-control-inset);
 }
 .datetime-main .dt-block,
 .datetime-blocks > .dt-block{
@@ -371,7 +377,7 @@ button{touch-action:manipulation}
   background:#f7f8fa;
   border-radius:10.5px; /* 42px × 1/4 */
   min-height:42px;
-  padding:0 var(--datetime-control-x);
+  padding:0 var(--datetime-horizontal-space);
   font-weight:700;
   font-size:14px;
   white-space:nowrap;
@@ -1242,31 +1248,31 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     if(!root)return;
 
     const buttons=[...root.querySelectorAll(".dt-block")];
-    const main=root.querySelector(".datetime-main");
     const endTime=root.querySelector(".datetime-end-time");
-    const duration=root.querySelector(".datetime-duration");
-    if(buttons.length!==4||!main||!endTime||!duration)return;
+    if(buttons.length!==4||!endTime)return;
 
     const preferred=10;
-    root.style.setProperty("--datetime-control-x","0px");
+    const minimum=6;
 
-    // Measure intrinsic widths first. Duration stays right-aligned via margin-left:auto.
-    const mainGap=parseFloat(getComputedStyle(main).columnGap||getComputedStyle(main).gap)||0;
-    const rootGap=parseFloat(getComputedStyle(root).columnGap||getComputedStyle(root).gap)||0;
+    // Measure intrinsic content widths with horizontal spacing removed.
+    root.classList.remove("datetime-wrap");
+    root.style.setProperty("--datetime-horizontal-space","0px");
+
     const controlsWidth=buttons.reduce((sum,button)=>sum+button.getBoundingClientRect().width,0);
     const endWidth=endTime.getBoundingClientRect().width;
-
-    // Main has: month / day / start / end = 3 internal gaps.
-    // Root has one minimum gap between the left group and duration.
-    const gapWidth=mainGap*3+rootGap;
     const available=root.clientWidth;
 
-    // Four controls × left/right padding = 8 equal padding spaces.
-    const fitted=(available-controlsWidth-endWidth-gapWidth)/(buttons.length*2);
-    const padding=Math.max(0,Math.min(preferred,fitted));
+    // Horizontal-space occurrences:
+    // 8 control paddings + 3 gaps inside the left group + 1 gap before duration = 12.
+    const spacingSlots=buttons.length*2+4;
+    const fitted=(available-controlsWidth-endWidth)/spacingSlots;
+    const spacing=Math.max(minimum,Math.min(preferred,fitted));
 
-    root.style.setProperty("--datetime-control-x",padding.toFixed(3)+"px");
-    root.classList.toggle("datetime-padding-fitted",padding<preferred-.01);
+    root.style.setProperty("--datetime-horizontal-space",spacing.toFixed(3)+"px");
+
+    // Wrap only when even the minimum shared spacing cannot fit.
+    const stillTooWide=fitted<minimum;
+    root.classList.toggle("datetime-wrap",stillTooWide);
   }
 
   function refreshDateTimeBlocks(v){
