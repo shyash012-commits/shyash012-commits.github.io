@@ -414,12 +414,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   padding-left:var(--record-horizontal-space);
   padding-right:var(--record-horizontal-space);
 }
-.segment{
+.choice-grid{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
   gap:var(--record-horizontal-space);
 }
-.segment button{
+.choice-grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.choice-grid-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.choice-button{
+  min-width:0;
   height:42px;
   border:1px solid var(--record-control-border);
   background:var(--record-control-bg);
@@ -429,18 +431,19 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   font-weight:700;
   line-height:1;
   text-align:center;
+  white-space:nowrap;
   color:var(--record-control-text);
   box-shadow:none;
   -webkit-appearance:none;
   appearance:none;
 }
-.segment button.active{
+.choice-button.active{
   background:var(--record-control-active-bg);
   border-color:var(--record-control-active-border);
   color:var(--record-control-active-text);
 }
-.segment button:active{background:var(--record-control-pressed-bg)}
-.segment button.active:active{
+.choice-button:active{background:var(--record-control-pressed-bg)}
+.choice-button.active:active{
   background:var(--record-control-active-pressed-bg);
   border-color:var(--record-control-active-pressed-border);
 }
@@ -979,6 +982,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   box-shadow:inset 0 1px 0 rgba(255,255,255,.98);
 }
 
+@media(max-width:340px){
+  .choice-grid-5{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .choice-grid-5 .choice-button{grid-column:span 2}
+  .choice-grid-5 .choice-button:nth-child(4){grid-column:2 / span 2}
+  .choice-grid-5 .choice-button:nth-child(5){grid-column:4 / span 2}
+}
+
 @media(max-width:380px){
   .app{padding-left:12px;padding-right:12px}
   .header{margin-left:-12px;margin-right:-12px;padding-left:10px;padding-right:10px}
@@ -1006,6 +1016,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 <script>
 (() => {
   const STORAGE_KEY="lesson-record-v01-github";
+  const SUBJECTS=["国語","数学","英語","理科","社会"];
   const now=new Date(), Y=now.getFullYear(), M=now.getMonth()+1, D=now.getDate();
 
   const materialDb={
@@ -1059,12 +1070,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function writeRecord(v){
     if(!state.lessonId)return;
     const c=capture(v),l=getLesson(),prev=state.records[l.id]||{};
+    const {subject:_legacySubject,...current}=prev;
     state.records[l.id]={
-      ...prev,
+      ...current,
       performedAt:c.dt,
       duration:c.duration,
       type:c.type,
-      subject:c.subject,
+      subjects:c.subjects,
       material:c.material,
       customMaterial:c.customMaterial,
       pageFrom:c.pageFrom,
@@ -1123,8 +1135,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function openRecord(id){
     state.lessonId=id;state.showPrev=false;state.showHistory=false;
     const l=getLesson(),r=getRecord();state.rating=r?.rating||"";state.forgot=new Set(r?.forgot||["なし"]);state.manualUnit=!!r?.manualUnit;
-    const dt=r?.performedAt||lessonBase(l),duration=Number(r?.duration||l.duration||70),material=r?.material||l.materials[0],pageFrom=r?.pageFrom||"",pageTo=r?.pageTo||"",unit=r?.unit||unitFor(material,pageFrom,pageTo),subject=r?.subject||l.subject;
-    renderRecord({dt,duration,material,pageFrom,pageTo,unit,review:r?.review||"",homeworkComment:r?.homeworkComment||"",nextHomework:r?.nextHomework||"",note:r?.note||"",customMaterial:r?.customMaterial||"",forgotOther:r?.forgotOther||"",type:r?.type||l.type,subject});
+    const dt=r?.performedAt||lessonBase(l),duration=Number(r?.duration||l.duration||70),material=r?.material||l.materials[0],pageFrom=r?.pageFrom||"",pageTo=r?.pageTo||"",unit=r?.unit||unitFor(material,pageFrom,pageTo);
+    const savedSubjects=Array.isArray(r?.subjects)?r.subjects:(r?.subject?[r.subject]:[]);
+    const subjects=SUBJECTS.filter(subject=>savedSubjects.includes(subject));
+    if(!subjects.length)subjects.push(l.subject);
+    renderRecord({dt,duration,material,pageFrom,pageTo,unit,review:r?.review||"",homeworkComment:r?.homeworkComment||"",nextHomework:r?.nextHomework||"",note:r?.note||"",customMaterial:r?.customMaterial||"",forgotOther:r?.forgotOther||"",type:r?.type||l.type,subjects});
   }
 
   function renderRecord(v){
@@ -1145,9 +1160,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div></div>'+
     '<section class="record-section" data-record-section="basic"><h1 class="record-section-title">基本情報</h1>'+
     '<section class="card vt-datetime" data-card-status="datetime"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">実施日時</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+datetimeBlocks(v)+'</div></section>'+
-    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="segment" id="typeSegment">'+["通常","振替","講習"].map(t=>'<button data-type="'+t+'" class="'+(v.type===t?'active':'')+'">'+t+'</button>').join("")+'</div></div></section>'+
+    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid choice-grid-3" id="typeSegment" role="group" aria-label="授業区分">'+["通常","振替","講習"].map(t=>'<button type="button" class="choice-button '+(v.type===t?'active':'')+'" data-type="'+t+'" aria-pressed="'+(v.type===t)+'">'+t+'</button>').join("")+'</div></div></section>'+
     '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+
-    '<select id="subjectSelect"><option value="国語" '+(v.subject==="国語"?"selected":"")+'>国語</option><option value="数学" '+(v.subject==="数学"?"selected":"")+'>数学</option><option value="英語" '+(v.subject==="英語"?"selected":"")+'>英語</option><option value="理科" '+(v.subject==="理科"?"selected":"")+'>理科</option><option value="社会" '+(v.subject==="社会"?"selected":"")+'>社会</option></select>'+
+    '<div class="choice-grid choice-grid-5" id="subjectChoices" role="group" aria-label="教科（複数選択可）">'+SUBJECTS.map(subject=>'<button type="button" class="choice-button '+(v.subjects.includes(subject)?'active':'')+'" data-subject="'+subject+'" aria-pressed="'+v.subjects.includes(subject)+'">'+subject+'</button>').join("")+'</div>'+
     '</div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
@@ -1328,7 +1343,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       note:document.getElementById("note")?.value??v.note,
       forgotOther:document.getElementById("forgotOther")?.value??v.forgotOther,
       type:document.querySelector("#typeSegment .active")?.dataset.type||v.type,
-      subject:document.getElementById("subjectSelect")?.value||v.subject
+      subjects:[...document.querySelectorAll("#subjectChoices [data-subject].active")].map(button=>button.dataset.subject)
     };
   }
 
@@ -1349,7 +1364,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const completed={
       datetime:true,
       type:!!String(c.type||"").trim(),
-      subject:!!String(c.subject||"").trim(),
+      subject:Array.isArray(c.subjects)&&c.subjects.length>0,
       material:c.material==="__custom__"
         ? !!String(c.customMaterial||"").trim()
         : !!String(c.material||"").trim(),
@@ -1551,17 +1566,24 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     });
 
     document.querySelectorAll("[data-type]").forEach(b=>b.onclick=()=>{
-      document.querySelectorAll("[data-type]").forEach(x=>x.classList.remove("active"));
-      b.classList.add("active");
+      document.querySelectorAll("[data-type]").forEach(x=>{
+        const selected=x===b;
+        x.classList.toggle("active",selected);
+        x.setAttribute("aria-pressed",String(selected));
+      });
       v.type=b.dataset.type;
       autoSaveNow(v);
     });
 
-    const subjectSelect=document.getElementById("subjectSelect");
-    if(subjectSelect) subjectSelect.onchange=e=>{
-      v.subject=e.target.value;
+    const subjectButtons=[...document.querySelectorAll("#subjectChoices [data-subject]")];
+    subjectButtons.forEach(b=>b.onclick=()=>{
+      const selected=subjectButtons.filter(x=>x.classList.contains("active"));
+      if(b.classList.contains("active")&&selected.length===1)return;
+      b.classList.toggle("active");
+      b.setAttribute("aria-pressed",String(b.classList.contains("active")));
+      v.subjects=subjectButtons.filter(x=>x.classList.contains("active")).map(x=>x.dataset.subject);
       autoSaveNow(v);
-    };
+    });
 
     const mat=document.getElementById("material");
     const updateUnit=()=>{
