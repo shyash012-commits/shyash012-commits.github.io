@@ -259,6 +259,7 @@ button{touch-action:manipulation}
   height:10.5px;
   flex:0 0 10.5px;
   box-sizing:border-box;
+  transform:translateY(.5px);
   border:.875px solid #b8c1cb;
   border-radius:25%;
   background:#fff;
@@ -286,6 +287,27 @@ button{touch-action:manipulation}
 .app.preview-mode .record-section[data-record-section="basic"].is-current .card.is-complete .card-status{
   background:#2faa68;
   border-color:#2faa68;
+}
+
+/* Basic-info list: no enclosing card, only a quiet item separator. */
+.record-section[data-record-section="basic"] .card{
+  position:relative;
+  background:transparent;
+  border:0;
+  border-radius:0;
+  padding:0 4px 10px;
+}
+.record-section[data-record-section="basic"] .card:not(:last-of-type)::after{
+  content:"";
+  position:absolute;
+  left:20.9px; /* 10.5px status + 6.4px gap + 4px left inset */
+  right:4px;
+  bottom:0;
+  height:1px;
+  background:#d7dde4;
+}
+.record-section[data-record-section="basic"] .card:last-of-type{
+  padding-bottom:0;
 }
 
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:14px 0}
