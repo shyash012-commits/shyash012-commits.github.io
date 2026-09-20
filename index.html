@@ -468,6 +468,16 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   background:var(--record-control-active-pressed-bg);
   border-color:var(--record-control-active-pressed-border);
 }
+.record-option-label{
+  position:relative;
+  z-index:1;
+  display:block;
+  white-space:nowrap;
+  line-height:1;
+  transform:translateX(0);
+  transform-origin:50% 50%;
+  will-change:opacity,transform;
+}
 .guide{font-size:13px;line-height:1.7;color:#4b5563;background:#faf9f5;border:1px solid #ebe4ce;border-radius:var(--body-radius);padding:10px 12px;margin-bottom:10px}
 .counter{text-align:right;font-size:12px;color:var(--sub);margin-top:6px}.link-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px}.link-btn{border:0;background:none;color:var(--primary);padding:8px 0;font-weight:600}
 .history{margin-top:10px;display:grid;gap:8px}.history-item{border:1px solid var(--line);background:#f7f8fa;border-radius:var(--body-radius);padding:11px}.history-date{font-size:12px;color:var(--sub);margin-bottom:5px}
@@ -1188,10 +1198,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div></div>'+
     '<section class="record-section" data-record-section="basic"><h1 class="record-section-title">基本情報</h1>'+
     '<section class="card vt-datetime" data-card-status="datetime"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">実施日時</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+datetimeBlocks(v)+'</div></section>'+
-    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="typeSegment" data-adaptive-horizontal="choices" role="group" aria-label="授業区分">'+["通常","振替","講習"].map(t=>'<button type="button" class="choice-button '+(v.type===t?'active':'')+'" data-type="'+t+'" aria-pressed="'+(v.type===t)+'">'+t+'</button>').join("")+'</div></div></section>'+
-    '<section class="card vt-instructor" data-card-status="instructor"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">担当講師</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="instructorChoices" data-adaptive-horizontal="choices" role="group" aria-label="担当講師">'+INSTRUCTORS.map(instructor=>'<button type="button" class="choice-button '+(v.instructor===instructor?'active':'')+'" data-instructor="'+instructor+'" aria-pressed="'+(v.instructor===instructor)+'">'+instructor+'</button>').join("")+'</div></div></section>'+
+    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="typeSegment" data-adaptive-horizontal="choices" role="group" aria-label="授業区分">'+["通常","振替","講習"].map(t=>'<button type="button" class="choice-button '+(v.type===t?'active':'')+'" data-type="'+t+'" aria-pressed="'+(v.type===t)+'"><span class="record-option-label">'+t+'</span></button>').join("")+'</div></div></section>'+
+    '<section class="card vt-instructor" data-card-status="instructor"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">担当講師</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="instructorChoices" data-adaptive-horizontal="choices" role="group" aria-label="担当講師">'+INSTRUCTORS.map(instructor=>'<button type="button" class="choice-button '+(v.instructor===instructor?'active':'')+'" data-instructor="'+instructor+'" aria-pressed="'+(v.instructor===instructor)+'"><span class="record-option-label">'+instructor+'</span></button>').join("")+'</div></div></section>'+
     '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+
-    '<div class="choice-grid" id="subjectChoices" data-adaptive-horizontal="choices" role="group" aria-label="教科（複数選択可）">'+SUBJECTS.map(subject=>'<button type="button" class="choice-button '+(v.subjects.includes(subject)?'active':'')+'" data-subject="'+subject+'" aria-pressed="'+v.subjects.includes(subject)+'">'+subject+'</button>').join("")+'</div>'+
+    '<div class="choice-grid" id="subjectChoices" data-adaptive-horizontal="choices" role="group" aria-label="教科（複数選択可）">'+SUBJECTS.map(subject=>'<button type="button" class="choice-button '+(v.subjects.includes(subject)?'active':'')+'" data-subject="'+subject+'" aria-pressed="'+v.subjects.includes(subject)+'"><span class="record-option-label">'+subject+'</span></button>').join("")+'</div>'+
     '</div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
@@ -1200,11 +1210,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="card vt-review" data-card-status="review"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">講評</h2></div><div class="card-body"><div class="guide"><strong>書いてほしいこと</strong><br>・今日やったこと<br>・つまずいたこと／難しかったこと<br>・できたこと／できるようになったこと</div><textarea id="review" placeholder="授業の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter" id="reviewCount">'+String(v.review||"").length+'文字</div><div class="link-row"><button class="link-btn" id="prevBtn">前回の講評を見る</button><button class="link-btn" id="historyBtn">過去の講評を見る</button></div><div id="historyArea" class="history"></div></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="homework"><h1 class="record-section-title">宿題確認</h1>'+
-    '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'">'+r+'</button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
+    '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'"><span class="record-option-label">'+r+'</span></button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
     '<section class="card vt-nexthomework" data-card-status="nexthomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">今回の宿題</h2></div><div class="card-body"><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="other"><h1 class="record-section-title">特記事項</h1>'+
-    '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2></div><div class="card-body"><p class="hint">複数選択可</p><div class="chips" id="forgotChips" data-adaptive-horizontal="choices">'+["なし","筆記用具","教材","宿題","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'">'+x+'</button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></section>'+
+    '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2></div><div class="card-body"><p class="hint">複数選択可</p><div class="chips" id="forgotChips" data-adaptive-horizontal="choices">'+["なし","筆記用具","教材","宿題","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></section>'+
     '<section class="card vt-note" data-card-status="note"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">備考（内部用）</h2></div><div class="card-body"><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></div></section>'+
     '</section>'+
     '<div class="record-footer-spacer" aria-hidden="true"></div>'+
@@ -1548,13 +1558,26 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     const PREVIEW_OPTION_SELECTOR=".choice-button, .rating button, .chip";
     const PREVIEW_OPTION_GROUP_SELECTOR=".choice-grid, .rating, .chips";
+
+    function cssTimeToMs(value,fallback){
+      const raw=String(value||"").trim();
+      if(!raw)return fallback;
+      const n=parseFloat(raw);
+      if(!Number.isFinite(n))return fallback;
+      return raw.endsWith("ms")?n:n*1000;
+    }
+
+    const footerMotionStyle=getComputedStyle(recordFooter);
     const PREVIEW_OPTION_MOTION={
-      move:210,
-      ease:"cubic-bezier(.22,.72,.26,1)"
+      move:cssTimeToMs(footerMotionStyle.getPropertyValue("--footer-motion-dur"),210),
+      fade:cssTimeToMs(footerMotionStyle.getPropertyValue("--footer-fade-dur"),100),
+      ease:footerMotionStyle.getPropertyValue("--footer-motion-ease").trim()||"cubic-bezier(.22,.72,.26,1)"
     };
+
     let previewOptionMotionToken=0;
     let previewOptionCleanupTimer=null;
     let previewOptionAnimations=[];
+    let previewOptionClones=[];
 
     function previewOptions(){
       return [...document.querySelectorAll(PREVIEW_OPTION_SELECTOR)];
@@ -1566,6 +1589,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     function inactivePreviewOptions(){
       return previewOptions().filter(option=>!option.classList.contains("active"));
+    }
+
+    function optionLabel(option){
+      return option.querySelector(".record-option-label");
     }
 
     function rememberMotionStyle(option){
@@ -1582,14 +1609,21 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       option.removeAttribute("data-preview-motion-style");
     }
 
+    function clearPreviewClones(){
+      previewOptionClones.forEach(clone=>clone.remove());
+      previewOptionClones=[];
+    }
+
     function stopPreviewOptionMotion(compact){
       previewOptionMotionToken+=1;
       clearTimeout(previewOptionCleanupTimer);
       previewOptionCleanupTimer=null;
       previewOptionAnimations.forEach(animation=>animation.cancel());
       previewOptionAnimations=[];
+      clearPreviewClones();
       previewOptions().forEach(option=>{
         restoreMotionStyle(option);
+        option.style.removeProperty("visibility");
         option.classList.toggle("preview-option-hidden",compact&&!option.classList.contains("active"));
       });
     }
@@ -1604,8 +1638,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       return [...group.children].filter(child=>child.matches(PREVIEW_OPTION_SELECTOR));
     }
 
-    // An unselected option folds into the nearest selected option on its left.
-    // Only when there is no selected option to the left does it fold right.
     function previewStackTarget(option){
       const options=groupOptions(option);
       const index=options.indexOf(option);
@@ -1650,6 +1682,40 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       });
     }
 
+    function animateLabelOut(option){
+      const label=optionLabel(option);
+      if(!label)return;
+      const animation=label.animate(
+        [
+          {opacity:1,transform:"translateX(0)"},
+          {opacity:0,transform:"translateX(-4px)"}
+        ],
+        {
+          duration:PREVIEW_OPTION_MOTION.fade,
+          easing:"ease",
+          fill:"forwards"
+        }
+      );
+      previewOptionAnimations.push(animation);
+    }
+
+    function animateLabelIn(option){
+      const label=optionLabel(option);
+      if(!label)return;
+      const animation=label.animate(
+        [
+          {opacity:0,transform:"translateX(-4px)"},
+          {opacity:1,transform:"translateX(0)"}
+        ],
+        {
+          duration:PREVIEW_OPTION_MOTION.fade,
+          easing:"ease",
+          fill:"both"
+        }
+      );
+      previewOptionAnimations.push(animation);
+    }
+
     function collapsePreviewOptions(){
       const inactive=inactivePreviewOptions();
       const active=activePreviewOptions();
@@ -1666,9 +1732,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
       raiseActiveOptions(active);
 
-      // Taking the unselected options out of flow creates the compact preview
-      // immediately. Their visual boxes remain at the old positions and slide
-      // underneath the selected option instead of fading away.
       inactive.forEach(option=>{
         const rect=inactiveBefore.get(option);
         rememberMotionStyle(option);
@@ -1684,6 +1747,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           overflow:"hidden",
           transformOrigin:"0 50%"
         });
+        animateLabelOut(option);
       });
 
       const activeAfter=captureRects(active);
@@ -1698,8 +1762,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           const animation=option.animate(
             [{opacity:1},{opacity:0}],
             {
-              duration:PREVIEW_OPTION_MOTION.move,
-              easing:PREVIEW_OPTION_MOTION.ease,
+              duration:PREVIEW_OPTION_MOTION.fade,
+              easing:"ease",
               fill:"forwards"
             }
           );
@@ -1710,19 +1774,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         const endWidth=Math.min(from.width,to.width);
         const targetLeft=to.left+(to.width-endWidth)/2;
         const targetTop=to.top+(to.height-from.height)/2;
-        const dx=targetLeft-from.left;
-        const dy=targetTop-from.top;
 
         const animation=option.animate(
           [
-            {
-              transform:"translate(0, 0)",
-              width:from.width+"px"
-            },
-            {
-              transform:`translate(${dx}px, ${dy}px)`,
-              width:endWidth+"px"
-            }
+            {left:from.left+"px",top:from.top+"px",width:from.width+"px"},
+            {left:targetLeft+"px",top:targetTop+"px",width:endWidth+"px"}
           ],
           {
             duration:PREVIEW_OPTION_MOTION.move,
@@ -1744,6 +1800,29 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       },PREVIEW_OPTION_MOTION.move+20);
     }
 
+    function makePreviewClone(option,from,to){
+      const clone=option.cloneNode(true);
+      clone.removeAttribute("id");
+      clone.removeAttribute("data-preview-motion-style");
+      clone.setAttribute("aria-hidden","true");
+      clone.tabIndex=-1;
+      clone.classList.remove("preview-option-hidden");
+      Object.assign(clone.style,{
+        position:"fixed",
+        left:from.left+"px",
+        top:from.top+"px",
+        width:from.width+"px",
+        height:to.height+"px",
+        margin:"0",
+        pointerEvents:"none",
+        zIndex:"1",
+        overflow:"hidden"
+      });
+      document.body.appendChild(clone);
+      previewOptionClones.push(clone);
+      return clone;
+    }
+
     function expandPreviewOptions(){
       const inactive=inactivePreviewOptions();
       const active=activePreviewOptions();
@@ -1760,7 +1839,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         [...new Set([...targets.values()].filter(Boolean))].map(target=>[target,target.getBoundingClientRect()])
       );
 
-      inactive.forEach(option=>option.classList.remove("preview-option-hidden"));
+      inactive.forEach(option=>{
+        option.classList.remove("preview-option-hidden");
+        rememberMotionStyle(option);
+        option.style.visibility="hidden";
+      });
+
       const activeAfter=captureRects(active);
       const inactiveAfter=captureRects(inactive);
 
@@ -1770,48 +1854,38 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       inactive.forEach(option=>{
         const to=inactiveAfter.get(option);
         const target=targets.get(option);
-        const from=target?targetBefore.get(target):null;
+        const targetRect=target?targetBefore.get(target):null;
         if(!to)return;
 
-        rememberMotionStyle(option);
-        option.style.position="relative";
-        option.style.zIndex="1";
-        option.style.transformOrigin="0 50%";
-        option.style.overflow="hidden";
-
-        if(!from){
-          const animation=option.animate(
-            [{opacity:0},{opacity:1}],
-            {
-              duration:PREVIEW_OPTION_MOTION.move,
-              easing:PREVIEW_OPTION_MOTION.ease
-            }
-          );
-          previewOptionAnimations.push(animation);
+        if(!targetRect){
+          option.style.visibility="visible";
+          animateLabelIn(option);
           return;
         }
 
-        const startWidth=Math.min(to.width,from.width);
-        const startLeft=from.left+(from.width-startWidth)/2;
-        const startTop=from.top+(from.height-to.height)/2;
-        const dx=startLeft-to.left;
-        const dy=startTop-to.top;
-        const scaleX=startWidth/to.width;
+        const startWidth=Math.min(to.width,targetRect.width);
+        const from={
+          left:targetRect.left+(targetRect.width-startWidth)/2,
+          top:targetRect.top+(targetRect.height-to.height)/2,
+          width:startWidth
+        };
+        const clone=makePreviewClone(option,from,to);
+        const cloneLabel=optionLabel(clone);
+        if(cloneLabel){
+          cloneLabel.style.opacity="0";
+          cloneLabel.style.transform="translateX(-4px)";
+          animateLabelIn(clone);
+        }
 
-        // The option starts visually tucked underneath the selected option,
-        // then slides out while expanding back to its own natural width.
-        const animation=option.animate(
+        const animation=clone.animate(
           [
-            {
-              transform:`translate(${dx}px, ${dy}px) scaleX(${scaleX})`
-            },
-            {
-              transform:"translate(0, 0) scaleX(1)"
-            }
+            {left:from.left+"px",top:from.top+"px",width:from.width+"px"},
+            {left:to.left+"px",top:to.top+"px",width:to.width+"px"}
           ],
           {
             duration:PREVIEW_OPTION_MOTION.move,
-            easing:PREVIEW_OPTION_MOTION.ease
+            easing:PREVIEW_OPTION_MOTION.ease,
+            fill:"forwards"
           }
         );
         previewOptionAnimations.push(animation);
@@ -1819,7 +1893,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
       previewOptionCleanupTimer=setTimeout(()=>{
         if(token!==previewOptionMotionToken)return;
-        [...active,...inactive].forEach(restoreMotionStyle);
+        clearPreviewClones();
+        inactive.forEach(option=>{
+          option.style.visibility="visible";
+          restoreMotionStyle(option);
+        });
+        active.forEach(restoreMotionStyle);
         previewOptionCleanupTimer=null;
       },PREVIEW_OPTION_MOTION.move+20);
     }
