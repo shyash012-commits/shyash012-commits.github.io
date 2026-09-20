@@ -213,6 +213,9 @@ button{touch-action:manipulation}
   --record-horizontal-space:var(--record-horizontal-space-preferred);
 
   /* Body controls stay flat; header/footer own the glossy material language. */
+  --record-control-height:42px;
+  --record-control-font-size:14px;
+  --record-control-font-weight:700;
   --record-control-bg:#fff;
   --record-control-border:#cbd3dc;
   --record-control-text:#56616e;
@@ -371,9 +374,9 @@ button{touch-action:manipulation}
 }
 .datetime-end-time{
   flex:0 0 auto;
-  font-size:14px;
-  font-weight:700;
-  color:#56616e;
+  font-size:var(--record-control-font-size);
+  font-weight:var(--record-control-font-weight);
+  color:var(--record-control-text);
   white-space:nowrap;
   font-variant-numeric:tabular-nums;
 }
@@ -382,14 +385,15 @@ button{touch-action:manipulation}
   align-items:center;
   justify-content:center;
   width:auto;
-  min-height:42px;
+  height:var(--record-control-height);
   min-width:0;
   border:1px solid #cbd3dc;
   background:#f7f8fa;
   border-radius:var(--body-radius);
   padding:0 var(--record-horizontal-space);
-  font-weight:700;
-  font-size:14px;
+  font-weight:var(--record-control-font-weight);
+  font-size:var(--record-control-font-size);
+  color:var(--record-control-text);
   white-space:nowrap;
   box-shadow:0 1px 0 rgba(31,41,51,.02);
   -webkit-appearance:none;
@@ -427,13 +431,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   flex:0 0 auto;
   width:auto;
   min-width:0;
-  height:42px;
+  height:var(--record-control-height);
   border:1px solid var(--record-control-border);
   background:var(--record-control-bg);
   border-radius:var(--body-radius);
   padding:0 var(--record-horizontal-space);
-  font-size:14px;
-  font-weight:700;
+  font-size:var(--record-control-font-size);
+  font-weight:var(--record-control-font-weight);
   line-height:1;
   text-align:center;
   white-space:nowrap;
