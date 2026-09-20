@@ -798,12 +798,31 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 .record-footer.preview-mode .record-nav-item.active .record-icon-circle::before{
   transform:scale(1);
-  border-color:#2278ef;
-  background:linear-gradient(180deg,#3993ff 0%,#1f73e6 100%);
+  border-color:#2faa68;
+  background:linear-gradient(180deg,#56cf8d 0%,#35b978 100%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.16);
+}
+
+/* Preview mode ignores "completed" gray: unselected items return to normal white. */
+.record-footer.preview-mode .record-nav-item.completed:not(.active) .record-icon-circle{
+  color:#243140;
+}
+.record-footer.preview-mode .record-nav-item.completed:not(.active) .record-icon-circle::before{
+  border-color:#cbd3dc;
+  background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(31,41,51,.035);
 }
 .record-footer-spacer{height:90px}
 .vt-datetime,.vt-material,.vt-prevhomework,.vt-forgot{scroll-margin-top:86px}
+
+.app.preview-mode .card input,
+.app.preview-mode .card textarea,
+.app.preview-mode .card select,
+.app.preview-mode .card button{
+  cursor:default;
+}
 
 
 /* White control gloss — same material language as the blue actions */
@@ -1357,10 +1376,27 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     const previewBtn=document.getElementById("previewBtn");
     const recordFooter=document.querySelector(".record-footer");
-    if(previewBtn&&recordFooter)previewBtn.onclick=()=>{
+    const recordApp=document.querySelector("#app > .app");
+    if(previewBtn&&recordFooter&&recordApp)previewBtn.onclick=()=>{
       autoSaveNow(v);
+      closeDateTimePopover();
+
       const on=!recordFooter.classList.contains("preview-mode");
+
+      // If an input is currently focused, close the keyboard before locking the form.
+      if(on && document.activeElement instanceof HTMLElement){
+        document.activeElement.blur();
+      }
+
       recordFooter.classList.toggle("preview-mode",on);
+      recordApp.classList.toggle("preview-mode",on);
+
+      // Preview is read-only: keep scrolling/nav available, but make every record card inert.
+      document.querySelectorAll(".card").forEach(card=>{
+        if(on) card.setAttribute("inert","");
+        else card.removeAttribute("inert");
+      });
+
       previewBtn.setAttribute("aria-pressed",String(on));
       previewBtn.setAttribute("aria-label",on?"プレビューを閉じる":"プレビュー");
     };
