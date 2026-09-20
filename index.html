@@ -426,12 +426,19 @@ button{touch-action:manipulation}
 }
 .material-detail-stack{
   display:grid;
-  grid-template-columns:max-content minmax(0,1fr);
-  gap:15px;
+  grid-template-columns:max-content 14px minmax(0,1fr);
+  column-gap:10px;
   align-items:start;
 }
 .material-detail-field{
   min-width:0;
+}
+.material-relation-line{
+  width:14px;
+  height:1px;
+  align-self:end;
+  margin-bottom:calc(var(--record-control-height) / 2);
+  background:var(--line);
 }
 .material-range-controls{
   display:flex;
@@ -460,7 +467,7 @@ button{touch-action:manipulation}
   border:1px solid var(--line);
   border-radius:var(--body-radius);
   background:#f7f8fa;
-  padding:0 13px;
+  padding:0 var(--record-horizontal-space);
   white-space:nowrap;
   color:#6f7882;
   font-size:var(--record-control-font-size);
@@ -1407,6 +1414,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
               '<input class="material-page-input" id="pageTo" inputmode="numeric" type="number" min="1" aria-label="終了ページ" value="'+esc(materialRange.to)+'">'+
             '</div>'+
           '</div>'+
+          '<span class="material-relation-line" aria-hidden="true"></span>'+
           '<div class="material-detail-field"><label class="label">単元</label>'+
             '<div class="material-unit-window" id="unitDisplay" aria-label="単元名" aria-readonly="true">'+
               (materialUnitLines.length
