@@ -1545,9 +1545,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     const PREVIEW_OPTION_SELECTOR=".choice-button, .rating button, .chip";
     const PREVIEW_OPTION_MOTION={
-      move:180,
-      fade:115,
-      revealDelay:35,
+      move:210,
+      fade:100,
       ease:"cubic-bezier(.22,.72,.26,1)"
     };
     let previewOptionMotionToken=0;
@@ -1630,9 +1629,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const token=++previewOptionMotionToken;
       const before=captureRects(active);
 
-      // Remove unselected controls from layout immediately, but leave their visual
-      // copies in place long enough to fade. Selected controls can therefore glide
-      // into their final preview positions at the same time.
+      // Match the footer's motion language: unselected controls only fade,
+      // while selected controls glide into their new positions with the same
+      // 210ms easing used by the footer.
       inactive.forEach(option=>{
         const rect=option.getBoundingClientRect();
         rememberMotionStyle(option);
@@ -1649,8 +1648,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         });
         const animation=option.animate(
           [
-            {opacity:1,transform:"scale(1)"},
-            {opacity:0,transform:"scale(.94)"}
+            {opacity:1},
+            {opacity:0}
           ],
           {
             duration:PREVIEW_OPTION_MOTION.fade,
@@ -1689,12 +1688,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       inactive.forEach(option=>{
         const animation=option.animate(
           [
-            {opacity:0,transform:"scale(.94)"},
-            {opacity:1,transform:"scale(1)"}
+            {opacity:0},
+            {opacity:1}
           ],
           {
             duration:PREVIEW_OPTION_MOTION.fade,
-            delay:PREVIEW_OPTION_MOTION.revealDelay,
             easing:"ease-out",
             fill:"backwards"
           }
