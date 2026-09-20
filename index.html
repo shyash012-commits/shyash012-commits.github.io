@@ -684,14 +684,18 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   inset:0;
   border-radius:50%;
   border:0;
-  background:#fff;
-  box-shadow:none;
+  background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(31,41,51,.035);
   transform:scale(1);
   transform-origin:50% 50%;
   z-index:0;
   will-change:transform;
   transition:
-    transform var(--footer-motion-dur) var(--footer-motion-ease);
+    transform var(--footer-motion-dur) var(--footer-motion-ease),
+    background var(--footer-color-dur) var(--footer-color-ease),
+    box-shadow var(--footer-color-dur) var(--footer-color-ease);
 }
 .record-preview-button .preview-icon-slot svg{
   position:absolute;
@@ -748,6 +752,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .record-footer.preview-mode .record-preview-button .preview-icon-slot::before{
   transform:scale(var(--footer-icon-scale));
   background:#fff;
+  box-shadow:none;
 }
 .record-footer.preview-mode .preview-label{
   max-width:var(--preview-label-w);
