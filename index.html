@@ -235,6 +235,20 @@ button{touch-action:manipulation}
   display:grid;
   row-gap:var(--record-item-gap);
 }
+
+/* Preview shows only the values that were actually selected. */
+.app.preview-mode .record-section{
+  --record-control-active-bg:#dcf7e9;
+  --record-control-active-border:#7fcca3;
+  --record-control-active-text:#237a4b;
+  --record-control-active-pressed-bg:#d2f3e1;
+  --record-control-active-pressed-border:#6fc095;
+}
+.app.preview-mode .choice-button:not(.active),
+.app.preview-mode .rating button:not(.active),
+.app.preview-mode .chip:not(.active){
+  display:none;
+}
 .record-section-title{
   margin:0 4px 0;
   display:flex;
@@ -465,14 +479,24 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   gap:var(--record-horizontal-space);
 }
 .rating button{
-  border:1px solid #cbd3dc;
-  background:#fff;
+  border:1px solid var(--record-control-border);
+  background:var(--record-control-bg);
   border-radius:var(--body-radius);
   padding:12px var(--record-horizontal-space);
   font-size:19px;
   font-weight:700;
+  color:var(--record-control-text);
+  box-shadow:none;
 }
-.rating button.active{background:linear-gradient(180deg,#2f8cff 0%, #2278ef 100%);border-color:#2278ef;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}.rating button.active:active{background:linear-gradient(180deg,#247cf1 0%, #1a67da 100%);border-color:#1a67da}
+.rating button.active{
+  background:var(--record-control-active-bg);
+  border-color:var(--record-control-active-border);
+  color:var(--record-control-active-text);
+}
+.rating button.active:active{
+  background:var(--record-control-active-pressed-bg);
+  border-color:var(--record-control-active-pressed-border);
+}
 .chips{
   display:flex;
   flex-wrap:nowrap;
