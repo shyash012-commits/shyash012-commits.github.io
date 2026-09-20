@@ -1454,13 +1454,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       // No special close animation: the same CSS transition runs back to the base state.
       // This also means an interrupted motion reverses smoothly from its current position.
       recordFooter.classList.remove("preview-mode");
+      recordApp.classList.remove("preview-mode");
       previewBtn.setAttribute("aria-pressed","false");
       previewBtn.setAttribute("aria-label","プレビュー");
 
       previewUnlockTimer=setTimeout(()=>{
         // If preview was reopened during the morph, keep it locked.
         if(recordFooter.classList.contains("preview-mode")) return;
-        recordApp.classList.remove("preview-mode");
         document.querySelectorAll(".card").forEach(card=>card.removeAttribute("inert"));
       },400);
     };
