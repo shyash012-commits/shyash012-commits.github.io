@@ -210,6 +210,9 @@ button{touch-action:manipulation}
   --record-half-label-gap:3.2px;
   --record-content-gap:10px;
   --record-item-gap:15px;
+  --record-horizontal-space-preferred:10px;
+  --record-horizontal-space-min:6px;
+  --record-horizontal-space:var(--record-horizontal-space-preferred);
   --record-control-inset:calc(var(--record-status-size) + var(--record-half-label-gap));
   --record-divider-start:calc(var(--record-list-inset) + var(--record-control-inset));
   margin:0;
@@ -331,18 +334,16 @@ button{touch-action:manipulation}
 
 /* Direct-edit date/time blocks */
 .datetime-blocks{
-  --datetime-horizontal-space:10px;
-  --datetime-horizontal-space-min:6px;
   display:flex;
   align-items:center;
-  gap:var(--datetime-horizontal-space);
+  gap:var(--record-horizontal-space);
   min-width:0;
   width:100%;
 }
 .datetime-main{
   display:flex;
   align-items:center;
-  gap:var(--datetime-horizontal-space);
+  gap:var(--record-horizontal-space);
   min-width:0;
 }
 .datetime-blocks.datetime-wrap{
@@ -380,8 +381,8 @@ button{touch-action:manipulation}
   background:#f7f8fa;
   background-image:none;
   border-radius:10.5px; /* 42px × 1/4 */
-  padding:0 var(--datetime-horizontal-space);
-  padding-right:var(--datetime-horizontal-space);
+  padding:0 var(--record-horizontal-space);
+  padding-right:var(--record-horizontal-space);
   font-weight:700;
   font-size:14px;
   white-space:nowrap;
@@ -396,20 +397,68 @@ button{touch-action:manipulation}
 .field{margin-top:14px}.label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
 input,textarea,select{width:100%;max-width:100%;min-width:0;border:1px solid #cbd3dc;border-radius:12px;background:#fff;padding:12px 13px;outline:none}
 select{-webkit-appearance:none;appearance:none;background-image:linear-gradient(45deg,transparent 50%,#333 50%),linear-gradient(135deg,#333 50%,transparent 50%);background-position:calc(100% - 17px) 52%,calc(100% - 12px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:32px}
-select.dt-block{-webkit-appearance:none;appearance:none;background-image:none;padding-right:var(--datetime-horizontal-space)}
+select.dt-block{-webkit-appearance:none;appearance:none;background-image:none;padding-right:var(--record-horizontal-space)}
 textarea{min-height:140px;resize:vertical;line-height:1.65}
 input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3px rgba(49,91,138,.10)}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.date-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.time-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--record-horizontal-space);
+}
+.row input{
+  padding-left:var(--record-horizontal-space);
+  padding-right:var(--record-horizontal-space);
+}
 .btn{border:1px solid #cbd3dc;background:#fff;border-radius:12px;padding:12px 14px;font-weight:600}.btn.primary{border-color:#2278ef;background:linear-gradient(180deg,#2f8cff 0%, #2278ef 100%);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}.btn.primary:active{background:linear-gradient(180deg,#247cf1 0%, #1a67da 100%);border-color:#1a67da}.btn.full{width:100%}
 .btn-stack{display:grid;gap:10px;margin-top:14px}
-.segment{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.segment button{border:1px solid #cbd3dc;background:#fff;border-radius:12px;padding:12px 8px;font-weight:600}.segment button.active{background:linear-gradient(180deg,#2f8cff 0%, #2278ef 100%);border-color:#2278ef;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}.segment button.active:active{background:linear-gradient(180deg,#247cf1 0%, #1a67da 100%);border-color:#1a67da}
+.segment{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:var(--record-horizontal-space);
+}
+.segment button{
+  border:1px solid #cbd3dc;
+  background:#fff;
+  border-radius:12px;
+  padding:12px var(--record-horizontal-space);
+  font-weight:600;
+}
+.segment button.active{background:linear-gradient(180deg,#2f8cff 0%, #2278ef 100%);border-color:#2278ef;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}.segment button.active:active{background:linear-gradient(180deg,#247cf1 0%, #1a67da 100%);border-color:#1a67da}
 .guide{font-size:13px;line-height:1.7;color:#4b5563;background:#faf9f5;border:1px solid #ebe4ce;border-radius:10px;padding:10px 12px;margin-bottom:10px}
 .counter{text-align:right;font-size:12px;color:var(--sub);margin-top:6px}.link-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px}.link-btn{border:0;background:none;color:var(--primary);padding:8px 0;font-weight:600}
 .history{margin-top:10px;display:grid;gap:8px}.history-item{border:1px solid var(--line);background:#f7f8fa;border-radius:10px;padding:11px}.history-date{font-size:12px;color:var(--sub);margin-bottom:5px}
-.rating{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.rating button{border:1px solid #cbd3dc;background:#fff;border-radius:12px;padding:12px;font-size:19px;font-weight:700}.rating button.active{background:linear-gradient(180deg,#2f8cff 0%, #2278ef 100%);border-color:#2278ef;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}.rating button.active:active{background:linear-gradient(180deg,#247cf1 0%, #1a67da 100%);border-color:#1a67da}
-.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{border:1px solid #cbd3dc;background:#fff;border-radius:999px;padding:10px 14px}.chip.active{background:var(--primary-soft);border-color:#91acce;color:#234e7a;font-weight:700}
+.rating{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:var(--record-horizontal-space);
+}
+.rating button{
+  border:1px solid #cbd3dc;
+  background:#fff;
+  border-radius:12px;
+  padding:12px var(--record-horizontal-space);
+  font-size:19px;
+  font-weight:700;
+}
+.rating button.active{background:linear-gradient(180deg,#2f8cff 0%, #2278ef 100%);border-color:#2278ef;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}.rating button.active:active{background:linear-gradient(180deg,#247cf1 0%, #1a67da 100%);border-color:#1a67da}
+.chips{
+  display:flex;
+  flex-wrap:nowrap;
+  gap:var(--record-horizontal-space);
+  min-width:0;
+}
+.chips.adaptive-wrap{
+  flex-wrap:wrap;
+}
+.chip{
+  flex:0 0 auto;
+  border:1px solid #cbd3dc;
+  background:#fff;
+  border-radius:999px;
+  padding:10px var(--record-horizontal-space);
+  white-space:nowrap;
+}
+.chip.active{background:var(--primary-soft);border-color:#91acce;color:#234e7a;font-weight:700}
 .hidden{display:none!important}
 
 /* Motion: layout itself moves; no page-level crossfade */
@@ -944,7 +993,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   .header-action{font-size:14px}
   .header-back{column-gap:2px;padding-right:10px}
   .header-submit{column-gap:2px;padding-left:10px}
-  .date-grid{gap:6px}.date-grid select{font-size:14px;padding-left:8px;padding-right:26px}
 }
 </style>
 </head>
@@ -1107,7 +1155,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="card vt-nexthomework" data-card-status="nexthomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">今回の宿題</h2></div><div class="card-body"><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="other"><h1 class="record-section-title">特記事項</h1>'+
-    '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2></div><div class="card-body"><p class="hint">複数選択可</p><div class="chips" id="forgotChips">'+["なし","筆記用具","教材","宿題","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'">'+x+'</button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></section>'+
+    '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2></div><div class="card-body"><p class="hint">複数選択可</p><div class="chips" id="forgotChips" data-adaptive-horizontal="choices">'+["なし","筆記用具","教材","宿題","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'">'+x+'</button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></section>'+
     '<section class="card vt-note" data-card-status="note"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">備考（内部用）</h2></div><div class="card-body"><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></div></section>'+
     '</section>'+
     '<div class="record-footer-spacer" aria-hidden="true"></div>'+
@@ -1149,7 +1197,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div>'+
     '</div>';
     bindRecord(v);
-    requestAnimationFrame(fitDateTimeControls);
+    requestAnimationFrame(fitRecordHorizontalControls);
   }
 
   function endTimeLabel(dt,duration){
@@ -1175,36 +1223,67 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div>';
   }
 
+  function horizontalSpacingLimits(root){
+    const style=getComputedStyle(root);
+    return {
+      preferred:parseFloat(style.getPropertyValue("--record-horizontal-space-preferred"))||10,
+      minimum:parseFloat(style.getPropertyValue("--record-horizontal-space-min"))||6
+    };
+  }
+
   function fitDateTimeControls(){
     const root=document.querySelector(".datetime-blocks");
     if(!root)return;
 
-    const buttons=[...root.querySelectorAll(".dt-block")];
+    const controls=[...root.querySelectorAll(".dt-block")];
     const endTime=root.querySelector(".datetime-end-time");
-    if(buttons.length!==4||!endTime)return;
+    if(controls.length!==4||!endTime)return;
 
-    const preferred=10;
-    const minimum=6;
+    const {preferred,minimum}=horizontalSpacingLimits(root);
 
-    // Measure intrinsic content widths with horizontal spacing removed.
     root.classList.remove("datetime-wrap");
-    root.style.setProperty("--datetime-horizontal-space","0px");
+    root.style.setProperty("--record-horizontal-space","0px");
 
-    const controlsWidth=buttons.reduce((sum,button)=>sum+button.getBoundingClientRect().width,0);
+    const controlsWidth=controls.reduce((sum,control)=>sum+control.getBoundingClientRect().width,0);
     const endWidth=endTime.getBoundingClientRect().width;
     const available=root.clientWidth;
 
-    // Horizontal-space occurrences:
-    // 8 control paddings + 3 gaps inside the left group + 1 gap before duration = 12.
-    const spacingSlots=buttons.length*2+4;
+    // 4 controls × 2 inner paddings + 4 horizontal gaps = 12 equal slots.
+    const spacingSlots=controls.length*2+4;
     const fitted=(available-controlsWidth-endWidth)/spacingSlots;
     const spacing=Math.max(minimum,Math.min(preferred,fitted));
 
-    root.style.setProperty("--datetime-horizontal-space",spacing.toFixed(3)+"px");
+    root.style.setProperty("--record-horizontal-space",spacing.toFixed(3)+"px");
+    root.classList.toggle("datetime-wrap",fitted<minimum);
+  }
 
-    // Wrap only when even the minimum shared spacing cannot fit.
-    const stillTooWide=fitted<minimum;
-    root.classList.toggle("datetime-wrap",stillTooWide);
+  function fitAdaptiveChoiceRows(){
+    document.querySelectorAll('[data-adaptive-horizontal="choices"]').forEach(root=>{
+      const items=[...root.children].filter(el=>el.matches("button,.chip"));
+      if(items.length<2)return;
+
+      const {preferred,minimum}=horizontalSpacingLimits(root);
+
+      // Measure one-line intrinsic content first.
+      root.classList.remove("adaptive-wrap");
+      root.style.setProperty("--record-horizontal-space","0px");
+
+      const intrinsicWidth=items.reduce((sum,item)=>sum+item.getBoundingClientRect().width,0);
+      const available=root.clientWidth;
+
+      // Every item contributes left/right padding; adjacent items share one gap.
+      const spacingSlots=items.length*2+(items.length-1);
+      const fitted=(available-intrinsicWidth)/spacingSlots;
+      const spacing=Math.max(minimum,Math.min(preferred,fitted));
+
+      root.style.setProperty("--record-horizontal-space",spacing.toFixed(3)+"px");
+      root.classList.toggle("adaptive-wrap",fitted<minimum);
+    });
+  }
+
+  function fitRecordHorizontalControls(){
+    fitDateTimeControls();
+    fitAdaptiveChoiceRows();
   }
 
   function refreshDateTimeBlocks(v){
@@ -1225,7 +1304,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     if(timeEl)timeEl.value=pad(dt.hour)+':'+pad(dt.minute);
     if(durationEl)durationEl.value=String(Number(v.duration||70));
     if(endTimeEl)endTimeEl.textContent=endTimeLabel(dt,v.duration);
-    requestAnimationFrame(fitDateTimeControls);
+    requestAnimationFrame(fitRecordHorizontalControls);
   }
 
 
@@ -1576,7 +1655,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       requestAnimationFrame(()=>{a.style.height="";a.style.overflow=""});
     };
   }
-  window.addEventListener("resize",()=>requestAnimationFrame(fitDateTimeControls),{passive:true});
+  window.addEventListener("resize",()=>requestAnimationFrame(fitRecordHorizontalControls),{passive:true});
   renderList();
 })();
 </script>
