@@ -424,17 +424,15 @@ button{touch-action:manipulation}
 .material-detail-field{
   margin-top:0;
 }
-.material-range-row{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  min-width:0;
+.material-detail-stack{
+  display:grid;
+  gap:15px;
 }
 .material-range-controls{
   display:flex;
   align-items:center;
   gap:var(--record-horizontal-space);
-  flex:0 0 auto;
+  width:max-content;
 }
 .material-page-input{
   flex:0 0 auto;
@@ -449,15 +447,20 @@ button{touch-action:manipulation}
   -moz-appearance:textfield;
 }
 .material-unit-window{
-  flex:1 1 auto;
+  width:100%;
   min-width:0;
+  height:var(--record-control-height);
   overflow-x:auto;
   overflow-y:hidden;
+  border:1px solid var(--line);
+  border-radius:var(--body-radius);
+  background:#f7f8fa;
+  padding:0 13px;
   white-space:nowrap;
-  color:var(--record-control-text);
+  color:#6f7882;
   font-size:var(--record-control-font-size);
   font-weight:var(--record-control-font-weight);
-  line-height:var(--record-control-height);
+  line-height:calc(var(--record-control-height) - 2px);
   scrollbar-width:none;
   -webkit-overflow-scrolling:touch;
   touch-action:pan-x;
@@ -1391,16 +1394,20 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '<div class="material-entry">'+
         '<select id="material">'+allMaterials.map(x=>'<option value="'+esc(x)+'" '+(materialEntry.material===x?'selected':'')+'>'+esc(x)+'</option>').join("")+'<option value="__custom__" '+(materialEntry.material==="__custom__"?'selected':'')+'>自由入力</option></select>'+
         '<div id="customMaterialWrap" class="field '+(materialEntry.material==="__custom__"?'':'hidden')+'"><label class="label">教材名</label><input id="customMaterial" value="'+esc(materialEntry.customMaterial||"")+'"></div>'+
-        '<div class="material-detail-field"><label class="label">範囲</label><div class="material-range-row">'+
-          '<div class="material-range-controls">'+
-            '<input class="material-page-input" id="pageFrom" inputmode="numeric" type="number" min="1" aria-label="開始ページ" value="'+esc(materialRange.from)+'">'+
-            '<span class="material-range-separator" aria-hidden="true">〜</span>'+
-            '<input class="material-page-input" id="pageTo" inputmode="numeric" type="number" min="1" aria-label="終了ページ" value="'+esc(materialRange.to)+'">'+
+        '<div class="material-detail-stack">'+
+          '<div class="material-detail-field"><label class="label">範囲</label>'+
+            '<div class="material-range-controls">'+
+              '<input class="material-page-input" id="pageFrom" inputmode="numeric" type="number" min="1" aria-label="開始ページ" value="'+esc(materialRange.from)+'">'+
+              '<span class="material-range-separator" aria-hidden="true">〜</span>'+
+              '<input class="material-page-input" id="pageTo" inputmode="numeric" type="number" min="1" aria-label="終了ページ" value="'+esc(materialRange.to)+'">'+
+            '</div>'+
           '</div>'+
-          '<div class="material-unit-window" id="unitDisplay" aria-label="単元名">'+
-            (materialUnitLines.length
-              ? '<span class="material-unit-track">'+materialUnitLines.map(esc).join(" ／ ")+'</span>'
-              : '')+
+          '<div class="material-detail-field"><label class="label">単元</label>'+
+            '<div class="material-unit-window" id="unitDisplay" aria-label="単元名" aria-readonly="true">'+
+              (materialUnitLines.length
+                ? '<span class="material-unit-track">'+materialUnitLines.map(esc).join(" ／ ")+'</span>'
+                : '')+
+            '</div>'+
           '</div>'+
         '</div>'+
       '</div>'+
