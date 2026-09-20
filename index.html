@@ -386,6 +386,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   --footer-item-h:42px;
   --footer-item-r:21px;
   --footer-icon-d:30px;
+  --footer-icon-scale:.7142857;
   position:fixed;
   left:50%;
   bottom:0;
@@ -454,24 +455,42 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     transform .14s ease;
   will-change:width;
 }
-.record-nav-item:active{transform:scale(.985)}
+.record-nav-item:active{transform:none}
 .record-nav-item .record-icon-circle{
+  position:relative;
   width:var(--footer-item-h);
   height:var(--footer-item-h);
   flex:0 0 var(--footer-item-h);
   border-radius:50%;
-  border:1.25px solid #aeb8c3;
-  background:#fff;
+  border:0;
+  background:transparent;
   color:#243140;
   display:grid;
   place-items:center;
+}
+.record-nav-item .record-icon-circle::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  border:1.25px solid #cbd3dc;
+  background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(31,41,51,.035);
+  transform:scale(1);
+  transform-origin:50% 50%;
+  will-change:transform;
   transition:
-    width .34s cubic-bezier(.16,1,.3,1),
-    height .34s cubic-bezier(.16,1,.3,1),
-    flex-basis .34s cubic-bezier(.16,1,.3,1),
+    transform .34s cubic-bezier(.16,1,.3,1),
     border-color .24s ease,
-    background-color .24s ease,
-    color .24s ease;
+    background .24s ease,
+    box-shadow .24s ease;
+}
+.record-nav-item .record-icon-circle svg{
+  position:relative;
+  z-index:1;
+  transform:translateZ(0);
 }
 .record-save-state .record-icon-circle{
   width:var(--footer-item-h);
@@ -526,31 +545,34 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 .record-nav-item.active{
   width:calc(var(--footer-item-h) + 2px + 4em + 11px);
-  padding:0 11px 0 6px;
+  padding:0 11px 0 0;
   color:#fff;
   background:linear-gradient(180deg,#3993ff 0%,#1f73e6 100%);
   border:1.25px solid #2278ef;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.16);
 }
 .record-nav-item.active .record-icon-circle{
-  width:var(--footer-icon-d);
-  height:var(--footer-icon-d);
-  flex-basis:var(--footer-icon-d);
-  border-color:#fff;
-  background:#fff;
   color:#2278ef;
 }
+.record-nav-item.active .record-icon-circle::before{
+  transform:scale(var(--footer-icon-scale));
+  border-color:#fff;
+  background:#fff;
+  box-shadow:none;
+}
 .record-nav-item.completed:not(.active) .record-icon-circle{
+  color:#44515e;
+}
+.record-nav-item.completed:not(.active) .record-icon-circle::before{
   border-color:#aeb8c3;
   background:linear-gradient(180deg,#e2e6ea 0%,#d3d9df 100%);
-  color:#44515e;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.62);
 }
 .record-nav-item.active .record-nav-label{
   max-width:4em;
   opacity:1;
   visibility:visible;
-  margin-left:8px;
+  margin-left:2px;
   transform:translateX(0);
   transition:
     max-width .34s cubic-bezier(.16,1,.3,1) 0s,
@@ -591,7 +613,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 /* White control gloss — same material language as the blue actions */
 .header-back,
 .record-nav-shell,
-.record-nav-item:not(.active):not(.completed) .record-icon-circle,
 .record-save-state .record-icon-circle,
 .btn:not(.primary),
 .segment button:not(.active),
@@ -602,7 +623,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 
 /* Footer standalone white circles: exactly the same white material as header 「一覧」 */
-.record-nav-item:not(.active):not(.completed) .record-icon-circle,
+.record-nav-item:not(.active):not(.completed) .record-icon-circle::before{
+  border:1.25px solid #cbd3dc;
+  background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(31,41,51,.035);
+}
 .record-save-state .record-icon-circle{
   border:1.25px solid #cbd3dc;
   background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
@@ -624,13 +651,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     --footer-item-h:40px;
     --footer-item-r:20px;
     --footer-icon-d:28px;
+    --footer-icon-scale:.7;
     gap:8px;
   }
   .record-nav-shell{
     padding:10px;
   }
   .record-nav-item{padding:0;font-size:14px}
-  .record-nav-item.active{width:calc(var(--footer-item-h) + 2px + 4em + 9px);padding:0 9px 0 6px}
+  .record-nav-item.active{width:calc(var(--footer-item-h) + 2px + 4em + 9px);padding:0 9px 0 0}
 }
 @media(max-width:380px){
   .app{padding-left:12px;padding-right:12px}
