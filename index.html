@@ -1020,6 +1020,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 (() => {
   const STORAGE_KEY="lesson-record-v01-github";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
+  const INSTRUCTORS=["石井","田中","佐々木"];
   const now=new Date(), Y=now.getFullYear(), M=now.getMonth()+1, D=now.getDate();
 
   const materialDb={
@@ -1030,12 +1031,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   };
 
   const lessons=[
-    {id:"l1",student:"佐藤 陽菜",familyName:"佐藤",givenName:"陽菜",familyKana:"さとう",givenKana:"ひな",grade:"中2",subject:"数学",hour:17,minute:0,type:"通常",materials:["新中学問題集 数学2年","計算トレーニング 数学2年"],prevHomework:"新中学問題集 数学2年 p.46〜47 の残り（大問3・4）",history:[
+    {id:"l1",student:"佐藤 陽菜",familyName:"佐藤",givenName:"陽菜",familyKana:"さとう",givenKana:"ひな",grade:"中2",subject:"数学",instructor:"石井",hour:17,minute:0,type:"通常",materials:["新中学問題集 数学2年","計算トレーニング 数学2年"],prevHomework:"新中学問題集 数学2年 p.46〜47 の残り（大問3・4）",history:[
       {date:"2026/09/12",text:"加減法で係数をそろえる手順を確認しました。途中式を省略するとミスが出るため、一行ずつ書く練習を行いました。"},
       {date:"2026/09/05",text:"分数を含む連立方程式を扱いました。分母をはらう処理を確認した後は、自力で解ける問題が増えました。"}]},
-    {id:"l2",student:"鈴木 大輝",familyName:"鈴木",givenName:"大輝",familyKana:"すずき",givenKana:"だいき",grade:"中2",subject:"英語",hour:18,minute:20,type:"振替",materials:["新中学問題集 英語2年"],prevHomework:"新中学問題集 英語2年 p.46〜47、単語テスト範囲の復習",history:[
+    {id:"l2",student:"鈴木 大輝",familyName:"鈴木",givenName:"大輝",familyKana:"すずき",givenKana:"だいき",grade:"中2",subject:"英語",instructor:"田中",hour:18,minute:20,type:"振替",materials:["新中学問題集 英語2年"],prevHomework:"新中学問題集 英語2年 p.46〜47、単語テスト範囲の復習",history:[
       {date:"2026/09/11",text:"不定詞の名詞的用法・副詞的用法の識別を演習しました。英作文ではtoの位置を確認しました。"}]},
-    {id:"l3",student:"高橋 芽衣",familyName:"高橋",givenName:"芽衣",familyKana:"たかはし",givenKana:"めい",grade:"中3",subject:"国語",hour:19,minute:40,type:"講習",materials:["標準問題集 国語3年"],prevHomework:"標準問題集 国語3年 p.24〜25 の記述問題",history:[
+    {id:"l3",student:"高橋 芽衣",familyName:"高橋",givenName:"芽衣",familyKana:"たかはし",givenKana:"めい",grade:"中3",subject:"国語",instructor:"石井",hour:19,minute:40,type:"講習",materials:["標準問題集 国語3年"],prevHomework:"標準問題集 国語3年 p.24〜25 の記述問題",history:[
       {date:"2026/09/10",text:"接続語に着目して段落関係を整理しました。記述問題では必要な要素を意識して書けるようになりました。"}]}
   ];
 
@@ -1079,6 +1080,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       performedAt:c.dt,
       duration:c.duration,
       type:c.type,
+      instructor:c.instructor,
       subjects:c.subjects,
       material:c.material,
       customMaterial:c.customMaterial,
@@ -1142,7 +1144,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const savedSubjects=Array.isArray(r?.subjects)?r.subjects:(r?.subject?[r.subject]:[]);
     const subjects=SUBJECTS.filter(subject=>savedSubjects.includes(subject));
     if(!subjects.length)subjects.push(l.subject);
-    renderRecord({dt,duration,material,pageFrom,pageTo,unit,review:r?.review||"",homeworkComment:r?.homeworkComment||"",nextHomework:r?.nextHomework||"",note:r?.note||"",customMaterial:r?.customMaterial||"",forgotOther:r?.forgotOther||"",type:r?.type||l.type,subjects});
+    const instructor=INSTRUCTORS.includes(r?.instructor)?r.instructor:l.instructor;
+    renderRecord({dt,duration,material,pageFrom,pageTo,unit,review:r?.review||"",homeworkComment:r?.homeworkComment||"",nextHomework:r?.nextHomework||"",note:r?.note||"",customMaterial:r?.customMaterial||"",forgotOther:r?.forgotOther||"",type:r?.type||l.type,instructor,subjects});
   }
 
   function renderRecord(v){
@@ -1164,6 +1167,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="record-section" data-record-section="basic"><h1 class="record-section-title">基本情報</h1>'+
     '<section class="card vt-datetime" data-card-status="datetime"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">実施日時</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+datetimeBlocks(v)+'</div></section>'+
     '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="typeSegment" data-adaptive-horizontal="choices" role="group" aria-label="授業区分">'+["通常","振替","講習"].map(t=>'<button type="button" class="choice-button '+(v.type===t?'active':'')+'" data-type="'+t+'" aria-pressed="'+(v.type===t)+'">'+t+'</button>').join("")+'</div></div></section>'+
+    '<section class="card vt-instructor" data-card-status="instructor"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">担当講師</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="instructorChoices" data-adaptive-horizontal="choices" role="group" aria-label="担当講師">'+INSTRUCTORS.map(instructor=>'<button type="button" class="choice-button '+(v.instructor===instructor?'active':'')+'" data-instructor="'+instructor+'" aria-pressed="'+(v.instructor===instructor)+'">'+instructor+'</button>').join("")+'</div></div></section>'+
     '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+
     '<div class="choice-grid" id="subjectChoices" data-adaptive-horizontal="choices" role="group" aria-label="教科（複数選択可）">'+SUBJECTS.map(subject=>'<button type="button" class="choice-button '+(v.subjects.includes(subject)?'active':'')+'" data-subject="'+subject+'" aria-pressed="'+v.subjects.includes(subject)+'">'+subject+'</button>').join("")+'</div>'+
     '</div></section>'+
@@ -1346,6 +1350,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       note:document.getElementById("note")?.value??v.note,
       forgotOther:document.getElementById("forgotOther")?.value??v.forgotOther,
       type:document.querySelector("#typeSegment .active")?.dataset.type||v.type,
+      instructor:document.querySelector("#instructorChoices .active")?.dataset.instructor||v.instructor,
       subjects:[...document.querySelectorAll("#subjectChoices [data-subject].active")].map(button=>button.dataset.subject)
     };
   }
@@ -1367,6 +1372,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const completed={
       datetime:true,
       type:!!String(c.type||"").trim(),
+      instructor:!!String(c.instructor||"").trim(),
       subject:Array.isArray(c.subjects)&&c.subjects.length>0,
       material:c.material==="__custom__"
         ? !!String(c.customMaterial||"").trim()
@@ -1575,6 +1581,16 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         x.setAttribute("aria-pressed",String(selected));
       });
       v.type=b.dataset.type;
+      autoSaveNow(v);
+    });
+
+    document.querySelectorAll("[data-instructor]").forEach(b=>b.onclick=()=>{
+      document.querySelectorAll("[data-instructor]").forEach(x=>{
+        const selected=x===b;
+        x.classList.toggle("active",selected);
+        x.setAttribute("aria-pressed",String(selected));
+      });
+      v.instructor=b.dataset.instructor;
       autoSaveNow(v);
     });
 
