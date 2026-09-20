@@ -204,6 +204,7 @@ button{touch-action:manipulation}
 .record-section{
   --record-list-inset:15px;
   --record-status-size:10.5px;
+  --record-mark-stroke:1.75px;
   --record-label-gap:6.4px;
   --record-half-label-gap:3.2px;
   --record-content-gap:10px;
@@ -301,7 +302,7 @@ button{touch-action:manipulation}
   box-sizing:border-box;
   transform:translateY(.5px);
   align-self:center;
-  border:1.75px solid #56616e;
+  border:var(--record-mark-stroke) solid #56616e;
   border-radius:25%;
   background:#fff;
   transition:
@@ -435,9 +436,9 @@ button{touch-action:manipulation}
 }
 .material-relation-line{
   width:14px;
-  height:2px;
+  height:var(--record-mark-stroke);
   align-self:end;
-  margin-bottom:calc(var(--record-control-height) / 2 - .5px);
+  margin-bottom:calc((var(--record-control-height) - var(--record-mark-stroke)) / 2);
   border-radius:999px;
   background:#aeb8c3;
 }
@@ -532,7 +533,7 @@ select.dt-block{padding-right:var(--record-horizontal-space)}
   display:block;
   fill:none;
   stroke:currentColor;
-  stroke-width:1.9;
+  stroke-width:var(--record-mark-stroke);
   stroke-linecap:round;
   stroke-linejoin:round;
   shape-rendering:geometricPrecision;
@@ -562,6 +563,45 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   overscroll-behavior-x:contain;
 }
 .choice-grid::-webkit-scrollbar{display:none}
+
+.choice-scroll-affordance{
+  display:none;
+  align-items:center;
+  justify-content:flex-end;
+  gap:4px;
+  height:var(--record-status-size);
+  margin:0 0 6px;
+  color:var(--record-control-text);
+  pointer-events:none;
+}
+.choice-scroll-affordance.is-visible{
+  display:flex;
+}
+.choice-scroll-chevron{
+  width:var(--record-status-size);
+  height:var(--record-status-size);
+  flex:0 0 var(--record-status-size);
+  opacity:1;
+  transition:opacity .12s ease;
+}
+.choice-scroll-chevron.is-muted{
+  opacity:.28;
+}
+.choice-scroll-chevron svg{
+  display:block;
+  width:100%;
+  height:100%;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:var(--record-mark-stroke);
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  shape-rendering:geometricPrecision;
+}
+.app.preview-mode .choice-scroll-affordance{
+  display:none!important;
+}
+
 .choice-button{
   flex:0 0 auto;
   width:auto;
@@ -1485,7 +1525,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="card vt-nexthomework" data-card-status="nexthomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">今回の宿題</h2></div><div class="card-body"><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="other"><h1 class="record-section-title">特記事項</h1>'+
-    '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2></div><div class="card-body"><p class="hint">複数選択可</p><div class="chips" id="forgotChips" data-choice-scroll>'+["なし","筆記用具","教材","宿題","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></section>'+
+    '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2></div><div class="card-body"><p class="hint">複数選択可</p><div class="chips" id="forgotChips" data-choice-scroll>'+["なし","筆記用具","教材","宿題","連絡帳","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></section>'+
     '<section class="card vt-note" data-card-status="note"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">備考（内部用）</h2></div><div class="card-body"><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></div></section>'+
     '</section>'+
     '<div class="record-footer-spacer" aria-hidden="true"></div>'+
@@ -1587,8 +1627,52 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     root.classList.toggle("datetime-wrap",fitted<minimum);
   }
 
+  function updateChoiceScrollAffordance(group){
+    const shell=group.previousElementSibling;
+    if(!shell?.classList.contains("choice-scroll-affordance"))return;
+
+    const maxScroll=Math.max(0,group.scrollWidth-group.clientWidth);
+    const scrollable=maxScroll>1;
+    const left=shell.querySelector('[data-scroll-direction="left"]');
+    const right=shell.querySelector('[data-scroll-direction="right"]');
+
+    shell.classList.toggle("is-visible",scrollable);
+    if(!scrollable)return;
+
+    const current=Math.max(0,group.scrollLeft);
+    left?.classList.toggle("is-muted",current<=1);
+    right?.classList.toggle("is-muted",current>=maxScroll-1);
+  }
+
+  function setupChoiceScrollAffordances(){
+    document.querySelectorAll("[data-choice-scroll]").forEach(group=>{
+      if(!group.previousElementSibling?.classList.contains("choice-scroll-affordance")){
+        const affordance=document.createElement("div");
+        affordance.className="choice-scroll-affordance";
+        affordance.setAttribute("aria-hidden","true");
+        affordance.innerHTML=
+          '<span class="choice-scroll-chevron" data-scroll-direction="left">'+
+            '<svg viewBox="0 0 10.5 10.5"><path d="M6.7 2.15 3.6 5.25l3.1 3.1"/></svg>'+
+          '</span>'+
+          '<span class="choice-scroll-chevron" data-scroll-direction="right">'+
+            '<svg viewBox="0 0 10.5 10.5"><path d="m3.8 2.15 3.1 3.1-3.1 3.1"/></svg>'+
+          '</span>';
+        group.before(affordance);
+
+        let raf=0;
+        group.addEventListener("scroll",()=>{
+          cancelAnimationFrame(raf);
+          raf=requestAnimationFrame(()=>updateChoiceScrollAffordance(group));
+        },{passive:true});
+      }
+
+      updateChoiceScrollAffordance(group);
+    });
+  }
+
   function fitRecordHorizontalControls(){
     fitDateTimeControls();
+    setupChoiceScrollAffordances();
   }
 
   function refreshDateTimeBlocks(v){
@@ -2067,6 +2151,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         active.forEach(restoreMotionStyle);
         document.querySelectorAll("[data-choice-scroll]").forEach(group=>{
           group.scrollLeft=0;
+          updateChoiceScrollAffordance(group);
         });
       });
     }
@@ -2176,7 +2261,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           restoreMotionStyle(option);
         });
         active.forEach(restoreMotionStyle);
-        scrollGroups.forEach(group=>group.style.removeProperty("overflow"));
+        scrollGroups.forEach(group=>{
+          group.style.removeProperty("overflow");
+          updateChoiceScrollAffordance(group);
+        });
       });
     }
 
