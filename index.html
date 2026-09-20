@@ -466,8 +466,34 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   will-change:width;
 }
 .record-nav-item:active{transform:none}
+
+/* Selected nav capsule lives on its own opacity layer.
+   This lets the color disappear at the same pace as the geometry closes,
+   instead of the gradient snapping away. */
+.record-nav-item::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  border-radius:inherit;
+  background:linear-gradient(180deg,#3993ff 0%,#1f73e6 100%);
+  box-shadow:
+    inset 0 0 0 1.25px #2278ef,
+    inset 0 1px 0 rgba(255,255,255,.16);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity var(--footer-motion-dur) var(--footer-motion-ease);
+}
+.record-nav-item.active::after{
+  opacity:1;
+}
+.record-footer.preview-mode .record-nav-item.active::after{
+  opacity:0;
+}
+
 .record-nav-item .record-icon-circle{
   position:relative;
+  z-index:1;
   width:var(--footer-item-h);
   height:var(--footer-item-h);
   flex:0 0 var(--footer-item-h);
@@ -555,6 +581,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   shape-rendering:geometricPrecision;
 }
 .record-nav-label{
+  position:relative;
+  z-index:1;
   width:4em;
   max-width:0;
   opacity:0;
@@ -580,9 +608,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   width:calc(var(--footer-item-h) + 2px + 4em + 11px);
   padding:0 11px 0 0;
   color:#fff;
-  background:linear-gradient(180deg,#3993ff 0%,#1f73e6 100%);
-  border:1.25px solid #2278ef;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.16);
+  background:transparent;
+  border:0;
+  box-shadow:none;
 }
 .record-nav-item.active .record-icon-circle{
   color:#2278ef;
