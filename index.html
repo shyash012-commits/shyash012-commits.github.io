@@ -441,11 +441,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   height:var(--footer-item-h);
   width:var(--footer-item-h);
   min-width:var(--footer-item-h);
-  border:1.25px solid #cbd3dc;
+  border:0;
   border-radius:var(--footer-item-r);
   padding:0;
   background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
   box-shadow:
+    inset 0 0 0 1.25px #cbd3dc,
     inset 0 1px 0 rgba(255,255,255,1),
     inset 0 -1px 0 rgba(31,41,51,.035);
   color:#243140;
@@ -587,8 +588,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   padding:0 11px 0 0;
   color:#fff;
   background:linear-gradient(180deg,#3993ff 0%,#1f73e6 100%);
-  border-color:#2278ef;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.16);
+  box-shadow:
+    inset 0 0 0 1.25px #2278ef,
+    inset 0 1px 0 rgba(255,255,255,.16);
 }
 .record-nav-item.active .record-icon-circle{
   color:#2278ef;
@@ -599,9 +601,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   box-shadow:none;
 }
 .record-nav-item.completed:not(.active){
-  border-color:#9faab6;
   background:linear-gradient(180deg,#d9dee3 0%,#c8cfd6 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.58);
+  box-shadow:
+    inset 0 0 0 1.25px #9faab6,
+    inset 0 1px 0 rgba(255,255,255,.58);
   color:#44515e;
 }
 .record-nav-item.completed:not(.active) .record-icon-circle{
@@ -660,9 +663,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   width:var(--footer-item-h);
   height:var(--footer-item-h);
   border-radius:var(--footer-item-r);
-  border:1.25px solid #cbd3dc;
+  border:0;
   background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
   box-shadow:
+    inset 0 0 0 1.25px #cbd3dc,
     inset 0 1px 0 rgba(255,255,255,1),
     inset 0 -1px 0 rgba(31,41,51,.035);
   display:block;
@@ -753,9 +757,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .record-footer.preview-mode .record-preview-button .record-icon-circle{
   width:var(--preview-inner-w);
   color:#fff;
-  border-color:#2faa68;
   background:linear-gradient(180deg,#56cf8d 0%,#35b978 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.16);
+  box-shadow:
+    inset 0 0 0 1.25px #2faa68,
+    inset 0 1px 0 rgba(255,255,255,.16);
 }
 .record-footer.preview-mode .record-preview-button .preview-icon-slot{
   color:#2faa68;
@@ -808,9 +813,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
 /* Preview mode ignores "completed" gray: unselected items return to normal white. */
 .record-footer.preview-mode .record-nav-item.completed:not(.active){
-  border-color:#cbd3dc;
   background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
   box-shadow:
+    inset 0 0 0 1.25px #cbd3dc,
     inset 0 1px 0 rgba(255,255,255,1),
     inset 0 -1px 0 rgba(31,41,51,.035);
   color:#243140;
