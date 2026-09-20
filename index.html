@@ -390,8 +390,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   --footer-item-r:21px;
   --footer-icon-d:30px;
   --footer-icon-scale:.7142857;
-  --footer-color-dur:.48s;
-  --footer-color-ease:cubic-bezier(.42,0,.58,1);
+  --footer-motion-dur:.38s;
+  --footer-motion-ease:cubic-bezier(.65,0,.35,1);
+  --footer-fade-dur:.18s;
+  --footer-color-dur:.30s;
+  --footer-color-ease:cubic-bezier(.65,0,.35,1);
   position:fixed;
   left:50%;
   bottom:0;
@@ -454,10 +457,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   appearance:none;
   -webkit-appearance:none;
   transition:
-    width .34s cubic-bezier(.16,1,.3,1),
+    width var(--footer-motion-dur) var(--footer-motion-ease),
     background-color var(--footer-color-dur) var(--footer-color-ease),
     color var(--footer-color-dur) var(--footer-color-ease),
-    padding .34s cubic-bezier(.16,1,.3,1),
+    padding var(--footer-motion-dur) var(--footer-motion-ease),
     transform .14s ease;
   will-change:width;
 }
@@ -488,7 +491,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   transform-origin:50% 50%;
   will-change:transform;
   transition:
-    transform .34s cubic-bezier(.16,1,.3,1),
+    transform var(--footer-motion-dur) var(--footer-motion-ease),
     border-color var(--footer-color-dur) var(--footer-color-ease),
     background var(--footer-color-dur) var(--footer-color-ease),
     box-shadow var(--footer-color-dur) var(--footer-color-ease);
@@ -554,7 +557,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   width:4em;
   max-width:0;
   opacity:0;
-  visibility:hidden;
   overflow:hidden;
   white-space:nowrap;
   margin-left:0;
@@ -564,11 +566,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   line-height:1;
   will-change:max-width,opacity,transform;
   transition:
-    opacity .07s ease 0s,
-    visibility 0s linear .07s,
-    max-width .28s cubic-bezier(.16,1,.3,1) .05s,
-    margin-left .28s cubic-bezier(.16,1,.3,1) .05s,
-    transform .18s ease 0s;
+    max-width var(--footer-motion-dur) var(--footer-motion-ease),
+    margin-left var(--footer-motion-dur) var(--footer-motion-ease),
+    transform var(--footer-motion-dur) var(--footer-motion-ease),
+    opacity var(--footer-fade-dur) ease;
 }
 .record-nav-label-spaced{
   display:inline-flex;
@@ -602,15 +603,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .record-nav-item.active .record-nav-label{
   max-width:4em;
   opacity:1;
-  visibility:visible;
   margin-left:2px;
   transform:translateX(0);
-  transition:
-    max-width .34s cubic-bezier(.16,1,.3,1) 0s,
-    margin-left .34s cubic-bezier(.16,1,.3,1) 0s,
-    transform .34s cubic-bezier(.16,1,.3,1) 0s,
-    opacity .14s ease .09s,
-    visibility 0s linear 0s;
 }
 .record-preview-button{
   --preview-label-w:5em;
@@ -639,8 +633,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   font-size:15px;
   -webkit-tap-highlight-color:transparent;
   transition:
-    width .34s cubic-bezier(.16,1,.3,1),
-    border-radius .34s cubic-bezier(.16,1,.3,1),
+    width var(--footer-motion-dur) var(--footer-motion-ease),
+    border-radius var(--footer-motion-dur) var(--footer-motion-ease),
     background-color var(--footer-color-dur) var(--footer-color-ease),
     border-color var(--footer-color-dur) var(--footer-color-ease),
     transform .14s ease;
@@ -663,8 +657,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   display:block;
   overflow:hidden;
   transition:
-    width .34s cubic-bezier(.16,1,.3,1),
-    border-radius .34s cubic-bezier(.16,1,.3,1),
+    width var(--footer-motion-dur) var(--footer-motion-ease),
+    border-radius var(--footer-motion-dur) var(--footer-motion-ease),
     background var(--footer-color-dur) var(--footer-color-ease),
     border-color var(--footer-color-dur) var(--footer-color-ease),
     box-shadow var(--footer-color-dur) var(--footer-color-ease),
@@ -698,7 +692,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   z-index:0;
   will-change:transform;
   transition:
-    transform .34s cubic-bezier(.16,1,.3,1),
+    transform var(--footer-motion-dur) var(--footer-motion-ease),
     border-color var(--footer-color-dur) var(--footer-color-ease),
     background var(--footer-color-dur) var(--footer-color-ease),
     box-shadow var(--footer-color-dur) var(--footer-color-ease);
@@ -717,7 +711,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   width:var(--preview-label-w);
   max-width:0;
   opacity:0;
-  visibility:hidden;
   overflow:hidden;
   white-space:nowrap;
   transform:translateY(-50%) translateX(-4px);
@@ -727,10 +720,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   text-align:left;
   will-change:max-width,opacity,transform;
   transition:
-    opacity .07s ease 0s,
-    visibility 0s linear .07s,
-    max-width .28s cubic-bezier(.16,1,.3,1) .05s,
-    transform .18s ease 0s;
+    max-width var(--footer-motion-dur) var(--footer-motion-ease),
+    transform var(--footer-motion-dur) var(--footer-motion-ease),
+    opacity var(--footer-fade-dur) ease,
+    color var(--footer-color-dur) var(--footer-color-ease);
 }
 .record-preview-button:active .record-icon-circle{
   background:linear-gradient(180deg,#f7f9fb 0%,#e7ecf1 100%);
@@ -766,60 +759,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   max-width:var(--preview-label-w);
   color:#fff;
   opacity:1;
-  visibility:visible;
   transform:translateY(-50%) translateX(0);
-  transition:
-    max-width .34s cubic-bezier(.16,1,.3,1) 0s,
-    transform .34s cubic-bezier(.16,1,.3,1) 0s,
-    opacity .14s ease .09s,
-    visibility 0s linear 0s;
 }
 
-
-/* Exact rewind when leaving preview mode.
-   Forward: cubic-bezier(.16,1,.3,1)
-   Rewind:  cubic-bezier(.7,0,.84,0) */
-.record-footer.preview-rewind .record-preview-button{
-  transition:
-    width .34s cubic-bezier(.7,0,.84,0),
-    border-radius .34s cubic-bezier(.7,0,.84,0),
-    background-color var(--footer-color-dur) var(--footer-color-ease),
-    border-color var(--footer-color-dur) var(--footer-color-ease),
-    transform .14s ease;
-}
-.record-footer.preview-rewind .record-preview-button .record-icon-circle{
-  transition:
-    width .34s cubic-bezier(.7,0,.84,0),
-    border-radius .34s cubic-bezier(.7,0,.84,0),
-    background var(--footer-color-dur) var(--footer-color-ease),
-    border-color var(--footer-color-dur) var(--footer-color-ease),
-    box-shadow var(--footer-color-dur) var(--footer-color-ease),
-    color var(--footer-color-dur) var(--footer-color-ease);
-}
-.record-footer.preview-rewind .preview-icon-slot::before,
-.record-footer.preview-rewind .record-nav-item .record-icon-circle::before{
-  transition:
-    transform .34s cubic-bezier(.7,0,.84,0),
-    border-color var(--footer-color-dur) var(--footer-color-ease),
-    background var(--footer-color-dur) var(--footer-color-ease),
-    box-shadow var(--footer-color-dur) var(--footer-color-ease);
-}
-.record-footer.preview-rewind .preview-label{
-  transition:
-    max-width .34s cubic-bezier(.7,0,.84,0) 0s,
-    transform .34s cubic-bezier(.7,0,.84,0) 0s,
-    opacity .14s cubic-bezier(.75,0,.75,.9) .11s,
-    visibility 0s linear .25s,
-    color var(--footer-color-dur) var(--footer-color-ease);
-}
-.record-footer.preview-rewind .record-nav-item{
-  transition:
-    width .34s cubic-bezier(.7,0,.84,0),
-    background-color var(--footer-color-dur) var(--footer-color-ease),
-    color var(--footer-color-dur) var(--footer-color-ease),
-    padding .34s cubic-bezier(.7,0,.84,0),
-    transform .14s ease;
-}
 
 /* In preview mode the TOC is icon-only; selection is shown by a blue circle only. */
 .record-footer.preview-mode .record-nav-item,
@@ -835,15 +777,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .record-footer.preview-mode .record-nav-item.active .record-nav-label{
   max-width:0;
   opacity:0;
-  visibility:hidden;
   margin-left:0;
   transform:translateX(-4px);
-  transition:
-    max-width .34s cubic-bezier(.7,0,.84,0) 0s,
-    margin-left .34s cubic-bezier(.7,0,.84,0) 0s,
-    transform .34s cubic-bezier(.7,0,.84,0) 0s,
-    opacity .14s cubic-bezier(.75,0,.75,.9) .11s,
-    visibility 0s linear .25s;
 }
 .record-footer.preview-mode .record-nav-item.active .record-icon-circle{
   color:#fff;
@@ -1429,48 +1364,42 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const previewBtn=document.getElementById("previewBtn");
     const recordFooter=document.querySelector(".record-footer");
     const recordApp=document.querySelector("#app > .app");
-    let previewRewindTimer=null;
+    let previewUnlockTimer=null;
 
     if(previewBtn&&recordFooter&&recordApp)previewBtn.onclick=()=>{
-      if(recordFooter.classList.contains("preview-rewind")) return;
-
       autoSaveNow(v);
       closeDateTimePopover();
 
       const on=!recordFooter.classList.contains("preview-mode");
+      clearTimeout(previewUnlockTimer);
 
       if(on){
-        // If an input is currently focused, close the keyboard before locking the form.
+        // Close the keyboard before locking the form.
         if(document.activeElement instanceof HTMLElement){
           document.activeElement.blur();
         }
 
-        recordFooter.classList.add("preview-mode");
         recordApp.classList.add("preview-mode");
-
-        // Preview is read-only: keep scrolling/nav available, but make every record card inert.
         document.querySelectorAll(".card").forEach(card=>card.setAttribute("inert",""));
+        recordFooter.classList.add("preview-mode");
 
         previewBtn.setAttribute("aria-pressed","true");
         previewBtn.setAttribute("aria-label","プレビューを閉じる");
         return;
       }
 
-      // Closing is a literal rewind of the opening motion.
-      // Put the reverse transition rules in place first, then remove the open state.
-      recordFooter.classList.add("preview-rewind");
-      void recordFooter.offsetWidth;
+      // No special close animation: the same CSS transition runs back to the base state.
+      // This also means an interrupted motion reverses smoothly from its current position.
       recordFooter.classList.remove("preview-mode");
-
       previewBtn.setAttribute("aria-pressed","false");
       previewBtn.setAttribute("aria-label","プレビュー");
 
-      clearTimeout(previewRewindTimer);
-      previewRewindTimer=setTimeout(()=>{
-        recordFooter.classList.remove("preview-rewind");
+      previewUnlockTimer=setTimeout(()=>{
+        // If preview was reopened during the morph, keep it locked.
+        if(recordFooter.classList.contains("preview-mode")) return;
         recordApp.classList.remove("preview-mode");
         document.querySelectorAll(".card").forEach(card=>card.removeAttribute("inert"));
-      },350);
+      },400);
     };
 
     document.querySelectorAll("[data-dt-part]").forEach(btn=>{
