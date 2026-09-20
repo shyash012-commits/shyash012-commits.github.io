@@ -1577,7 +1577,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     let previewOptionMotionToken=0;
     let previewOptionCleanupTimer=null;
     let previewOptionAnimations=[];
-    let previewOptionClones=[];
 
     const px=value=>value+"px";
     const previewOptions=()=>[...document.querySelectorAll(PREVIEW_OPTION_SELECTOR)];
@@ -1606,18 +1605,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       return animation;
     }
 
-    function clearPreviewClones(){
-      previewOptionClones.forEach(clone=>clone.remove());
-      previewOptionClones=[];
-    }
-
     function stopPreviewOptionMotion(compact){
       previewOptionMotionToken+=1;
       clearTimeout(previewOptionCleanupTimer);
       previewOptionCleanupTimer=null;
       previewOptionAnimations.forEach(animation=>animation.cancel());
       previewOptionAnimations=[];
-      clearPreviewClones();
 
       previewOptions().forEach(option=>{
         restoreMotionStyle(option);
@@ -1830,37 +1823,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       });
     }
 
-    function makePreviewClone(option,from,to,zIndex=1){
-      const clone=option.cloneNode(true);
-      clone.removeAttribute("id");
-      clone.removeAttribute("data-preview-motion-style");
-      clone.setAttribute("aria-hidden","true");
-      clone.tabIndex=-1;
-      clone.classList.remove("preview-option-hidden");
-
-      Object.assign(clone.style,{
-        position:"fixed",
-        left:px(from.left),
-        top:px(from.top),
-        width:px(from.width),
-        height:px(to.height),
-        margin:"0",
-        pointerEvents:"none",
-        zIndex:String(zIndex),
-        overflow:"hidden"
-      });
-
-      const label=optionLabel(clone);
-      if(label){
-        label.style.opacity="0";
-        label.style.transform="translateX(-4px)";
-      }
-
-      document.body.appendChild(clone);
-      previewOptionClones.push(clone);
-      return clone;
-    }
-
     function expandPreviewOptions(){
       const inactive=inactivePreviewOptions();
       const active=activePreviewOptions();
@@ -1882,8 +1844,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       ];
       const targetBefore=captureRects(uniqueTargets);
 
-      // Restore the real controls for layout, but keep them visually hidden
-      // until their temporary clones finish sliding out.
+      // Put the real controls back into layout invisibly first. This establishes
+      // their true final positions without showing a temporary clone or causing
+      // a clone→real-element handoff at the end.
       inactive.forEach(option=>{
         option.classList.remove("preview-option-hidden");
         rememberMotionStyle(option);
@@ -1892,6 +1855,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
       const inactiveAfter=captureRects(inactive);
 
+      // The selected controls now sit at their edit-mode positions. FLIP them
+      // smoothly from the compact preview positions to those final positions.
       raiseActiveOptions(active);
       animateActiveMove(active,activeBefore);
 
@@ -1901,8 +1866,19 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         const targetRect=info?.target?targetBefore.get(info.target):null;
         if(!to)return;
 
+        const label=optionLabel(option);
+        if(label){
+          label.style.opacity="0";
+          label.style.transform="translateX(-4px)";
+        }
+
+        option.style.visibility="visible";
+        option.style.position="relative";
+        option.style.zIndex=String(info?.zIndex||1);
+        option.style.transformOrigin="50% 50%";
+        option.style.overflow="hidden";
+
         if(!targetRect){
-          option.style.visibility="visible";
           animateOptionLabel(
             option,
             true,
@@ -1911,23 +1887,45 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           return;
         }
 
-        const from=stackedRect(to,targetRect);
-        const clone=makePreviewClone(option,from,to,info?.zIndex||1);
-        // Match the footer's feel: the capsule moves first, then its label
-        // resolves during the final fade interval instead of appearing inside
-        // a still-narrow/clipped card.
+        const startWidth=Math.min(to.width,targetRect.width);
+        const startScaleX=startWidth/to.width;
+        const startCenterX=targetRect.left+targetRect.width/2;
+        const startCenterY=targetRect.top+targetRect.height/2;
+        const endCenterX=to.left+to.width/2;
+        const endCenterY=to.top+to.height/2;
+        const dx=startCenterX-endCenterX;
+        const dy=startCenterY-endCenterY;
+
+        // The real card begins visually underneath its selected target, then
+        // slides out while returning from the stacked width to its natural width.
+        // Because the actual DOM element is used throughout, there is no visible
+        // swap at the end of the animation.
+        trackPreviewAnimation(
+          option,
+          [
+            {transform:`translate(${dx}px, ${dy}px) scaleX(${startScaleX})`},
+            {transform:"translate(0, 0) scaleX(1)"}
+          ],
+          {
+            duration:PREVIEW_OPTION_MOTION.move,
+            easing:PREVIEW_OPTION_MOTION.ease
+          }
+        );
+
         animateOptionLabel(
-          clone,
+          option,
           true,
           Math.max(0,PREVIEW_OPTION_MOTION.move-PREVIEW_OPTION_MOTION.fade)
         );
-        animateBox(clone,from,to);
       });
 
       schedulePreviewCleanup(token,()=>{
-        clearPreviewClones();
         inactive.forEach(option=>{
-          option.style.visibility="visible";
+          const label=optionLabel(option);
+          if(label){
+            label.style.removeProperty("opacity");
+            label.style.removeProperty("transform");
+          }
           restoreMotionStyle(option);
         });
         active.forEach(restoreMotionStyle);
