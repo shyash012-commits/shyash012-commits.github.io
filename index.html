@@ -421,6 +421,32 @@ button{touch-action:manipulation}
 .dt-block:active{background:#eef2f6}
 
 .field{margin-top:14px}.label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.material-entries{
+  display:grid;
+}
+.material-entry-shell{
+  overflow:visible;
+}
+.material-entry-shell:not(:first-child){
+  padding-top:var(--record-item-gap);
+}
+.material-entry-content{
+  min-width:0;
+}
+.material-entry-heading{
+  display:flex;
+  align-items:center;
+  min-height:21px;
+  margin-bottom:var(--record-content-gap);
+}
+.material-entry-shell:first-child .material-entry-heading{
+  display:none;
+}
+.material-entry-title{
+  font-size:16px;
+  font-weight:700;
+  line-height:1.2;
+}
 .material-entry{
   display:grid;
   gap:14px;
@@ -491,11 +517,9 @@ button{touch-action:manipulation}
   min-width:max-content;
   padding-right:2px;
 }
-.material-add-action{
+.material-text-action{
   display:inline-flex;
   align-items:center;
-  gap:6px;
-  margin-top:var(--record-item-gap);
   padding:0;
   border:0;
   background:none;
@@ -504,8 +528,19 @@ button{touch-action:manipulation}
   font-weight:700;
   line-height:1.2;
 }
-.material-add-action:active{
+.material-text-action:active{
   opacity:.58;
+}
+.material-add-action{
+  gap:6px;
+  margin-top:var(--record-item-gap);
+}
+.material-delete-action{
+  margin-left:auto;
+}
+.app.preview-mode .material-add-action,
+.app.preview-mode .material-delete-action{
+  display:none;
 }
 .material-add-icon{
   width:var(--record-status-size);
@@ -1406,6 +1441,52 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       ranges:(from||to)?[{from,to}]:[]
     },material)];
   }
+
+  function materialEntryMarkup(entry,allMaterials){
+    const range=entry.ranges[0]||{from:"",to:""};
+    const units=unitListForRanges(entry.material,entry.ranges);
+
+    return '<div class="material-entry-shell" data-material-entry>'+
+      '<div class="material-entry-content">'+
+        '<div class="material-entry-heading">'+
+          '<span class="material-entry-title">使用教材</span>'+
+          '<button type="button" class="material-text-action material-delete-action" data-delete-material>削除</button>'+
+        '</div>'+
+        '<div class="material-entry">'+
+        '<div class="record-select-shell">'+
+          '<select data-material-select aria-label="教材">'+
+            allMaterials.map(material=>
+              '<option value="'+esc(material)+'" '+(entry.material===material?'selected':'')+'>'+esc(material)+'</option>'
+            ).join("")+
+            '<option value="__custom__" '+(entry.material==="__custom__"?'selected':'')+'>自由入力</option>'+
+          '</select>'+
+          '<span class="record-select-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M.875 2.65 5.25 7.025 9.625 2.65"/></svg></span>'+
+        '</div>'+
+        '<div class="field '+(entry.material==="__custom__"?'':'hidden')+'" data-custom-material-wrap>'+
+          '<label class="label">教材名</label>'+
+          '<input data-custom-material value="'+esc(entry.customMaterial||"")+'">'+
+        '</div>'+
+        '<div class="material-detail-stack">'+
+          '<div class="material-detail-field"><label class="label">範囲</label>'+
+            '<div class="material-range-controls">'+
+              '<input class="material-page-input" data-material-page-from inputmode="numeric" type="number" min="1" aria-label="開始ページ" value="'+esc(range.from)+'">'+
+              '<span class="material-range-separator" aria-hidden="true">〜</span>'+
+              '<input class="material-page-input" data-material-page-to inputmode="numeric" type="number" min="1" aria-label="終了ページ" value="'+esc(range.to)+'">'+
+            '</div>'+
+          '</div>'+
+          '<span class="material-relation-line" aria-hidden="true"></span>'+
+          '<div class="material-detail-field"><label class="label">単元</label>'+
+            '<div class="material-unit-window" data-material-unit aria-label="単元名" aria-readonly="true">'+
+              (units.length
+                ? '<span class="material-unit-track">'+units.map(esc).join(" ／ ")+'</span>'
+                : '')+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    '</div>';
+  }
   function toast(msg){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t)}t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1300)}
 
   function bindPressFeedback(el){
@@ -1533,10 +1614,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const l=getLesson(),
       subjectOptions=subjectsForGrade(l.grade),
       allMaterials=[...new Set([...l.materials,...Object.keys(materialDb)])],
-      materialEntry=v.materials[0]||normalizeMaterialEntry(null,l.materials[0]),
-      materialRange=materialEntry.ranges[0]||{from:"",to:""},
-      materialUnitLines=unitListForRanges(materialEntry.material,materialEntry.ranges),
-      showUnitPrompt=materialNeedsUnitPrompt(materialEntry.material,materialEntry.ranges);
+      materialEntries=(v.materials?.length?v.materials:[normalizeMaterialEntry(null,l.materials[0])]),
+      showUnitPrompt=materialEntries.some(entry=>
+        materialNeedsUnitPrompt(entry.material,entry.ranges)
+      );
     document.getElementById("app").innerHTML='<div class="app">'+
     '<div class="header"><div class="header-row">'+
       '<div class="header-left"><button class="header-action header-back" id="backBtn" aria-label="一覧に戻る">'+
@@ -1561,31 +1642,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</section>'+
     '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
     '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">使用教材</h2><p class="hint inline-auto-hint">*登録済み教材を優先表示</p></div><div class="card-body">'+
-      '<div class="material-entry">'+
-        '<div class="record-select-shell">'+
-          '<select id="material">'+allMaterials.map(x=>'<option value="'+esc(x)+'" '+(materialEntry.material===x?'selected':'')+'>'+esc(x)+'</option>').join("")+'<option value="__custom__" '+(materialEntry.material==="__custom__"?'selected':'')+'>自由入力</option></select>'+
-          '<span class="record-select-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M.875 2.65 5.25 7.025 9.625 2.65"/></svg></span>'+
-        '</div>'+
-        '<div id="customMaterialWrap" class="field '+(materialEntry.material==="__custom__"?'':'hidden')+'"><label class="label">教材名</label><input id="customMaterial" value="'+esc(materialEntry.customMaterial||"")+'"></div>'+
-        '<div class="material-detail-stack">'+
-          '<div class="material-detail-field"><label class="label">範囲</label>'+
-            '<div class="material-range-controls">'+
-              '<input class="material-page-input" id="pageFrom" inputmode="numeric" type="number" min="1" aria-label="開始ページ" value="'+esc(materialRange.from)+'">'+
-              '<span class="material-range-separator" aria-hidden="true">〜</span>'+
-              '<input class="material-page-input" id="pageTo" inputmode="numeric" type="number" min="1" aria-label="終了ページ" value="'+esc(materialRange.to)+'">'+
-            '</div>'+
-          '</div>'+
-          '<span class="material-relation-line" aria-hidden="true"></span>'+
-          '<div class="material-detail-field"><label class="label">単元</label>'+
-            '<div class="material-unit-window" id="unitDisplay" aria-label="単元名" aria-readonly="true">'+
-              (materialUnitLines.length
-                ? '<span class="material-unit-track">'+materialUnitLines.map(esc).join(" ／ ")+'</span>'
-                : '')+
-            '</div>'+
-          '</div>'+
-        '</div>'+
+      '<div class="material-entries" id="materialEntries">'+
+        materialEntries.map(entry=>materialEntryMarkup(entry,allMaterials)).join("")+
       '</div>'+
-      '<button type="button" class="material-add-action" id="addMaterialBtn" aria-label="教材を追加">'+
+      '<button type="button" class="material-text-action material-add-action" id="addMaterialBtn" aria-label="教材を追加">'+
         '<span class="material-add-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M5.25.875v8.75M.875 5.25h8.75"/></svg></span>'+
         '<span>教材を追加</span>'+
       '</button>'+
@@ -1777,17 +1837,18 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     return {
       dt:v.dt,
       duration:Number(v.duration||70),
-      materials:[(()=>{
-        const material=document.getElementById("material")?.value||v.materials?.[0]?.material||"";
-        const customMaterial=document.getElementById("customMaterial")?.value||"";
-        const from=document.getElementById("pageFrom")?.value||"";
-        const to=document.getElementById("pageTo")?.value||"";
+      materials:[...document.querySelectorAll("[data-material-entry]")].map((entry,index)=>{
+        const fallback=v.materials?.[index]||{};
+        const material=entry.querySelector("[data-material-select]")?.value||fallback.material||"";
+        const customMaterial=entry.querySelector("[data-custom-material]")?.value||"";
+        const from=entry.querySelector("[data-material-page-from]")?.value||"";
+        const to=entry.querySelector("[data-material-page-to]")?.value||"";
         return {
           material,
           customMaterial,
           ranges:(from||to)?[{from,to}]:[]
         };
-      })()],
+      }),
       review:document.getElementById("review")?.value??v.review,
       homeworkComment:document.getElementById("homeworkComment")?.value??v.homeworkComment,
       nextHomework:document.getElementById("nextHomework")?.value??v.nextHomework,
@@ -1818,7 +1879,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       type:!!String(c.type||"").trim(),
       instructor:!!String(c.instructor||"").trim(),
       subject:Array.isArray(c.subjects)&&c.subjects.length>0,
-      material:!!c.materials?.some(entry=>
+      material:!!c.materials?.length && c.materials.every(entry=>
         entry.material==="__custom__"
           ? !!String(entry.customMaterial||"").trim()
           : !!String(entry.material||"").trim()
@@ -2429,47 +2490,182 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       autoSaveNow(v);
     });
 
-    const mat=document.getElementById("material");
-    const pageInputs=[
-      document.getElementById("pageFrom"),
-      document.getElementById("pageTo")
-    ];
-    const unitDisplay=document.getElementById("unitDisplay");
     const reviewUnitPrompt=document.getElementById("reviewUnitPrompt");
+    const materialEntries=document.getElementById("materialEntries");
 
-    const currentMaterialRanges=()=>{
-      const from=pageInputs[0]?.value||"";
-      const to=pageInputs[1]?.value||"";
-      return (from||to)?[{from,to}]:[];
+    const readMaterialEntry=entry=>{
+      const material=entry.querySelector("[data-material-select]")?.value||"";
+      const customMaterial=entry.querySelector("[data-custom-material]")?.value||"";
+      const from=entry.querySelector("[data-material-page-from]")?.value||"";
+      const to=entry.querySelector("[data-material-page-to]")?.value||"";
+      return {
+        material,
+        customMaterial,
+        ranges:(from||to)?[{from,to}]:[]
+      };
     };
 
-    const updateUnit=()=>{
-      const ranges=currentMaterialRanges();
-      const units=unitListForRanges(mat?.value,ranges);
-
-      if(unitDisplay){
-        unitDisplay.innerHTML=units.length
-          ? '<span class="material-unit-track">'+units.map(esc).join(" ／ ")+'</span>'
-          : "";
-        unitDisplay.scrollLeft=0;
-      }
-
+    const updateUnitPrompt=()=>{
+      const materials=[...materialEntries.querySelectorAll("[data-material-entry]")]
+        .map(readMaterialEntry);
       reviewUnitPrompt?.classList.toggle(
         "hidden",
-        !materialNeedsUnitPrompt(mat?.value,ranges)
+        !materials.some(entry=>materialNeedsUnitPrompt(entry.material,entry.ranges))
       );
     };
 
-    pageInputs.forEach(input=>{
-      input.oninput=()=>{
-        updateUnit();
-        scheduleAutoSave(v);
+    const removeMaterialEntry=entry=>{
+      const finish=()=>{
+        entry.remove();
+        updateUnitPrompt();
+        v.materials=capture(v).materials;
+        autoSaveNow(v);
       };
-    });
 
-    mat.onchange=()=>{
-      document.getElementById("customMaterialWrap").classList.toggle("hidden",mat.value!=="__custom__");
-      updateUnit();
+      if(matchMedia("(prefers-reduced-motion: reduce)").matches){
+        finish();
+        return;
+      }
+
+      const content=entry.querySelector(".material-entry-content");
+      const startHeight=entry.getBoundingClientRect().height;
+
+      entry.style.height=startHeight+"px";
+      entry.style.overflow="hidden";
+
+      content?.animate(
+        [
+          {opacity:1,transform:"translateY(0)"},
+          {opacity:0,transform:"translateY(-8px)"}
+        ],
+        {
+          duration:PREVIEW_OPTION_MOTION.move,
+          easing:PREVIEW_OPTION_MOTION.ease,
+          fill:"forwards"
+        }
+      );
+
+      const heightAnimation=entry.animate(
+        [
+          {height:startHeight+"px"},
+          {height:"0px"}
+        ],
+        {
+          duration:PREVIEW_OPTION_MOTION.move,
+          easing:PREVIEW_OPTION_MOTION.ease,
+          fill:"forwards"
+        }
+      );
+
+      heightAnimation.onfinish=finish;
+    };
+
+    const bindMaterialEntry=entry=>{
+      const mat=entry.querySelector("[data-material-select]");
+      const customWrap=entry.querySelector("[data-custom-material-wrap]");
+      const customInput=entry.querySelector("[data-custom-material]");
+      const pageInputs=[
+        entry.querySelector("[data-material-page-from]"),
+        entry.querySelector("[data-material-page-to]")
+      ];
+      const unitDisplay=entry.querySelector("[data-material-unit]");
+      const deleteBtn=entry.querySelector("[data-delete-material]");
+
+      const currentRanges=()=>{
+        const from=pageInputs[0]?.value||"";
+        const to=pageInputs[1]?.value||"";
+        return (from||to)?[{from,to}]:[];
+      };
+
+      const updateUnit=()=>{
+        const ranges=currentRanges();
+        const units=unitListForRanges(mat?.value,ranges);
+
+        if(unitDisplay){
+          unitDisplay.innerHTML=units.length
+            ? '<span class="material-unit-track">'+units.map(esc).join(" ／ ")+'</span>'
+            : "";
+          unitDisplay.scrollLeft=0;
+        }
+        updateUnitPrompt();
+      };
+
+      pageInputs.forEach(input=>{
+        input.oninput=()=>{
+          updateUnit();
+          scheduleAutoSave(v);
+        };
+      });
+
+      mat.onchange=()=>{
+        customWrap?.classList.toggle("hidden",mat.value!=="__custom__");
+        updateUnit();
+        autoSaveNow(v);
+      };
+
+      customInput?.addEventListener("input",()=>scheduleAutoSave(v));
+
+      if(deleteBtn){
+        deleteBtn.onclick=()=>removeMaterialEntry(entry);
+      }
+    };
+
+    materialEntries.querySelectorAll("[data-material-entry]").forEach(bindMaterialEntry);
+
+    const revealMaterialEntry=entry=>{
+      if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+
+      const content=entry.querySelector(".material-entry-content");
+      const targetHeight=entry.scrollHeight;
+      entry.style.height="0px";
+      entry.style.overflow="hidden";
+
+      content?.animate(
+        [
+          {opacity:0,transform:"translateY(-8px)"},
+          {opacity:1,transform:"translateY(0)"}
+        ],
+        {
+          duration:210,
+          easing:"cubic-bezier(.22,.72,.26,1)"
+        }
+      );
+
+      const heightAnimation=entry.animate(
+        [
+          {height:"0px"},
+          {height:targetHeight+"px"}
+        ],
+        {
+          duration:210,
+          easing:"cubic-bezier(.22,.72,.26,1)",
+          fill:"forwards"
+        }
+      );
+
+      heightAnimation.onfinish=()=>{
+        entry.style.removeProperty("height");
+        entry.style.removeProperty("overflow");
+        heightAnimation.cancel();
+      };
+    };
+
+    document.getElementById("addMaterialBtn").onclick=()=>{
+      const current=capture(v);
+      v.materials=current.materials;
+
+      const newEntry=normalizeMaterialEntry(
+        null,
+        l.materials[0]||allMaterials[0]||""
+      );
+      v.materials.push(newEntry);
+
+      const holder=document.createElement("div");
+      holder.innerHTML=materialEntryMarkup(newEntry,allMaterials);
+      const entry=holder.firstElementChild;
+      materialEntries.append(entry);
+      bindMaterialEntry(entry);
+      revealMaterialEntry(entry);
       autoSaveNow(v);
     };
 
@@ -2500,7 +2696,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       autoSaveNow(v);
     });
 
-    ["customMaterial","homeworkComment","nextHomework","forgotOther","note"].forEach(id=>{
+    ["homeworkComment","nextHomework","forgotOther","note"].forEach(id=>{
       const el=document.getElementById(id);
       if(el)el.addEventListener("input",()=>scheduleAutoSave(v));
     });
