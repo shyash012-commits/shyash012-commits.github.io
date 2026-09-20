@@ -769,6 +769,52 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     visibility 0s linear 0s;
 }
 
+
+/* Exact rewind when leaving preview mode.
+   Forward: cubic-bezier(.16,1,.3,1)
+   Rewind:  cubic-bezier(.7,0,.84,0) */
+.record-footer.preview-rewind .record-preview-button{
+  transition:
+    width .34s cubic-bezier(.7,0,.84,0),
+    border-radius .34s cubic-bezier(.7,0,.84,0),
+    background-color .24s cubic-bezier(.75,0,.75,.9) .10s,
+    border-color .24s cubic-bezier(.75,0,.75,.9) .10s,
+    transform .14s ease;
+}
+.record-footer.preview-rewind .record-preview-button .record-icon-circle{
+  transition:
+    width .34s cubic-bezier(.7,0,.84,0),
+    border-radius .34s cubic-bezier(.7,0,.84,0),
+    background .18s cubic-bezier(.75,0,.75,.9) .16s,
+    border-color .24s cubic-bezier(.75,0,.75,.9) .10s,
+    box-shadow .24s cubic-bezier(.75,0,.75,.9) .10s,
+    color .24s cubic-bezier(.75,0,.75,.9) .10s;
+}
+.record-footer.preview-rewind .preview-icon-slot::before,
+.record-footer.preview-rewind .record-nav-item .record-icon-circle::before{
+  transition:
+    transform .34s cubic-bezier(.7,0,.84,0),
+    border-color .24s cubic-bezier(.75,0,.75,.9) .10s,
+    background .24s cubic-bezier(.75,0,.75,.9) .10s,
+    box-shadow .24s cubic-bezier(.75,0,.75,.9) .10s;
+}
+.record-footer.preview-rewind .preview-label{
+  transition:
+    max-width .34s cubic-bezier(.7,0,.84,0) 0s,
+    transform .34s cubic-bezier(.7,0,.84,0) 0s,
+    opacity .14s cubic-bezier(.75,0,.75,.9) .11s,
+    visibility 0s linear .25s,
+    color .24s cubic-bezier(.75,0,.75,.9) .10s;
+}
+.record-footer.preview-rewind .record-nav-item{
+  transition:
+    width .34s cubic-bezier(.7,0,.84,0),
+    background-color .24s cubic-bezier(.75,0,.75,.9) .10s,
+    color .24s cubic-bezier(.75,0,.75,.9) .10s,
+    padding .34s cubic-bezier(.7,0,.84,0),
+    transform .14s ease;
+}
+
 /* In preview mode the TOC is icon-only; selection is shown by a blue circle only. */
 .record-footer.preview-mode .record-nav-item,
 .record-footer.preview-mode .record-nav-item.active{
@@ -787,11 +833,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   margin-left:0;
   transform:translateX(-4px);
   transition:
-    opacity .07s ease 0s,
-    visibility 0s linear .07s,
-    max-width .2s cubic-bezier(.16,1,.3,1) 0s,
-    margin-left .2s cubic-bezier(.16,1,.3,1) 0s,
-    transform .16s ease 0s;
+    max-width .34s cubic-bezier(.7,0,.84,0) 0s,
+    margin-left .34s cubic-bezier(.7,0,.84,0) 0s,
+    transform .34s cubic-bezier(.7,0,.84,0) 0s,
+    opacity .14s cubic-bezier(.75,0,.75,.9) .11s,
+    visibility 0s linear .25s;
 }
 .record-footer.preview-mode .record-nav-item.active .record-icon-circle{
   color:#fff;
@@ -1377,28 +1423,48 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const previewBtn=document.getElementById("previewBtn");
     const recordFooter=document.querySelector(".record-footer");
     const recordApp=document.querySelector("#app > .app");
+    let previewRewindTimer=null;
+
     if(previewBtn&&recordFooter&&recordApp)previewBtn.onclick=()=>{
+      if(recordFooter.classList.contains("preview-rewind")) return;
+
       autoSaveNow(v);
       closeDateTimePopover();
 
       const on=!recordFooter.classList.contains("preview-mode");
 
-      // If an input is currently focused, close the keyboard before locking the form.
-      if(on && document.activeElement instanceof HTMLElement){
-        document.activeElement.blur();
+      if(on){
+        // If an input is currently focused, close the keyboard before locking the form.
+        if(document.activeElement instanceof HTMLElement){
+          document.activeElement.blur();
+        }
+
+        recordFooter.classList.add("preview-mode");
+        recordApp.classList.add("preview-mode");
+
+        // Preview is read-only: keep scrolling/nav available, but make every record card inert.
+        document.querySelectorAll(".card").forEach(card=>card.setAttribute("inert",""));
+
+        previewBtn.setAttribute("aria-pressed","true");
+        previewBtn.setAttribute("aria-label","プレビューを閉じる");
+        return;
       }
 
-      recordFooter.classList.toggle("preview-mode",on);
-      recordApp.classList.toggle("preview-mode",on);
+      // Closing is a literal rewind of the opening motion.
+      // Put the reverse transition rules in place first, then remove the open state.
+      recordFooter.classList.add("preview-rewind");
+      void recordFooter.offsetWidth;
+      recordFooter.classList.remove("preview-mode");
 
-      // Preview is read-only: keep scrolling/nav available, but make every record card inert.
-      document.querySelectorAll(".card").forEach(card=>{
-        if(on) card.setAttribute("inert","");
-        else card.removeAttribute("inert");
-      });
+      previewBtn.setAttribute("aria-pressed","false");
+      previewBtn.setAttribute("aria-label","プレビュー");
 
-      previewBtn.setAttribute("aria-pressed",String(on));
-      previewBtn.setAttribute("aria-label",on?"プレビューを閉じる":"プレビュー");
+      clearTimeout(previewRewindTimer);
+      previewRewindTimer=setTimeout(()=>{
+        recordFooter.classList.remove("preview-rewind");
+        recordApp.classList.remove("preview-mode");
+        document.querySelectorAll(".card").forEach(card=>card.removeAttribute("inert"));
+      },350);
     };
 
     document.querySelectorAll("[data-dt-part]").forEach(btn=>{
