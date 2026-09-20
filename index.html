@@ -249,11 +249,13 @@ button{touch-action:manipulation}
   --basic-list-inset:15px;
   --basic-status-size:10.5px;
   --basic-label-gap:6.4px;
-  --basic-control-inset:13.7px; /* status + half of the label gap */
-  --basic-divider-start:28.7px; /* list inset + control inset */
-  --basic-divider-gap:15px;
+  --basic-half-label-gap:3.2px;
+  --basic-content-gap:10px;
+  --basic-item-gap:15px;
+  --basic-control-inset:calc(var(--basic-status-size) + var(--basic-half-label-gap));
+  --basic-divider-start:calc(var(--basic-list-inset) + var(--basic-control-inset));
   display:grid;
-  row-gap:var(--basic-divider-gap);
+  row-gap:var(--basic-item-gap);
 }
 .record-section[data-record-section="basic"] > .record-section-title{
   margin-bottom:0;
@@ -265,7 +267,7 @@ button{touch-action:manipulation}
   align-items:baseline;
   gap:var(--basic-label-gap);
   min-height:21px;
-  margin:0 0 10px;
+  margin:0 0 var(--basic-content-gap);
 }
 .record-section[data-record-section="basic"] .card-title-row .card-title{margin:0}
 .record-section[data-record-section="basic"] .inline-auto-hint{
@@ -316,7 +318,7 @@ button{touch-action:manipulation}
   border:0;
   border-radius:0;
   margin:0;
-  padding:0 4px var(--basic-divider-gap) var(--basic-list-inset);
+  padding:0 4px var(--basic-item-gap) var(--basic-list-inset);
 }
 .record-section[data-record-section="basic"] .card::after{
   content:"";
@@ -334,6 +336,9 @@ button{touch-action:manipulation}
 .record-section[data-record-section="basic"] .vt-subject > :not(.card-title-row){
   margin-left:var(--basic-control-inset);
 }
+.record-section[data-record-section="basic"] .vt-subject > select{
+  width:calc(100% - var(--basic-control-inset));
+}
 
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:14px 0}
 .card-title{font-size:16px;font-weight:700;margin:0 0 4px}.hint{font-size:13px;color:var(--sub);margin:0 0 12px}
@@ -344,7 +349,7 @@ button{touch-action:manipulation}
   display:flex;
   flex-direction:column;
   align-items:stretch;
-  gap:10px;
+  gap:var(--basic-content-gap);
 }
 .datetime-heading{
   display:flex;
