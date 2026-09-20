@@ -415,12 +415,17 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   padding-right:var(--record-horizontal-space);
 }
 .choice-grid{
-  display:grid;
+  display:flex;
+  flex-wrap:nowrap;
   gap:var(--record-horizontal-space);
+  min-width:0;
 }
-.choice-grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-.choice-grid-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.choice-grid.adaptive-wrap{
+  flex-wrap:wrap;
+}
 .choice-button{
+  flex:0 0 auto;
+  width:auto;
   min-width:0;
   height:42px;
   border:1px solid var(--record-control-border);
@@ -982,12 +987,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   box-shadow:inset 0 1px 0 rgba(255,255,255,.98);
 }
 
-@media(max-width:340px){
-  .choice-grid-5{grid-template-columns:repeat(6,minmax(0,1fr))}
-  .choice-grid-5 .choice-button{grid-column:span 2}
-  .choice-grid-5 .choice-button:nth-child(4){grid-column:2 / span 2}
-  .choice-grid-5 .choice-button:nth-child(5){grid-column:4 / span 2}
-}
 
 @media(max-width:380px){
   .app{padding-left:12px;padding-right:12px}
@@ -1160,9 +1159,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div></div>'+
     '<section class="record-section" data-record-section="basic"><h1 class="record-section-title">基本情報</h1>'+
     '<section class="card vt-datetime" data-card-status="datetime"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">実施日時</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+datetimeBlocks(v)+'</div></section>'+
-    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid choice-grid-3" id="typeSegment" role="group" aria-label="授業区分">'+["通常","振替","講習"].map(t=>'<button type="button" class="choice-button '+(v.type===t?'active':'')+'" data-type="'+t+'" aria-pressed="'+(v.type===t)+'">'+t+'</button>').join("")+'</div></div></section>'+
+    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="typeSegment" data-adaptive-horizontal="choices" role="group" aria-label="授業区分">'+["通常","振替","講習"].map(t=>'<button type="button" class="choice-button '+(v.type===t?'active':'')+'" data-type="'+t+'" aria-pressed="'+(v.type===t)+'">'+t+'</button>').join("")+'</div></div></section>'+
     '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+
-    '<div class="choice-grid choice-grid-5" id="subjectChoices" role="group" aria-label="教科（複数選択可）">'+SUBJECTS.map(subject=>'<button type="button" class="choice-button '+(v.subjects.includes(subject)?'active':'')+'" data-subject="'+subject+'" aria-pressed="'+v.subjects.includes(subject)+'">'+subject+'</button>').join("")+'</div>'+
+    '<div class="choice-grid" id="subjectChoices" data-adaptive-horizontal="choices" role="group" aria-label="教科（複数選択可）">'+SUBJECTS.map(subject=>'<button type="button" class="choice-button '+(v.subjects.includes(subject)?'active':'')+'" data-subject="'+subject+'" aria-pressed="'+v.subjects.includes(subject)+'">'+subject+'</button>').join("")+'</div>'+
     '</div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
