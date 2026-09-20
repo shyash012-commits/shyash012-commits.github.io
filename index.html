@@ -490,6 +490,36 @@ button{touch-action:manipulation}
   min-width:max-content;
   padding-right:2px;
 }
+.material-add-action{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-top:15px;
+  padding:8px 0;
+  border:0;
+  background:none;
+  color:var(--primary);
+  font-size:var(--record-control-font-size);
+  font-weight:700;
+  line-height:1;
+}
+.material-add-action:active{
+  opacity:.58;
+}
+.material-add-icon{
+  width:var(--record-mark-size);
+  height:var(--record-mark-size);
+  flex:0 0 var(--record-mark-size);
+}
+.material-add-icon svg{
+  display:block;
+  width:100%;
+  height:100%;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:var(--record-mark-stroke);
+  stroke-linecap:round;
+}
 .review-unit-prompt{
   color:#8a5b22;
 }
@@ -1553,6 +1583,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           '</div>'+
         '</div>'+
       '</div>'+
+      '<button type="button" class="material-add-action" id="addMaterialBtn" aria-label="教材を追加">'+
+        '<span class="material-add-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M5.25.875v8.75M.875 5.25h8.75"/></svg></span>'+
+        '<span>教材を追加</span>'+
+      '</button>'+
     '</div></section>'+
     '<section class="card vt-review" data-card-status="review"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">講評</h2></div><div class="card-body"><div class="guide"><strong>書いてほしいこと</strong><br>・今日やったこと<br>・つまずいたこと／難しかったこと<br>・できたこと／できるようになったこと<span class="review-unit-prompt '+(showUnitPrompt?'':'hidden')+'" id="reviewUnitPrompt"><br>・単元情報が登録されていません。必要に応じて単元名を補足してください</span></div><textarea id="review" placeholder="授業の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter" id="reviewCount">'+String(v.review||"").length+'文字</div><div class="link-row"><button class="link-btn" id="prevBtn">前回の講評を見る</button><button class="link-btn" id="historyBtn">過去の講評を見る</button></div><div id="historyArea" class="history"></div></div></section>'+
     '</section>'+
