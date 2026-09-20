@@ -490,17 +490,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   position:absolute;
   inset:0;
   border-radius:50%;
-  border:1.25px solid #cbd3dc;
-  background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,1),
-    inset 0 -1px 0 rgba(31,41,51,.035);
+  border:0;
+  background:transparent;
+  box-shadow:none;
   transform:scale(1);
   transform-origin:50% 50%;
   will-change:transform;
   transition:
     transform var(--footer-motion-dur) var(--footer-motion-ease),
-    border-color var(--footer-edge-dur) linear,
     background var(--footer-color-dur) var(--footer-color-ease),
     box-shadow var(--footer-color-dur) var(--footer-color-ease);
 }
@@ -598,7 +595,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 .record-nav-item.active .record-icon-circle::before{
   transform:scale(var(--footer-icon-scale));
-  border-color:#fff;
   background:#fff;
   box-shadow:none;
 }
@@ -612,9 +608,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   color:#44515e;
 }
 .record-nav-item.completed:not(.active) .record-icon-circle::before{
-  border-color:#9faab6;
-  background:linear-gradient(180deg,#d9dee3 0%,#c8cfd6 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.58);
+  background:transparent;
+  box-shadow:none;
 }
 .record-nav-item.active .record-nav-label{
   max-width:4em;
@@ -803,13 +798,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   box-shadow:inset 0 1px 0 rgba(255,255,255,.16);
 }
 .record-footer.preview-mode .record-nav-item.active .record-icon-circle{
-  color:#fff;
+  color:#2faa68;
 }
 .record-footer.preview-mode .record-nav-item.active .record-icon-circle::before{
-  transform:scale(1);
-  border-color:#2faa68;
-  background:linear-gradient(180deg,#56cf8d 0%,#35b978 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.16);
+  transform:scale(var(--footer-icon-scale));
+  background:#fff;
+  box-shadow:none;
 }
 
 /* Preview mode ignores "completed" gray: unselected items return to normal white. */
@@ -825,11 +819,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   color:#243140;
 }
 .record-footer.preview-mode .record-nav-item.completed:not(.active) .record-icon-circle::before{
-  border-color:#cbd3dc;
-  background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,1),
-    inset 0 -1px 0 rgba(31,41,51,.035);
+  background:transparent;
+  box-shadow:none;
 }
 .record-footer-spacer{height:90px}
 .vt-datetime,.vt-material,.vt-prevhomework,.vt-forgot{scroll-margin-top:86px}
@@ -854,11 +845,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
 /* Footer standalone white circles: exactly the same white material as header 「一覧」 */
 .record-nav-item:not(.active):not(.completed) .record-icon-circle::before{
-  border:1.25px solid #cbd3dc;
-  background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,1),
-    inset 0 -1px 0 rgba(31,41,51,.035);
+  background:transparent;
+  box-shadow:none;
 }
 
 @media(max-width:380px){
