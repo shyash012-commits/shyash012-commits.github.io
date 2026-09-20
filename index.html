@@ -441,10 +441,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   height:var(--footer-item-h);
   width:var(--footer-item-h);
   min-width:var(--footer-item-h);
-  border:0;
+  border:1.25px solid #cbd3dc;
   border-radius:var(--footer-item-r);
   padding:0;
-  background:transparent;
+  background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(31,41,51,.035);
   color:#243140;
   display:flex;
   align-items:center;
@@ -459,37 +462,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   -webkit-appearance:none;
   transition:
     width var(--footer-motion-dur) var(--footer-motion-ease),
-    background-color var(--footer-color-dur) var(--footer-color-ease),
-    color var(--footer-color-dur) var(--footer-color-ease),
     padding var(--footer-motion-dur) var(--footer-motion-ease),
+    background var(--footer-color-dur) var(--footer-color-ease),
+    border-color var(--footer-color-dur) var(--footer-color-ease),
+    box-shadow var(--footer-color-dur) var(--footer-color-ease),
+    color var(--footer-color-dur) var(--footer-color-ease),
     transform .14s ease;
   will-change:width;
 }
 .record-nav-item:active{transform:none}
-
-/* Selected nav capsule lives on its own opacity layer.
-   This lets the color disappear at the same pace as the geometry closes,
-   instead of the gradient snapping away. */
-.record-nav-item::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  z-index:-1;
-  border-radius:inherit;
-  background:linear-gradient(180deg,#3993ff 0%,#1f73e6 100%);
-  box-shadow:
-    inset 0 0 0 1.25px #2278ef,
-    inset 0 1px 0 rgba(255,255,255,.16);
-  opacity:0;
-  pointer-events:none;
-  transition:opacity var(--footer-motion-dur) var(--footer-motion-ease);
-}
-.record-nav-item.active::after{
-  opacity:1;
-}
-.record-footer.preview-mode .record-nav-item.active::after{
-  opacity:0;
-}
 
 .record-nav-item .record-icon-circle{
   position:relative;
@@ -608,9 +589,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   width:calc(var(--footer-item-h) + 2px + 4em + 11px);
   padding:0 11px 0 0;
   color:#fff;
-  background:transparent;
-  border:0;
-  box-shadow:none;
+  background:linear-gradient(180deg,#3993ff 0%,#1f73e6 100%);
+  border-color:#2278ef;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16);
 }
 .record-nav-item.active .record-icon-circle{
   color:#2278ef;
@@ -620,6 +601,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   border-color:#fff;
   background:#fff;
   box-shadow:none;
+}
+.record-nav-item.completed:not(.active){
+  border-color:#9faab6;
+  background:linear-gradient(180deg,#d9dee3 0%,#c8cfd6 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.58);
+  color:#44515e;
 }
 .record-nav-item.completed:not(.active) .record-icon-circle{
   color:#44515e;
@@ -797,9 +784,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   width:var(--footer-item-h);
   min-width:var(--footer-item-h);
   padding:0;
-  border:0;
-  background:transparent;
-  box-shadow:none;
+  border:1.25px solid #cbd3dc;
+  background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(31,41,51,.035);
 }
 .record-footer.preview-mode .record-nav-item .record-nav-label,
 .record-footer.preview-mode .record-nav-item.active .record-nav-label{
@@ -807,6 +796,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   opacity:0;
   margin-left:0;
   transform:translateX(-4px);
+}
+.record-footer.preview-mode .record-nav-item.active{
+  border-color:#2faa68;
+  background:linear-gradient(180deg,#56cf8d 0%,#35b978 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16);
 }
 .record-footer.preview-mode .record-nav-item.active .record-icon-circle{
   color:#fff;
@@ -819,6 +813,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 
 /* Preview mode ignores "completed" gray: unselected items return to normal white. */
+.record-footer.preview-mode .record-nav-item.completed:not(.active){
+  border-color:#cbd3dc;
+  background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(31,41,51,.035);
+  color:#243140;
+}
 .record-footer.preview-mode .record-nav-item.completed:not(.active) .record-icon-circle{
   color:#243140;
 }
