@@ -1985,23 +1985,29 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 /* iPhone landscape: keep every section-navigation capsule open.
    Colors/states remain exactly the same as portrait. */
 @media (orientation:landscape) and (max-height:500px) and (min-width:600px){
+  /* Open every section capsule using the exact same geometry as
+     the portrait active capsule. Only visibility changes here;
+     each item's portrait color/state rules continue to win. */
   .record-nav-item,
   .record-nav-item.active,
   .record-footer.preview-mode .record-nav-item,
   .record-footer.preview-mode .record-nav-item.active{
-    width:calc(var(--footer-item-h) + 2px + 4em + 8px);
-    min-width:calc(var(--footer-item-h) + 2px + 4em + 8px);
-    padding:0 8px 0 0;
+    width:calc(var(--footer-item-h) + 2px + 4em + 12px);
+    min-width:calc(var(--footer-item-h) + 2px + 4em + 12px);
+    padding:0 12px 0 0;
+    justify-content:flex-start;
   }
 
   .record-nav-item .record-nav-label,
   .record-nav-item.active .record-nav-label,
   .record-footer.preview-mode .record-nav-item .record-nav-label,
   .record-footer.preview-mode .record-nav-item.active .record-nav-label{
+    width:4em;
     max-width:4em;
     opacity:1;
     margin-left:2px;
     transform:translateX(0);
+    text-align:left;
   }
 }
 
@@ -2015,7 +2021,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 15:59";
+  const BUILD_ID="2026-09-21 16:01";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
