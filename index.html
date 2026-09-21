@@ -2034,7 +2034,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 18:22";
+  const BUILD_ID="2026-09-21 18:26";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -3683,15 +3683,40 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
       const rangeItems=()=>[...entry.querySelectorAll("[data-material-range]")];
 
-      const updateRangeDeleteVisibility=()=>{
-        const multiple=rangeItems().length>1;
-        rangeItems().forEach(range=>{
+      const syncRangeChrome=({excluding=null,animateNumbers=true}={})=>{
+        const allRanges=rangeItems();
+        const remainingRanges=excluding
+          ? allRanges.filter(range=>range!==excluding)
+          : allRanges;
+        const multiple=remainingRanges.length>1;
+        const materialIndex=materialEntryList().indexOf(entry);
+        const materialNumber=materialNumberLabel(materialIndex+1);
+
+        allRanges.forEach(range=>{
           const deleteRangeBtn=range.querySelector("[data-delete-range]");
-          if(!deleteRangeBtn)return;
-          deleteRangeBtn.classList.toggle("is-visible",multiple);
-          deleteRangeBtn.setAttribute("aria-hidden",String(!multiple));
+          const isRemaining=range!==excluding;
+          const showDelete=isRemaining&&multiple;
+
+          if(deleteRangeBtn){
+            deleteRangeBtn.classList.toggle("is-visible",showDelete);
+            deleteRangeBtn.setAttribute("aria-hidden",String(!showDelete));
+          }
+        });
+
+        remainingRanges.forEach((range,index)=>{
+          refreshRangeNumber(
+            range.querySelector("[data-range-number]"),
+            multiple?materialNumber:"",
+            multiple?"-"+(index+1):"",
+            multiple,
+            animateNumbers
+          );
         });
       };
+
+      const updateRangeDeleteVisibility=()=>syncRangeChrome({
+        animateNumbers:false
+      });
 
       const updateRangeUnit=range=>{
         const from=range.querySelector("[data-material-page-from]")?.value||"";
@@ -3723,8 +3748,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
             const finish=()=>{
               range.remove();
-              updateRangeDeleteVisibility();
-              refreshMaterialEntryLabels();
+              syncRangeChrome({animateNumbers:false});
+              refreshMaterialEntryLabels({animateRangeNumbers:false});
               v.materials=capture(v).materials;
               autoSaveNow(v);
             };
@@ -3733,6 +3758,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
               finish();
               return;
             }
+
+            /* Start the surviving rows' UI transition at the exact same time
+               as the deleted row starts collapsing. Previously these updates
+               waited until transitionend, so delete buttons / numbering moved
+               only after the row had already closed. */
+            syncRangeChrome({
+              excluding:range,
+              animateNumbers:true
+            });
 
             let finished=false;
             const finishOnce=()=>{
