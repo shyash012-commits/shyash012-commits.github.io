@@ -6,6 +6,57 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#f3f5f7">
 <title>授業記録システム v0.1</title>
+<!--
+  ============================================================
+  残課題メモ（2026-09-22）
+
+  ■ 課題
+  iOS Safari でソフトウェアキーボードを開閉すると、下部固定フッターと
+  Safari 自身の visualViewport / 自動スクロール / ブラウザUI復元が干渉し、
+  開始スクロール位置や開閉回数によって挙動が変わることがある。
+
+  確認された主な症状:
+  - キーボードを開いた瞬間、fixed フッターがキーボード上へ持ち上がる。
+  - 閉じる途中でフッターが裏から自然に出ず、閉じ切った後にパッと出る。
+  - 対策後、フッターがガタガタ震えることがある。
+  - 講評 textarea の自動スクロール位置が1回目と2回目以降で変わることがある。
+  - 閉じる際にページ本体がガクッと元位置へ復元されることがある。
+  - 閉じる際のスクロール固定を強くすると、その後のフッターナビの移動と競合する。
+
+  ■ これまで試した対処（現在はすべて撤去）
+  1. visualViewport の縮み量を使って fixed フッターを下方向へ相殺移動。
+  2. キーボード中だけ fixed → absolute に切り替え、キーボード裏へドック。
+  3. visualViewport.pageTop / offsetTop / window.scrollY を使ってドック位置を追従。
+  4. キーボード閉鎖時にページの visual top を一時固定して Safari の復元スクロールを抑制。
+  5. textarea が見やすくなるよう、キーボード展開後に追加スクロール補正。
+  6. Safari の自動スクロール終了を待ってから1回だけ補正する方式。
+  7. viewport の最小高さ・回復量から opening / closing を判定する方式。
+  8. 閉鎖後に absolute → fixed へ戻すタイミングを遅延・settle 判定する方式。
+
+  上記はいずれも一部の症状を改善したが、別の症状・回数依存・震えを発生させた。
+  特に「継続的な位置追従」「window.scrollTo/scrollBy によるスクロール固定」
+  「fixed/absolute の動的切替」は、Safari のネイティブ挙動と競合しやすかった。
+
+  ■ 過去の比較基準
+  - keyboard-dock-05: 複雑化前の比較的安定した基準版。
+  - 05c: 入力欄位置の再現性が一時改善。
+  - 05d: 閉じる際のページ本体の「ガクッ」を一時抑制。
+  ただし、いずれも最終的な安定解ではない。
+
+  ■ 現在の暫定方針（fallback）
+  課題を解決しようとしてフッター位置やページスクロールを操作する処理は全撤去。
+  Safari のキーボード表示中はフッターを単純に visibility:hidden にするだけとする。
+  キーボードが閉じて visualViewport の高さが元に戻ったら再表示する。
+  ページ本体のスクロール位置は Safari に任せ、こちらから補正しない。
+
+  ■ 再開時の注意
+  - 本件は「未解決の残課題」。暫定非表示を完成仕様とはみなさない。
+  - まずこの hide-only 版を壊さず比較基準にする。
+  - fixed/absolute 切替、pageTop 追従、継続スクロール補正、close-lock を
+    一度に再導入しない。必ず1要因ずつ検証する。
+  - UIの光学補正とは別問題。1px調整等で解決しようとしない。
+  ============================================================
+-->
 <style>
 :root{
   --bg:#f3f5f7;--card:#fff;--text:#1f2933;--sub:#6b7280;--line:#d7dde4;
@@ -1552,7 +1603,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     inset 0 0 0 1.25px var(--footer-completed-outline),
     inset 0 1px 0 rgba(255,255,255,.76),
     inset 0 -1px 0 rgba(31,41,51,.05);
-  --browser-keyboard-doc-top:0px;
   position:fixed;
   left:50%;
   bottom:10px;
@@ -1583,17 +1633,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 
 
-/* Browser keyboard session:
-   temporarily leave the fixed-position compositor entirely. iOS can clip a
-   translated fixed layer to the visual viewport, which makes it reappear only
-   after the keyboard has fully closed. An absolutely positioned footer stays
-   in the full layout viewport underneath the native keyboard, so the keyboard
-   itself can uncover it continuously while sliding down. */
-.record-footer.is-keyboard-docked{
-  position:absolute;
-  top:var(--browser-keyboard-doc-top);
-  bottom:auto;
-  transform:translateX(-50%);
+/* iOS Safari keyboard fallback (unresolved issue):
+   Do not reposition or animate the footer while the software keyboard is
+   active. Hiding it is intentionally boring but avoids compositor shaking,
+   fixed/absolute hand-offs, and scroll-lock conflicts. */
+.record-footer.is-keyboard-hidden{
+  visibility:hidden;
+  pointer-events:none;
 }
 
 .record-nav-shell{
@@ -2086,7 +2132,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-22 keyboard-dock-05d-settle";
+  const BUILD_ID="2026-09-22 keyboard-footer-hide-only";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2340,25 +2386,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   let footerScrollLock=null;
   let footerScrollUnlockTimer=null;
   let standaloneFooterResizeHandler=null;
-  let footerKeyboardOpeningViewportHandler=null;
-  let footerKeyboardOpeningWindowScrollHandler=null;
-  let footerKeyboardOpeningPointerDownHandler=null;
-  let footerKeyboardOpeningFocusInHandler=null;
-  let footerKeyboardOpeningFocusOutHandler=null;
-  let footerKeyboardOpeningBaselineTop=0;
-  let footerKeyboardOpeningBaselineHeight=0;
-  let footerKeyboardOpeningLastHeight=0;
-  let footerKeyboardOpeningMinHeight=Infinity;
-  let footerKeyboardOpeningHasOpened=false;
-  let footerKeyboardOpeningTimer=null;
-  let footerKeyboardOpeningRaf=0;
-  let footerKeyboardOpeningSession=false;
-  let footerKeyboardOpeningClosing=false;
-  let footerKeyboardOpeningClosePageTop=null;
-  let footerKeyboardOpeningCloseLockUntil=0;
-  let footerKeyboardOpeningCloseLockStarted=false;
-  let footerKeyboardOpeningComfortAdjusted=false;
-  let footerKeyboardOpeningComfortTimers=[];
+  let footerKeyboardViewportHandler=null;
+  let footerKeyboardFocusInHandler=null;
+  let footerKeyboardFocusOutHandler=null;
+  let footerKeyboardBaselineHeight=0;
+  let footerKeyboardSession=false;
+  let footerKeyboardHasShrunk=false;
 
   function writeRecord(v){
     if(!state.lessonId)return;
@@ -2533,483 +2566,111 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function unbindBrowserFooterKeyboardOpening(){
     const viewport=window.visualViewport;
 
-    if(footerKeyboardOpeningViewportHandler&&viewport){
-      viewport.removeEventListener("resize",footerKeyboardOpeningViewportHandler);
-      viewport.removeEventListener("scroll",footerKeyboardOpeningViewportHandler);
-      footerKeyboardOpeningViewportHandler=null;
+    if(footerKeyboardViewportHandler&&viewport){
+      viewport.removeEventListener("resize",footerKeyboardViewportHandler);
+      viewport.removeEventListener("scroll",footerKeyboardViewportHandler);
+      footerKeyboardViewportHandler=null;
     }
-    if(footerKeyboardOpeningWindowScrollHandler){
-      window.removeEventListener("scroll",footerKeyboardOpeningWindowScrollHandler);
-      footerKeyboardOpeningWindowScrollHandler=null;
+    if(footerKeyboardFocusInHandler){
+      document.removeEventListener("focusin",footerKeyboardFocusInHandler);
+      footerKeyboardFocusInHandler=null;
     }
-    if(footerKeyboardOpeningPointerDownHandler){
-      document.removeEventListener("pointerdown",footerKeyboardOpeningPointerDownHandler,true);
-      footerKeyboardOpeningPointerDownHandler=null;
-    }
-    if(footerKeyboardOpeningFocusInHandler){
-      document.removeEventListener("focusin",footerKeyboardOpeningFocusInHandler);
-      footerKeyboardOpeningFocusInHandler=null;
-    }
-    if(footerKeyboardOpeningFocusOutHandler){
-      document.removeEventListener("focusout",footerKeyboardOpeningFocusOutHandler);
-      footerKeyboardOpeningFocusOutHandler=null;
-    }
-
-    clearTimeout(footerKeyboardOpeningTimer);
-    footerKeyboardOpeningTimer=null;
-    footerKeyboardOpeningComfortTimers.forEach(clearTimeout);
-    footerKeyboardOpeningComfortTimers=[];
-    if(footerKeyboardOpeningRaf){
-      cancelAnimationFrame(footerKeyboardOpeningRaf);
-      footerKeyboardOpeningRaf=0;
+    if(footerKeyboardFocusOutHandler){
+      document.removeEventListener("focusout",footerKeyboardFocusOutHandler);
+      footerKeyboardFocusOutHandler=null;
     }
 
     const footer=document.querySelector(".record-footer");
-    if(footer){
-      footer.classList.remove("is-keyboard-docked");
-      footer.style.removeProperty("--browser-keyboard-doc-top");
-    }
+    if(footer)footer.classList.remove("is-keyboard-hidden");
 
-    footerKeyboardOpeningBaselineTop=0;
-    footerKeyboardOpeningBaselineHeight=0;
-    footerKeyboardOpeningLastHeight=0;
-    footerKeyboardOpeningMinHeight=Infinity;
-    footerKeyboardOpeningHasOpened=false;
-    footerKeyboardOpeningSession=false;
-    footerKeyboardOpeningClosing=false;
-    footerKeyboardOpeningClosePageTop=null;
-    footerKeyboardOpeningCloseLockUntil=0;
-    footerKeyboardOpeningCloseLockStarted=false;
-    footerKeyboardOpeningComfortAdjusted=false;
+    footerKeyboardBaselineHeight=0;
+    footerKeyboardSession=false;
+    footerKeyboardHasShrunk=false;
   }
 
   function bindBrowserFooterKeyboardOpening(){
     unbindBrowserFooterKeyboardOpening();
 
+    /* Installed/PWA mode uses its own footer inset handling. This fallback is
+       for ordinary iOS Safari browser mode only. */
     if(IS_STANDALONE_APP)return;
 
     const footer=document.querySelector(".record-footer");
     const viewport=window.visualViewport;
     if(!footer||!viewport)return;
 
-    /* Physical-screen Y inside the browser content area. getBoundingClientRect
-       is layout-viewport based, so subtract visualViewport.offsetTop. */
-    const footerScreenTop=()=>
-      footer.getBoundingClientRect().top-viewport.offsetTop;
+    footerKeyboardBaselineHeight=viewport.height;
 
-    footerKeyboardOpeningBaselineTop=footerScreenTop();
-    footerKeyboardOpeningBaselineHeight=viewport.height;
-    footerKeyboardOpeningLastHeight=viewport.height;
-    footerKeyboardOpeningMinHeight=viewport.height;
-    footerKeyboardOpeningHasOpened=false;
-
-    const visualPageTop=()=>
-      Number.isFinite(viewport.pageTop)
-        ?viewport.pageTop
-        :(window.scrollY+viewport.offsetTop);
-
-    const setDockTop=()=>{
-      /* Keep the footer at the SAME physical Y it had before the keyboard.
-         visualViewport.pageTop is the visual viewport's document-space top
-         in one atomic value. That matters when Safari auto-scrolls a low input:
-         window.scrollY and offsetTop can settle on different frames, which made
-         the footer miss the closing animation and pop in at the end. */
-      const documentTop=
-        visualPageTop()+
-        footerKeyboardOpeningBaselineTop;
-
-      footer.style.setProperty(
-        "--browser-keyboard-doc-top",
-        documentTop+"px"
-      );
+    const hideFooter=()=>{
+      footer.classList.add("is-keyboard-hidden");
     };
 
-    const dock=()=>{
-      setDockTop();
-      footer.classList.add("is-keyboard-docked");
-      /* Re-apply after the positioning mode changes so there is no one-frame
-         coordinate mismatch. */
-      setDockTop();
-    };
-
-    const undock=()=>{
-      footer.classList.remove("is-keyboard-docked");
-      footer.style.removeProperty("--browser-keyboard-doc-top");
-      footerKeyboardOpeningSession=false;
-      footerKeyboardOpeningClosing=false;
-      footerKeyboardOpeningClosePageTop=null;
-      footerKeyboardOpeningCloseLockUntil=0;
-      footerKeyboardOpeningCloseLockStarted=false;
-      footerKeyboardOpeningHasOpened=false;
-      footerKeyboardOpeningBaselineHeight=viewport.height;
-      footerKeyboardOpeningLastHeight=viewport.height;
-      footerKeyboardOpeningMinHeight=viewport.height;
-      /* Do not derive the next session's screen Y here. Safari may still be
-         settling its browser chrome after the keyboard disappears. The next
-         pointerdown/focusin captures a fresh fixed-footer position instead. */
+    const showFooter=()=>{
+      footer.classList.remove("is-keyboard-hidden");
+      footerKeyboardSession=false;
+      footerKeyboardHasShrunk=false;
+      footerKeyboardBaselineHeight=viewport.height;
     };
 
     const viewportRecovered=()=>
-      viewport.height>=footerKeyboardOpeningBaselineHeight-6;
-
-    /* 05d: Safari tries to restore its own focus-scroll while the keyboard is
-       sliding down. That makes the whole page jump even though the footer now
-       emerges correctly. Freeze the VISUAL page top at the position where the
-       close began, and let only the native keyboard reveal more of the page.
-       This is a short close-only lock, not a continuing open-state chase. */
-    const releaseClosePageLock=()=>{
-      footerKeyboardOpeningClosePageTop=null;
-      footerKeyboardOpeningCloseLockUntil=0;
-      footerKeyboardOpeningClosing=false;
-
-      /* Once the close animation has genuinely finished, restore the footer
-         to its ordinary fixed state while the screen is already still.
-         Carrying the docked state into the NEXT keyboard session made Safari
-         choose a different focus-scroll position on later openings. */
-      if(
-        footerKeyboardOpeningSession &&
-        footerKeyboardOpeningHasOpened &&
-        viewportRecovered()
-      ){
-        undock();
-      }
-    };
-
-    const beginClosePageLock=()=>{
-      /* One close lock per keyboard session. Repeated viewport/scroll events
-         must not keep extending it into the user's next navigation. */
-      if(footerKeyboardOpeningCloseLockStarted)return;
-      footerKeyboardOpeningCloseLockStarted=true;
-      footerKeyboardOpeningClosePageTop=visualPageTop();
-      footerKeyboardOpeningCloseLockUntil=performance.now()+720;
-      footerKeyboardOpeningClosing=true;
-    };
-
-    const holdClosePageTop=()=>{
-      if(footerKeyboardOpeningClosePageTop==null)return;
-      if(performance.now()>footerKeyboardOpeningCloseLockUntil){
-        releaseClosePageLock();
-        return;
-      }
-
-      const targetScrollTop=
-        footerKeyboardOpeningClosePageTop-viewport.offsetTop;
-      if(Math.abs(window.scrollY-targetScrollTop)>.75){
-        window.scrollTo({top:targetScrollTop,behavior:"auto"});
-      }
-    };
-
-    /* Docking the footer before focus is what prevents the iOS fixed-layer
-       pop, but it also changes Safari's automatic focus-scroll decision for a
-       low textarea. After the keyboard is genuinely open, independently move
-       only the focused editor into a comfortable reading position. The footer
-       remains docked and follows pageTop, so this scroll does not alter the
-       keyboard-closing behavior we just stabilized. */
-    const comfortFocusedControl=()=>{
-      if(!footerKeyboardOpeningSession)return;
-
-      /* A tiny visualViewport-height rebound can happen while Safari is still
-         OPENING the keyboard / settling its toolbar. Treat it as a real close
-         only after the viewport has recovered materially from the smallest
-         height seen in this keyboard session. This keeps the one-shot comfort
-         correction from being cancelled by a harmless opening-phase wobble. */
-      const genuinelyClosing=
-        footerKeyboardOpeningHasOpened &&
-        viewport.height-footerKeyboardOpeningMinHeight>42;
-      if(genuinelyClosing)return;
-
-      const active=document.activeElement;
-      if(!isKeyboardEntryControl(active))return;
-
-      const rect=active.getBoundingClientRect();
-      const screenTop=rect.top-viewport.offsetTop;
-      const screenBottom=rect.bottom-viewport.offsetTop;
-      const desiredTop=165;
-      const comfortableBottom=Math.max(300,viewport.height-110);
-
-      /* Leave Safari alone when it already produced a good composition.
-         The first screenshot case lands around 400px from the visual top and
-         therefore enters this branch; the second screenshot case does not. */
-      if(screenTop>250 || screenBottom>comfortableBottom){
-        const delta=screenTop-desiredTop;
-        if(Math.abs(delta)>8){
-          window.scrollBy({top:delta,behavior:"auto"});
-          setDockTop();
-        }
-      }
-    };
-
-    const scheduleComfortFocusedControl=()=>{
-      if(
-        footerKeyboardOpeningComfortAdjusted ||
-        !footerKeyboardOpeningSession ||
-        footerKeyboardOpeningClosing ||
-        !footerKeyboardOpeningHasOpened
-      )return;
-
-      /* 05b: Safari can auto-scroll a focused textarea in more than one step.
-         Do not correct while that native movement is still in progress. Watch
-         geometry passively, then make exactly ONE one-way comfort correction
-         after it has stayed still for a short window. This keeps the stable 05
-         footer path intact and avoids the active chasing that destabilized 06. */
-      footerKeyboardOpeningComfortAdjusted=true;
-
-      let lastGeometry=null;
-      let stableSamples=0;
-      const started=performance.now();
-
-      const sample=()=>{
-        if(
-          !footerKeyboardOpeningSession ||
-          !footerKeyboardOpeningHasOpened
-        )return;
-
-        const genuinelyClosing=
-          viewport.height-footerKeyboardOpeningMinHeight>42;
-        if(genuinelyClosing)return;
-
-        const active=document.activeElement;
-        if(!isKeyboardEntryControl(active))return;
-
-        const rect=active.getBoundingClientRect();
-        const pageTop=Number.isFinite(viewport.pageTop)
-          ?viewport.pageTop
-          :(window.scrollY+viewport.offsetTop);
-        const geometry=[
-          viewport.height,
-          viewport.offsetTop,
-          pageTop,
-          rect.top,
-          rect.bottom
-        ];
-
-        if(lastGeometry){
-          const movement=Math.max(
-            ...geometry.map((value,index)=>
-              Math.abs(value-lastGeometry[index])
-            )
-          );
-          stableSamples=movement<1?stableSamples+1:0;
-        }
-        lastGeometry=geometry;
-
-        /* Five quiet 45ms samples ~= 225ms of settled native geometry. The
-           timeout is only a fallback; either path still performs one correction
-           at most, never a continuing up/down chase. */
-        if(stableSamples>=5 || performance.now()-started>=780){
-          comfortFocusedControl();
-          return;
-        }
-
-        const timer=setTimeout(sample,45);
-        footerKeyboardOpeningComfortTimers.push(timer);
-      };
-
-      const timer=setTimeout(sample,90);
-      footerKeyboardOpeningComfortTimers.push(timer);
-    };
+      viewport.height>=footerKeyboardBaselineHeight-24;
 
     const sync=()=>{
-      footerKeyboardOpeningRaf=0;
-      const h=viewport.height;
-
-      if(!footerKeyboardOpeningSession){
+      if(!footerKeyboardSession){
         if(!isKeyboardEntryControl(document.activeElement)){
-          footerKeyboardOpeningBaselineTop=footerScreenTop();
-          footerKeyboardOpeningBaselineHeight=h;
-          footerKeyboardOpeningLastHeight=h;
+          footerKeyboardBaselineHeight=viewport.height;
         }
         return;
       }
 
-      footerKeyboardOpeningMinHeight=Math.min(
-        footerKeyboardOpeningMinHeight,
-        h
-      );
-
-      const shrink=footerKeyboardOpeningBaselineHeight-h;
-      if(shrink>80){
-        if(!footerKeyboardOpeningHasOpened){
-          footerKeyboardOpeningHasOpened=true;
-          scheduleComfortFocusedControl();
-        }
-      }
-      /* Do not call every tiny height rebound a keyboard close. Safari can
-         change toolbar/visualViewport height by a few pixels while the keyboard
-         is still opening. Only a material recovery from this session's minimum
-         height counts as closing. */
-      if(
-        footerKeyboardOpeningHasOpened &&
-        h-footerKeyboardOpeningMinHeight>42
-      ){
-        beginClosePageLock();
-      }
-      footerKeyboardOpeningLastHeight=h;
-
-      /* While closing, suppress Safari's late focus-scroll restoration. The
-         content stays visually still while the native keyboard itself moves. */
-      if(footerKeyboardOpeningClosing){
-        holdClosePageTop();
-        if(!footerKeyboardOpeningSession)return;
-      }
-
-      /* While the keyboard is open the footer lives in document space at its
-         original full-screen position, physically underneath the keyboard. */
-      setDockTop();
-
-      /* IMPORTANT: do not switch back to position:fixed when the viewport
-         merely looks recovered. On the first iOS keyboard cycle Safari can
-         report the pre-keyboard viewport height slightly before the native
-         keyboard has finished sliding away. Switching positioning modes in
-         that window makes the footer disappear and then pop back in at the
-         very end. Keep the footer docked in document space after close; it is
-         already visible at the correct screen Y and setDockTop makes it behave
-         like fixed while browser chrome settles. A later input tap (or leaving
-         the record screen) starts a fresh session and performs the cleanup. */
-      if(
-        footerKeyboardOpeningHasOpened &&
-        viewportRecovered() &&
-        footerKeyboardOpeningClosePageTop==null
-      ){
-        footerKeyboardOpeningClosing=false;
-      }
+      /* No page movement, no footer movement, no visualViewport chasing.
+         First wait until a real software-keyboard shrink has actually been
+         observed; otherwise Safari can emit an early viewport scroll event
+         before the keyboard resizes and accidentally reveal the footer again. */
+      const shrink=footerKeyboardBaselineHeight-viewport.height;
+      if(shrink>80)footerKeyboardHasShrunk=true;
+      if(footerKeyboardHasShrunk&&viewportRecovered())showFooter();
     };
 
-    const schedule=()=>{
-      if(footerKeyboardOpeningRaf)return;
-      footerKeyboardOpeningRaf=requestAnimationFrame(sync);
-    };
-
-    const pumpForTransition=(frames=54)=>{
-      let remaining=frames;
-      const pump=()=>{
-        footerKeyboardOpeningRaf=0;
-        sync();
-        remaining-=1;
-        if(remaining>0&&footerKeyboardOpeningSession){
-          footerKeyboardOpeningRaf=requestAnimationFrame(pump);
-        }
-      };
-      if(footerKeyboardOpeningRaf){
-        cancelAnimationFrame(footerKeyboardOpeningRaf);
-      }
-      footerKeyboardOpeningRaf=requestAnimationFrame(pump);
-    };
-
-    const startSession=()=>{
-      clearTimeout(footerKeyboardOpeningTimer);
-      footerKeyboardOpeningTimer=null;
-
-      if(footerKeyboardOpeningSession){
-        /* A transfer between fields while the keyboard is still open belongs to
-           the same session. If the viewport has already recovered, however,
-           clean up the stale session first (iOS may have kept focus). */
-        if(footerKeyboardOpeningHasOpened&&viewportRecovered()){
-          undock();
-        }else{
-          footerKeyboardOpeningClosing=false;
-          return;
-        }
-      }
-
-      /* Capture the footer's real current fixed position for EVERY keyboard
-         opening. Never reuse the previous close's baseline; Safari's toolbar
-         can settle to a slightly different visual viewport after each cycle. */
-      footerKeyboardOpeningBaselineTop=footerScreenTop();
-      footerKeyboardOpeningBaselineHeight=viewport.height;
-      footerKeyboardOpeningLastHeight=viewport.height;
-      footerKeyboardOpeningMinHeight=viewport.height;
-      footerKeyboardOpeningHasOpened=false;
-      footerKeyboardOpeningSession=true;
-      footerKeyboardOpeningClosing=false;
-      footerKeyboardOpeningClosePageTop=null;
-      footerKeyboardOpeningCloseLockUntil=0;
-      footerKeyboardOpeningCloseLockStarted=false;
-      footerKeyboardOpeningComfortAdjusted=false;
-      footerKeyboardOpeningComfortTimers.forEach(clearTimeout);
-      footerKeyboardOpeningComfortTimers=[];
-
-      /* pointerdown reaches here before focus/default keyboard layout, so the
-         absolute dock starts from the exact fixed-footer position. */
-      dock();
-      pumpForTransition();
-    };
-
-    footerKeyboardOpeningPointerDownHandler=e=>{
-      /* Footer navigation is an explicit new scroll intent. If the keyboard is
-         already down, finish the close state before the navigation click runs
-         so nothing can fight the smooth scroll. */
-      const footerTap=e.target.closest?.(".record-footer");
-      if(
-        footerTap &&
-        footerKeyboardOpeningSession &&
-        footerKeyboardOpeningHasOpened &&
-        viewportRecovered()
-      ){
-        releaseClosePageLock();
-      }
-
+    footerKeyboardFocusInHandler=e=>{
       if(!isKeyboardEntryControl(e.target))return;
-      startSession();
+
+      /* Capture a fresh baseline only at the start of a new keyboard session.
+         Focus transfers between fields while the keyboard is open keep the
+         original baseline. Hide immediately so Safari never gets a chance to
+         visibly hoist the fixed footer above the keyboard. */
+      if(!footerKeyboardSession){
+        footerKeyboardBaselineHeight=viewport.height;
+        footerKeyboardSession=true;
+        footerKeyboardHasShrunk=false;
+      }
+      hideFooter();
     };
 
-    footerKeyboardOpeningFocusInHandler=e=>{
-      if(!isKeyboardEntryControl(e.target))return;
-      startSession();
+    footerKeyboardFocusOutHandler=()=>{
+      /* Blur alone is not a reliable "keyboard closed" signal on iOS. If a
+         software keyboard really opened, wait for viewport recovery. If no
+         shrink ever happened (hardware keyboard / cancelled focus), reveal. */
+      requestAnimationFrame(()=>{
+        if(!footerKeyboardHasShrunk)showFooter();
+        else sync();
+      });
     };
 
-    footerKeyboardOpeningFocusOutHandler=()=>{
-      clearTimeout(footerKeyboardOpeningTimer);
-      footerKeyboardOpeningTimer=setTimeout(()=>{
-        /* A focus transfer between two fields keeps the same keyboard session.
-           Blur is only a hint; viewport recovery is the authoritative close. */
-        if(isKeyboardEntryControl(document.activeElement)){
-          return;
-        }
-        beginClosePageLock();
-        pumpForTransition(72);
-        footerKeyboardOpeningTimer=setTimeout(()=>{
-          if(footerKeyboardOpeningSession){
-            sync();
-          }
-        },520);
-      },0);
-    };
+    footerKeyboardViewportHandler=()=>requestAnimationFrame(sync);
 
-    /* A low field (like the review box in the first screenshot) makes Safari
-       auto-scroll the page for the keyboard. During keyboard close Safari can
-       restore that page scroll late, after the last convenient resize event.
-       Once ANY viewport/scroll movement begins, sample geometry every frame for
-       long enough to cover the whole native transition and the late scroll
-       restoration. This is what makes the low-scroll and high-scroll cases use
-       the same closing path. */
-    footerKeyboardOpeningViewportHandler=()=>pumpForTransition(110);
-    footerKeyboardOpeningWindowScrollHandler=()=>pumpForTransition(110);
-
-    document.addEventListener(
-      "pointerdown",
-      footerKeyboardOpeningPointerDownHandler,
-      true
-    );
-    document.addEventListener("focusin",footerKeyboardOpeningFocusInHandler);
-    document.addEventListener("focusout",footerKeyboardOpeningFocusOutHandler);
+    document.addEventListener("focusin",footerKeyboardFocusInHandler);
+    document.addEventListener("focusout",footerKeyboardFocusOutHandler);
     viewport.addEventListener(
       "resize",
-      footerKeyboardOpeningViewportHandler,
+      footerKeyboardViewportHandler,
       {passive:true}
     );
     viewport.addEventListener(
       "scroll",
-      footerKeyboardOpeningViewportHandler,
+      footerKeyboardViewportHandler,
       {passive:true}
     );
-    window.addEventListener(
-      "scroll",
-      footerKeyboardOpeningWindowScrollHandler,
-      {passive:true}
-    );
-
-    sync();
   }
 
   function renderList(){
