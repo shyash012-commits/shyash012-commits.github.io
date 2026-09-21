@@ -2086,7 +2086,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 keyboard-dock-05e";
+  const BUILD_ID="2026-09-21 keyboard-dock-05f";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2698,15 +2698,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const comfortFocusedControl=()=>{
       if(!footerKeyboardOpeningSession)return;
 
-      /* A tiny visualViewport-height rebound can happen while Safari is still
-         OPENING the keyboard / settling its toolbar. Treat it as a real close
-         only after the viewport has recovered materially from the smallest
-         height seen in this keyboard session. This keeps the one-shot comfort
-         correction from being cancelled by a harmless opening-phase wobble. */
-      const genuinelyClosing=
-        footerKeyboardOpeningHasOpened &&
-        viewport.height-footerKeyboardOpeningMinHeight>42;
-      if(genuinelyClosing)return;
+      /* 05f: judge the OPEN state directly from the current visualViewport
+         shrink. The close-lock can leave the old min-height/closing state alive
+         for a short time after one cycle, which made later openings skip this
+         correction even though the keyboard was fully open. */
+      const keyboardStillOpen=
+        footerKeyboardOpeningBaselineHeight-viewport.height>80;
+      if(!keyboardStillOpen)return;
 
       const active=document.activeElement;
       if(!isKeyboardEntryControl(active))return;
@@ -2733,7 +2731,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       if(
         footerKeyboardOpeningComfortAdjusted ||
         !footerKeyboardOpeningSession ||
-        footerKeyboardOpeningClosing ||
         !footerKeyboardOpeningHasOpened
       )return;
 
@@ -2754,9 +2751,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           !footerKeyboardOpeningHasOpened
         )return;
 
-        const genuinelyClosing=
-          viewport.height-footerKeyboardOpeningMinHeight>42;
-        if(genuinelyClosing)return;
+        /* Do not let stale close-state from the previous keyboard cycle cancel
+           a fresh opening. Continue only while this keyboard is actually open. */
+        const keyboardStillOpen=
+          footerKeyboardOpeningBaselineHeight-viewport.height>80;
+        if(!keyboardStillOpen)return;
 
         const active=document.activeElement;
         if(!isKeyboardEntryControl(active))return;
