@@ -769,7 +769,9 @@ textarea{min-height:140px;resize:vertical;line-height:1.65}
 }
 .vt-review #review{
   display:block;
-  padding:15px;
+  /* 1.65 line-height adds visual leading above the glyphs.
+     Reduce only the top inset so the visible text sits ~15px from top/left. */
+  padding:10.5px 15px 15px;
 }
 input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3px rgba(49,91,138,.10)}
 .row{
@@ -877,12 +879,36 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   transform:translateX(0);
   will-change:opacity,transform;
 }
-.counter{text-align:right;font-size:13px;color:var(--sub);margin-top:var(--record-field-gap)}
+.counter{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:var(--record-horizontal-space);
+  margin-top:var(--record-field-gap);
+  font-size:13px;
+  color:var(--sub);
+}
+.counter-hint{
+  text-align:left;
+  font-weight:400;
+}
+.counter-value{
+  margin-left:auto;
+  text-align:right;
+  white-space:nowrap;
+}
+.review-prev-row{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:var(--record-content-gap);
+}
+.review-prev-row[hidden]{
+  display:none;
+}
 .review-prev-toggle{
   display:inline-flex;
   align-items:center;
   gap:6px;
-  margin-left:auto;
   padding:0;
   border:0;
   background:none;
@@ -921,12 +947,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .previous-review-reveal.open .previous-review-content{
   opacity:1;
   transform:translateX(0);
-}
-.previous-review-label{
-  display:block;
-  margin:0 0 var(--record-field-gap);
-  font-size:13px;
-  font-weight:600;
 }
 .previous-review-text{
   margin:0;
@@ -1861,9 +1881,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         '<span>教材を追加</span>'+
       '</button>'+
     '</div></section>'+
-    '<section class="card vt-review" data-card-status="review"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">講評</h2><button type="button" class="review-prev-toggle" id="prevBtn" aria-expanded="false"><span class="record-action-icon review-close-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M.875 5.25h8.75"/></svg></span><span id="prevBtnLabel">前回の講評を見る</span></button></div><div class="card-body">'+
-      '<div class="previous-review-reveal" id="previousReview" aria-hidden="true"><div class="previous-review-clip"><div class="previous-review-content"><p class="previous-review-label">前回の講評</p><p class="previous-review-text">'+esc(l.history[0]?.text||"")+'</p></div></div></div>'+
-      '<textarea id="review" placeholder="授業の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter" id="reviewCount">'+String(v.review||"").length+'文字</div></div></section>'+
+    '<section class="card vt-review" data-card-status="review"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">講評</h2></div><div class="card-body">'+
+      '<div class="previous-review-reveal" id="previousReview" aria-hidden="true"><div class="previous-review-clip"><div class="previous-review-content"><p class="previous-review-text">'+esc(l.history[0]?.text||"")+'</p></div></div></div>'+
+      '<textarea id="review" placeholder="授業の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter"><span class="counter-hint">*目安200字以内</span><span class="counter-value" id="reviewCount">'+String(v.review||"").length+'文字</span></div>'+
+      '<div class="review-prev-row" id="prevRow"><button type="button" class="review-prev-toggle" id="prevBtn" aria-expanded="false"><span class="record-action-icon review-close-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M.875 5.25h8.75"/></svg></span><span id="prevBtnLabel">前回の講評を見る</span></button></div></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="homework"><h1 class="record-section-title">宿題確認</h1>'+
     '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'"><span class="record-option-label">'+r+'</span></button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
@@ -3010,12 +3031,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       scheduleAutoSave(v);
     };
 
+    const prevRow=document.getElementById("prevRow");
     const prevBtn=document.getElementById("prevBtn");
     const prevBtnLabel=document.getElementById("prevBtnLabel");
     const previousReview=document.getElementById("previousReview");
 
     if(!l.history[0]){
-      prevBtn.hidden=true;
+      prevRow.hidden=true;
     }
 
     prevBtn.onclick=()=>{
@@ -3023,7 +3045,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       previousReview.classList.toggle("open",state.showPrev);
       previousReview.setAttribute("aria-hidden",String(!state.showPrev));
       prevBtn.setAttribute("aria-expanded",String(state.showPrev));
-      prevBtnLabel.textContent=state.showPrev?"閉じる":"前回の講評を見る";
+      prevBtnLabel.textContent=state.showPrev?"前回の講評を閉じる":"前回の講評を見る";
     };
 
     document.querySelectorAll("[data-rating]").forEach(b=>b.onclick=()=>{
