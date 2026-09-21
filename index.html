@@ -1582,6 +1582,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 
 
+.record-footer.is-keyboard-opening{
+  visibility:hidden;
+  pointer-events:none;
+}
+
 .record-nav-shell{
   position:relative;
   flex:1 1 auto;
@@ -2072,7 +2077,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 21:37";
+  const BUILD_ID="2026-09-21 21:41";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2326,6 +2331,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   let footerScrollLock=null;
   let footerScrollUnlockTimer=null;
   let standaloneFooterResizeHandler=null;
+  let footerKeyboardOpeningViewportHandler=null;
+  let footerKeyboardOpeningFocusInHandler=null;
+  let footerKeyboardOpeningFocusOutHandler=null;
+  let footerKeyboardOpeningBaselineHeight=0;
+  let footerKeyboardOpeningTimer=null;
 
   function writeRecord(v){
     if(!state.lessonId)return;
@@ -2497,8 +2507,115 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     requestAnimationFrame(updateStandaloneFooterInset);
   }
 
+  function unbindBrowserFooterKeyboardOpening(){
+    const viewport=window.visualViewport;
+
+    if(footerKeyboardOpeningViewportHandler&&viewport){
+      viewport.removeEventListener("resize",footerKeyboardOpeningViewportHandler);
+      viewport.removeEventListener("scroll",footerKeyboardOpeningViewportHandler);
+      footerKeyboardOpeningViewportHandler=null;
+    }
+    if(footerKeyboardOpeningFocusInHandler){
+      document.removeEventListener("focusin",footerKeyboardOpeningFocusInHandler);
+      footerKeyboardOpeningFocusInHandler=null;
+    }
+    if(footerKeyboardOpeningFocusOutHandler){
+      document.removeEventListener("focusout",footerKeyboardOpeningFocusOutHandler);
+      footerKeyboardOpeningFocusOutHandler=null;
+    }
+
+    clearTimeout(footerKeyboardOpeningTimer);
+    footerKeyboardOpeningTimer=null;
+    footerKeyboardOpeningBaselineHeight=0;
+  }
+
+  function bindBrowserFooterKeyboardOpening(){
+    unbindBrowserFooterKeyboardOpening();
+
+    if(IS_STANDALONE_APP)return;
+
+    const footer=document.querySelector(".record-footer");
+    const viewport=window.visualViewport;
+    if(!footer||!viewport)return;
+
+    footerKeyboardOpeningBaselineHeight=viewport.height;
+
+    const suppress=()=>{
+      footer.classList.add("is-keyboard-opening");
+    };
+
+    const release=()=>{
+      footer.classList.remove("is-keyboard-opening");
+    };
+
+    const sync=()=>{
+      const shrink=Math.max(
+        0,
+        footerKeyboardOpeningBaselineHeight-viewport.height
+      );
+
+      /* Once the software keyboard has materially opened, the fixed footer is
+         already underneath it. Re-enable it there so it will naturally emerge
+         from behind the keyboard during closing instead of popping in later. */
+      if(shrink>100){
+        release();
+        return;
+      }
+
+      /* Fully recovered / no software keyboard. */
+      if(shrink<40&&!isKeyboardEntryControl(document.activeElement)){
+        release();
+        footerKeyboardOpeningBaselineHeight=viewport.height;
+      }
+    };
+
+    footerKeyboardOpeningFocusInHandler=e=>{
+      if(!isKeyboardEntryControl(e.target))return;
+
+      /* Capture the normal viewport before Safari starts keyboard layout, then
+         hide the footer for only this opening transition. */
+      footerKeyboardOpeningBaselineHeight=viewport.height;
+      suppress();
+
+      clearTimeout(footerKeyboardOpeningTimer);
+      footerKeyboardOpeningTimer=setTimeout(()=>{
+        /* Hardware keyboard / no viewport shrink fallback. */
+        sync();
+        if(
+          Math.max(
+            0,
+            footerKeyboardOpeningBaselineHeight-viewport.height
+          )<40
+        ){
+          release();
+        }
+      },350);
+    };
+
+    footerKeyboardOpeningFocusOutHandler=()=>{
+      clearTimeout(footerKeyboardOpeningTimer);
+      footerKeyboardOpeningTimer=setTimeout(sync,0);
+    };
+
+    footerKeyboardOpeningViewportHandler=()=>requestAnimationFrame(sync);
+
+    document.addEventListener("focusin",footerKeyboardOpeningFocusInHandler);
+    document.addEventListener("focusout",footerKeyboardOpeningFocusOutHandler);
+    viewport.addEventListener(
+      "resize",
+      footerKeyboardOpeningViewportHandler,
+      {passive:true}
+    );
+    viewport.addEventListener(
+      "scroll",
+      footerKeyboardOpeningViewportHandler,
+      {passive:true}
+    );
+  }
+
   function renderList(){
     unbindStandaloneFooterInset();
+    unbindBrowserFooterKeyboardOpening();
     if(footerScrollHandler){
       window.removeEventListener("scroll",footerScrollHandler);
       footerScrollHandler=null;
@@ -2959,6 +3076,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     bindRecordFooter(v);
     bindStandaloneFooterInset();
+    bindBrowserFooterKeyboardOpening();
     updateFooterCompletion(capture(v));
     const backBtn=document.getElementById("backBtn");
     bindPressFeedback(backBtn);
