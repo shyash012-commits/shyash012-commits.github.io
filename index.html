@@ -578,6 +578,13 @@ html.line-inapp .header{
   line-height:1.45;
 }
 
+/* Previous homework is read-only. Match the disabled material-unit field. */
+.vt-prevhomework .prev-homework-readonly{
+  border-color:#b9c3cd;
+  background:#e2e7ec;
+  color:#4f5b67;
+}
+
 /* Direct-edit date/time blocks.
    Layout is structural: the date/time group stays intact, while duration
    naturally moves to the next line when the row becomes too narrow. */
@@ -642,6 +649,24 @@ html.line-inapp .header{
 .dt-block:active{background:#eef2f6}
 
 .field{margin-top:var(--record-item-gap)}.label{display:block;font-size:var(--record-label-font-size);font-weight:600;margin-bottom:var(--record-field-gap)}
+.field-label-row{
+  display:flex;
+  align-items:baseline;
+  gap:var(--record-horizontal-space);
+  margin-bottom:var(--record-field-gap);
+}
+.field-label-row .label{margin-bottom:0}
+.field-inline-hint{
+  margin:0;
+  font-size:var(--record-label-font-size);
+  color:var(--sub);
+  line-height:1.2;
+}
+.homework-comment-input{
+  height:calc(var(--record-control-height) * 2);
+  min-height:calc(var(--record-control-height) * 2);
+  resize:none;
+}
 .material-entries{
   display:grid;
 }
@@ -1239,15 +1264,18 @@ textarea{
   font-size:inherit;
   font-weight:400;
 }
-.vt-review #review{
+.vt-review #review,
+.homework-comment-input{
   display:block;
-  height:calc(var(--record-control-height) * 4);
-  min-height:calc(var(--record-control-height) * 4);
   font-size:var(--record-control-font-size);
   font-weight:var(--record-control-font-weight);
   color:var(--record-control-text);
   padding-left:var(--record-horizontal-space);
   padding-right:var(--record-horizontal-space);
+}
+.vt-review #review{
+  height:calc(var(--record-control-height) * 4);
+  min-height:calc(var(--record-control-height) * 4);
 }
 .app.preview-mode .vt-review #review{
   overflow-y:auto;
@@ -2132,7 +2160,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-22 review-label-instant";
+  const BUILD_ID="2026-09-22 01:36";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2173,7 +2201,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       {date:"2026/09/10",hour:19,minute:40,duration:70,instructor:"石井",text:"接続語に着目して段落関係を整理しました。記述問題では必要な要素を意識して書けるようになりました。"}]}
   ];
 
-  const state={lessonId:null,records:load(),forgot:new Set(),rating:"",showPrev:false};
+  const state={lessonId:null,records:load(),forgot:new Set(),rating:"",homeworkProgress:"",showPrev:false};
   const REDUCED_MOTION_QUERY=window.matchMedia("(prefers-reduced-motion: reduce)");
   const prefersReducedMotion=()=>REDUCED_MOTION_QUERY.matches;
 
@@ -2416,6 +2444,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       materials:c.materials,
       review:c.review,
       rating:state.rating,
+      homeworkProgress:state.homeworkProgress,
       homeworkComment:c.homeworkComment,
       nextHomework:c.nextHomework,
       forgot:[...state.forgot],
@@ -2693,6 +2722,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     state.lessonId=id;state.showPrev=false;
     const l=getLesson(),r=getRecord();
     state.rating=r?.rating||"";
+    state.homeworkProgress=r?.homeworkProgress||"";
+    if(["未","忘"].includes(state.homeworkProgress))state.rating="";
     state.forgot=new Set(r?.forgot||["なし"]);
 
     const dt=r?.performedAt||lessonBase(l),
@@ -2767,7 +2798,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '<div class="previous-review-reveal" id="previousReview" aria-hidden="true"><div class="previous-review-clip"><div class="previous-review-content"><p class="previous-review-text"><span class="previous-review-body">'+esc(previousReview.text)+'</span>'+(previousReview.meta?'<span class="previous-review-meta">'+esc(previousReview.meta)+'</span>':'')+'</p></div></div></div></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="homework"><h1 class="record-section-title">宿題確認</h1>'+
-    '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button type="button" data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'"><span class="record-option-label">'+r+'</span></button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
+    '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><div class="readonly prev-homework-readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">取り組み</label><div class="choice-grid" data-choice-scroll role="group" aria-label="宿題の取り組み">'+["済","途","未","忘"].map(x=>'<button type="button" class="choice-button '+(state.homeworkProgress===x?'active':'')+'" data-homework-progress="'+x+'" aria-pressed="'+(state.homeworkProgress===x)+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div></div><div class="field" id="homeworkRatingField"'+(["未","忘"].includes(state.homeworkProgress)?' hidden':'')+'><label class="label">評価</label><div class="choice-grid" data-choice-scroll role="group" aria-label="宿題の評価">'+["◎","○","△"].map(r=>'<button type="button" class="choice-button '+(state.rating===r?'active':'')+'" data-rating="'+r+'" aria-pressed="'+(state.rating===r)+'"><span class="record-option-label">'+r+'</span></button>').join("")+'</div></div><div class="field"><div class="field-label-row"><label class="label">コメント</label><p class="field-inline-hint">（任意）</p></div><textarea id="homeworkComment" class="homework-comment-input" placeholder="補足事項を記録してください。">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
     '<section class="card vt-nexthomework" data-card-status="nexthomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">今回の宿題</h2></div><div class="card-body"><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="other"><h1 class="record-section-title">特記事項</h1>'+
@@ -2986,6 +3017,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       }),
       review:!!String(c.review||"").trim(),
       prevhomework:!!(
+        state.homeworkProgress ||
         state.rating ||
         String(c.homeworkComment||"").trim()
       ),
@@ -4265,9 +4297,32 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       setPreviousReviewToggle(state.showPrev);
     };
 
+    document.querySelectorAll("[data-homework-progress]").forEach(b=>b.onclick=()=>{
+      state.homeworkProgress=b.dataset.homeworkProgress;
+      document.querySelectorAll("[data-homework-progress]").forEach(x=>{
+        const active=x.dataset.homeworkProgress===state.homeworkProgress;
+        x.classList.toggle("active",active);
+        x.setAttribute("aria-pressed",String(active));
+      });
+
+      const hideRating=["未","忘"].includes(state.homeworkProgress);
+      const ratingField=document.getElementById("homeworkRatingField");
+      if(ratingField)ratingField.hidden=hideRating;
+      if(hideRating){
+        state.rating="";
+        document.querySelectorAll("[data-rating]").forEach(x=>x.classList.remove("active"));
+      }
+
+      autoSaveNow(v);
+    });
+
     document.querySelectorAll("[data-rating]").forEach(b=>b.onclick=()=>{
       state.rating=b.dataset.rating;
-      document.querySelectorAll("[data-rating]").forEach(x=>x.classList.toggle("active",x.dataset.rating===state.rating));
+      document.querySelectorAll("[data-rating]").forEach(x=>{
+        const active=x.dataset.rating===state.rating;
+        x.classList.toggle("active",active);
+        x.setAttribute("aria-pressed",String(active));
+      });
       autoSaveNow(v);
     });
 
