@@ -232,7 +232,7 @@ html.line-inapp .header{
   --record-mark-optical-y:.5px;
   --record-label-gap:6.4px;
   --record-half-label-gap:3.2px;
-  --record-field-gap:6px;
+  --record-field-gap:7px;
   --record-content-gap:10px;
   --record-item-gap:15px;
   --record-horizontal-space-preferred:10px;
@@ -243,7 +243,10 @@ html.line-inapp .header{
 
   /* Body controls stay flat; header/footer own the glossy material language. */
   --record-control-height:42px;
+  --record-section-title-font-size:20px;
+  --record-card-title-font-size:17px;
   --record-control-font-size:16px;
+  --record-label-font-size:13px;
   --record-control-font-weight:700;
   --record-control-bg:#fff;
   --record-control-border:#cbd3dc;
@@ -281,7 +284,7 @@ html.line-inapp .header{
   display:flex;
   align-items:center;
   gap:8px;
-  font-size:20px;
+  font-size:var(--record-section-title-font-size);
   font-weight:800;
   line-height:1.2;
   letter-spacing:.01em;
@@ -490,7 +493,7 @@ html.line-inapp .header{
   min-width:0;
 }
 
-.card-title{font-size:16px;font-weight:700;margin:0 0 4px}.hint{font-size:13px;color:var(--sub);margin:0 0 12px}
+.card-title{font-size:var(--record-card-title-font-size);font-weight:700;line-height:1.2;margin:0 0 4px}.hint{font-size:var(--record-label-font-size);color:var(--sub);margin:0 0 12px}
 .readonly{border:1px solid var(--line);background:#f7f8fa;border-radius:var(--body-radius);padding:13px 14px;line-height:1.45}
 
 /* Direct-edit date/time blocks */
@@ -551,7 +554,7 @@ html.line-inapp .header{
 }
 .dt-block:active{background:#eef2f6}
 
-.field{margin-top:14px}.label{display:block;font-size:13px;font-weight:600;margin-bottom:var(--record-field-gap)}
+.field{margin-top:14px}.label{display:block;font-size:var(--record-label-font-size);font-weight:600;margin-bottom:var(--record-field-gap)}
 .material-entries{
   display:grid;
 }
@@ -1753,7 +1756,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 14:06";
+  const BUILD_ID="2026-09-21 14:17";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
