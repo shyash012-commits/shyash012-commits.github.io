@@ -16,7 +16,7 @@
   --fade-dur:.10s
 }
 *{box-sizing:border-box;min-width:0}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",sans-serif;font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",sans-serif;font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:clip}
 body{min-height:100vh}
 button,input,textarea,select{font:inherit;color:inherit}
 button{touch-action:manipulation}
@@ -223,6 +223,28 @@ html.line-inapp .header{
   color:#9aa3ad;
   letter-spacing:.01em;
   user-select:text;
+}
+.native-assistant-diagnostic{
+  margin:20px 15px;
+  padding:16px;
+  border:1px dashed #9aa6b2;
+  background:#fff;
+}
+.native-assistant-diagnostic > p{
+  margin:0 0 12px;
+  font-size:14px;
+  font-weight:600;
+}
+.native-assistant-diagnostic input,
+.native-assistant-diagnostic textarea{
+  all:revert;
+  box-sizing:border-box;
+  display:block;
+  width:100%;
+  margin:0 0 12px;
+}
+.native-assistant-diagnostic textarea{
+  min-height:96px;
 }
 .record-form{
   margin:0;
@@ -2048,7 +2070,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 20:35";
+  const BUILD_ID="2026-09-21 20:48";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2484,6 +2506,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="card vt-note" data-card-status="note"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">備考（内部用）</h2></div><div class="card-body"><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></div></section>'+
     '</section>'+
     '</form>'+
+    '<div class="native-assistant-diagnostic" aria-label="Safari入力補助バー診断">'+
+      '<p>Safari診断用（アプリ処理なし）</p>'+
+      '<input type="text" autocomplete="off" placeholder="素のinput">'+
+      '<textarea placeholder="素のtextarea"></textarea>'+
+    '</div>'+
     '<div class="record-footer-spacer" aria-hidden="true"></div>'+
     '<div class="record-footer" aria-label="授業記録の目次">'+
       '<nav class="record-nav-shell">'+
