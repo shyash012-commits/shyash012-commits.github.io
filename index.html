@@ -1562,11 +1562,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   gap:10px;
   width:min(calc(100vw - 20px),700px);
 }
-.record-footer.is-keyboard-covered{
-  visibility:hidden;
-  pointer-events:none;
-}
-
 .record-nav-shell{
   position:relative;
   flex:1 1 auto;
@@ -2053,7 +2048,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 20:17";
+  const BUILD_ID="2026-09-21 20:25";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2306,13 +2301,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   let footerScrollHandler=null;
   let footerScrollLock=null;
   let footerScrollUnlockTimer=null;
-  let recordKeyboardTouchStartHandler=null;
-  let recordKeyboardPointerDownHandler=null;
-  let keyboardCoverViewportHandler=null;
-  let keyboardCoverFocusInHandler=null;
-  let keyboardCoverFocusOutHandler=null;
-  let keyboardCoverBaseline=0;
-  let keyboardCoverPendingTimer=null;
 
   function writeRecord(v){
     if(!state.lessonId)return;
@@ -2396,141 +2384,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     return ["text","number","search","tel","email","url","password"].includes(el.type);
   }
 
-  function unbindRecordKeyboardDismiss(){
-    if(recordKeyboardTouchStartHandler){
-      document.removeEventListener("touchstart",recordKeyboardTouchStartHandler,true);
-      recordKeyboardTouchStartHandler=null;
-    }
-    if(recordKeyboardPointerDownHandler){
-      document.removeEventListener("pointerdown",recordKeyboardPointerDownHandler,true);
-      recordKeyboardPointerDownHandler=null;
-    }
-  }
-
-  function bindRecordKeyboardDismiss(){
-    unbindRecordKeyboardDismiss();
-
-    const dismissFromTarget=target=>{
-      const active=document.activeElement;
-      if(!isKeyboardEntryControl(active))return;
-
-      const element=target instanceof Element?target:null;
-      if(!element)return;
-
-      // Keep the keyboard only while staying in the current field or moving
-      // directly to another keyboard-entry field.
-      if(element===active || active.contains(element))return;
-
-      const nextEntry=element.closest("input, textarea");
-      if(nextEntry && isKeyboardEntryControl(nextEntry))return;
-
-      active.blur();
-    };
-
-    // On iPhone, touchstart is the earliest reliable signal. Waiting for
-    // pointer movement or pointerup made dismissal feel unresponsive.
-    recordKeyboardTouchStartHandler=e=>{
-      dismissFromTarget(e.target);
-    };
-
-    // Pointer fallback for mouse/trackpad/pen and browsers without touch.
-    recordKeyboardPointerDownHandler=e=>{
-      if(e.pointerType==="touch")return;
-      dismissFromTarget(e.target);
-    };
-
-    document.addEventListener("touchstart",recordKeyboardTouchStartHandler,{
-      capture:true,
-      passive:true
-    });
-    document.addEventListener("pointerdown",recordKeyboardPointerDownHandler,true);
-  }
-
-  function unbindKeyboardFooterCover(){
-    const viewport=window.visualViewport;
-
-    if(keyboardCoverViewportHandler&&viewport){
-      viewport.removeEventListener("resize",keyboardCoverViewportHandler);
-      viewport.removeEventListener("scroll",keyboardCoverViewportHandler);
-      keyboardCoverViewportHandler=null;
-    }
-    if(keyboardCoverFocusInHandler){
-      document.removeEventListener("focusin",keyboardCoverFocusInHandler);
-      keyboardCoverFocusInHandler=null;
-    }
-    if(keyboardCoverFocusOutHandler){
-      document.removeEventListener("focusout",keyboardCoverFocusOutHandler);
-      keyboardCoverFocusOutHandler=null;
-    }
-    clearTimeout(keyboardCoverPendingTimer);
-    keyboardCoverPendingTimer=null;
-    keyboardCoverBaseline=0;
-  }
-
-  function bindKeyboardFooterCover(){
-    unbindKeyboardFooterCover();
-
-    const footer=document.querySelector(".record-footer");
-    const viewport=window.visualViewport;
-    if(!footer||!viewport)return;
-
-    keyboardCoverBaseline=viewport.height;
-
-    const setCovered=covered=>{
-      footer.classList.toggle("is-keyboard-covered",covered);
-    };
-
-    const sync=()=>{
-      const active=isKeyboardEntryControl(document.activeElement);
-      const shrink=Math.max(0,keyboardCoverBaseline-viewport.height);
-
-      if(shrink>100){
-        setCovered(true);
-        return;
-      }
-
-      if(shrink<40){
-        /* The keyboard is actually gone. This also handles iOS keeping the
-           textarea focused after the user dismisses the keyboard. */
-        setCovered(false);
-        if(!active){
-          keyboardCoverBaseline=viewport.height;
-        }
-      }
-    };
-
-    keyboardCoverFocusInHandler=e=>{
-      if(!isKeyboardEntryControl(e.target))return;
-
-      /* Capture the full-height baseline before the software keyboard settles.
-         Hide immediately so no intermediate lifted-footer frame is visible. */
-      if(viewport.height>keyboardCoverBaseline-40){
-        keyboardCoverBaseline=Math.max(keyboardCoverBaseline,viewport.height);
-      }
-      setCovered(true);
-
-      /* If a hardware keyboard/no software keyboard is in use, don't leave the
-         footer hidden forever. */
-      clearTimeout(keyboardCoverPendingTimer);
-      keyboardCoverPendingTimer=setTimeout(sync,350);
-    };
-
-    keyboardCoverFocusOutHandler=()=>{
-      clearTimeout(keyboardCoverPendingTimer);
-      keyboardCoverPendingTimer=setTimeout(sync,0);
-    };
-
-    keyboardCoverViewportHandler=()=>requestAnimationFrame(sync);
-
-    document.addEventListener("focusin",keyboardCoverFocusInHandler);
-    document.addEventListener("focusout",keyboardCoverFocusOutHandler);
-    viewport.addEventListener("resize",keyboardCoverViewportHandler,{passive:true});
-    viewport.addEventListener("scroll",keyboardCoverViewportHandler,{passive:true});
-  }
-
   function renderList(){
-    unbindRecordKeyboardDismiss();
-    unbindKeyboardFooterCover();
     if(footerScrollHandler){
       window.removeEventListener("scroll",footerScrollHandler);
       footerScrollHandler=null;
@@ -2990,8 +2844,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     }
 
     bindRecordFooter(v);
-    bindRecordKeyboardDismiss();
-    bindKeyboardFooterCover();
     updateFooterCompletion(capture(v));
     const backBtn=document.getElementById("backBtn");
     bindPressFeedback(backBtn);
