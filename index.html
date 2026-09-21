@@ -2086,7 +2086,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 keyboard-dock-05";
+  const BUILD_ID="2026-09-21 keyboard-dock-05a";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2675,17 +2675,35 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     };
 
     const scheduleComfortFocusedControl=()=>{
-      if(footerKeyboardOpeningComfortAdjusted)return;
-      footerKeyboardOpeningComfortAdjusted=true;
+      if(
+        footerKeyboardOpeningComfortAdjusted ||
+        !footerKeyboardOpeningSession ||
+        footerKeyboardOpeningClosing ||
+        !footerKeyboardOpeningHasOpened
+      )return;
 
-      /* Safari may finish its own low-field auto-scroll a few frames after the
-         visual viewport first reports the keyboard. Re-check twice, but only
-         during this opening transition; once the user can interact, we stop. */
-      comfortFocusedControl();
-      [90,220].forEach(delay=>{
-        const timer=setTimeout(comfortFocusedControl,delay);
-        footerKeyboardOpeningComfortTimers.push(timer);
-      });
+      /* Do not race Safari's own focus auto-scroll. The 05 build corrected
+         immediately and again at fixed delays; on later keyboard cycles Safari
+         could apply its own scroll after ours, pushing the focused textarea too
+         high. Instead, wait until viewport/scroll activity has been quiet for a
+         moment, then make at most ONE one-way comfort correction. */
+      footerKeyboardOpeningComfortTimers.forEach(clearTimeout);
+      footerKeyboardOpeningComfortTimers=[];
+
+      const timer=setTimeout(()=>{
+        footerKeyboardOpeningComfortTimers=[];
+        if(
+          !footerKeyboardOpeningSession ||
+          footerKeyboardOpeningClosing ||
+          !footerKeyboardOpeningHasOpened
+        )return;
+
+        /* Mark before scrolling so the scroll event produced by our own
+           correction cannot schedule another correction. */
+        footerKeyboardOpeningComfortAdjusted=true;
+        comfortFocusedControl();
+      },180);
+      footerKeyboardOpeningComfortTimers.push(timer);
     };
 
     const sync=()=>{
@@ -2828,8 +2846,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
        long enough to cover the whole native transition and the late scroll
        restoration. This is what makes the low-scroll and high-scroll cases use
        the same closing path. */
-    footerKeyboardOpeningViewportHandler=()=>pumpForTransition(110);
-    footerKeyboardOpeningWindowScrollHandler=()=>pumpForTransition(110);
+    footerKeyboardOpeningViewportHandler=()=>{
+      pumpForTransition(110);
+      scheduleComfortFocusedControl();
+    };
+    footerKeyboardOpeningWindowScrollHandler=()=>{
+      pumpForTransition(110);
+      scheduleComfortFocusedControl();
+    };
 
     document.addEventListener(
       "pointerdown",
