@@ -2086,7 +2086,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 keyboard-dock-05c";
+  const BUILD_ID="2026-09-21 keyboard-dock-05d";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2354,6 +2354,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   let footerKeyboardOpeningRaf=0;
   let footerKeyboardOpeningSession=false;
   let footerKeyboardOpeningClosing=false;
+  let footerKeyboardOpeningClosePageTop=null;
+  let footerKeyboardOpeningCloseLockUntil=0;
   let footerKeyboardOpeningComfortAdjusted=false;
   let footerKeyboardOpeningComfortTimers=[];
 
@@ -2574,6 +2576,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     footerKeyboardOpeningHasOpened=false;
     footerKeyboardOpeningSession=false;
     footerKeyboardOpeningClosing=false;
+    footerKeyboardOpeningClosePageTop=null;
+    footerKeyboardOpeningCloseLockUntil=0;
     footerKeyboardOpeningComfortAdjusted=false;
   }
 
@@ -2597,17 +2601,19 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     footerKeyboardOpeningMinHeight=viewport.height;
     footerKeyboardOpeningHasOpened=false;
 
+    const visualPageTop=()=>
+      Number.isFinite(viewport.pageTop)
+        ?viewport.pageTop
+        :(window.scrollY+viewport.offsetTop);
+
     const setDockTop=()=>{
       /* Keep the footer at the SAME physical Y it had before the keyboard.
          visualViewport.pageTop is the visual viewport's document-space top
          in one atomic value. That matters when Safari auto-scrolls a low input:
          window.scrollY and offsetTop can settle on different frames, which made
          the footer miss the closing animation and pop in at the end. */
-      const visualPageTop=Number.isFinite(viewport.pageTop)
-        ?viewport.pageTop
-        :(window.scrollY+viewport.offsetTop);
       const documentTop=
-        visualPageTop+
+        visualPageTop()+
         footerKeyboardOpeningBaselineTop;
 
       footer.style.setProperty(
@@ -2629,6 +2635,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       footer.style.removeProperty("--browser-keyboard-doc-top");
       footerKeyboardOpeningSession=false;
       footerKeyboardOpeningClosing=false;
+      footerKeyboardOpeningClosePageTop=null;
+      footerKeyboardOpeningCloseLockUntil=0;
       footerKeyboardOpeningHasOpened=false;
       footerKeyboardOpeningBaselineHeight=viewport.height;
       footerKeyboardOpeningLastHeight=viewport.height;
@@ -2640,6 +2648,34 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     const viewportRecovered=()=>
       viewport.height>=footerKeyboardOpeningBaselineHeight-6;
+
+    /* 05d: Safari tries to restore its own focus-scroll while the keyboard is
+       sliding down. That makes the whole page jump even though the footer now
+       emerges correctly. Freeze the VISUAL page top at the position where the
+       close began, and let only the native keyboard reveal more of the page.
+       This is a short close-only lock, not a continuing open-state chase. */
+    const beginClosePageLock=()=>{
+      if(footerKeyboardOpeningClosePageTop==null){
+        footerKeyboardOpeningClosePageTop=visualPageTop();
+      }
+      footerKeyboardOpeningCloseLockUntil=performance.now()+720;
+      footerKeyboardOpeningClosing=true;
+    };
+
+    const holdClosePageTop=()=>{
+      if(footerKeyboardOpeningClosePageTop==null)return;
+      if(performance.now()>footerKeyboardOpeningCloseLockUntil){
+        footerKeyboardOpeningClosePageTop=null;
+        footerKeyboardOpeningClosing=false;
+        return;
+      }
+
+      const targetScrollTop=
+        footerKeyboardOpeningClosePageTop-viewport.offsetTop;
+      if(Math.abs(window.scrollY-targetScrollTop)>.75){
+        window.scrollTo({top:targetScrollTop,behavior:"auto"});
+      }
+    };
 
     /* Docking the footer before focus is what prevents the iOS fixed-layer
        pop, but it also changes Safari's automatic focus-scroll decision for a
@@ -2784,9 +2820,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         footerKeyboardOpeningHasOpened &&
         h-footerKeyboardOpeningMinHeight>42
       ){
-        footerKeyboardOpeningClosing=true;
+        beginClosePageLock();
       }
       footerKeyboardOpeningLastHeight=h;
+
+      /* While closing, suppress Safari's late focus-scroll restoration. The
+         content stays visually still while the native keyboard itself moves. */
+      if(footerKeyboardOpeningClosing){
+        holdClosePageTop();
+      }
 
       /* While the keyboard is open the footer lives in document space at its
          original full-screen position, physically underneath the keyboard. */
@@ -2801,7 +2843,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
          already visible at the correct screen Y and setDockTop makes it behave
          like fixed while browser chrome settles. A later input tap (or leaving
          the record screen) starts a fresh session and performs the cleanup. */
-      if(footerKeyboardOpeningHasOpened&&viewportRecovered()){
+      if(
+        footerKeyboardOpeningHasOpened &&
+        viewportRecovered() &&
+        footerKeyboardOpeningClosePageTop==null
+      ){
         footerKeyboardOpeningClosing=false;
       }
     };
@@ -2853,6 +2899,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       footerKeyboardOpeningHasOpened=false;
       footerKeyboardOpeningSession=true;
       footerKeyboardOpeningClosing=false;
+      footerKeyboardOpeningClosePageTop=null;
+      footerKeyboardOpeningCloseLockUntil=0;
       footerKeyboardOpeningComfortAdjusted=false;
       footerKeyboardOpeningComfortTimers.forEach(clearTimeout);
       footerKeyboardOpeningComfortTimers=[];
@@ -2881,7 +2929,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         if(isKeyboardEntryControl(document.activeElement)){
           return;
         }
-        footerKeyboardOpeningClosing=true;
+        beginClosePageLock();
         pumpForTransition(72);
         footerKeyboardOpeningTimer=setTimeout(()=>{
           if(footerKeyboardOpeningSession){
