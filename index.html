@@ -1595,6 +1595,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   bottom:auto;
   transform:translateX(-50%);
 }
+/* 05i: during the native keyboard's opening transition, leave the footer in
+   its ordinary fixed mode so Safari can perform its normal focus-scroll. Hide
+   only the footer itself; once the keyboard is materially open we atomically
+   move it into the absolute dock underneath the keyboard, then reveal it there. */
+.record-footer.is-keyboard-opening{
+  visibility:hidden;
+  pointer-events:none;
+}
 
 .record-nav-shell{
   position:relative;
@@ -2086,7 +2094,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 keyboard-dock-05h";
+  const BUILD_ID="2026-09-22 keyboard-dock-05i";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2567,6 +2575,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const footer=document.querySelector(".record-footer");
     if(footer){
       footer.classList.remove("is-keyboard-docked");
+      footer.classList.remove("is-keyboard-opening");
       footer.style.removeProperty("--browser-keyboard-doc-top");
     }
 
@@ -2634,6 +2643,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     const undock=()=>{
       footer.classList.remove("is-keyboard-docked");
+      footer.classList.remove("is-keyboard-opening");
       footer.style.removeProperty("--browser-keyboard-doc-top");
       footerKeyboardOpeningSession=false;
       footerKeyboardOpeningClosing=false;
@@ -2829,7 +2839,17 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       if(shrink>80){
         if(!footerKeyboardOpeningHasOpened){
           footerKeyboardOpeningHasOpened=true;
-          scheduleComfortFocusedControl();
+
+          /* 05i: Safari has now completed the important part of its native
+             focus-scroll while the footer was still an ordinary fixed layer.
+             Move the hidden footer into document space at the original physical
+             screen Y, then reveal it. It is already behind the keyboard, so the
+             user never sees the positioning-mode handoff. No post-focus page
+             correction is needed, which removes the up -> down -> up wobble. */
+          dock();
+          requestAnimationFrame(()=>{
+            footer.classList.remove("is-keyboard-opening");
+          });
         }
       }
       /* Do not call every tiny height rebound a keyboard close. Safari can
@@ -2850,9 +2870,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         holdClosePageTop();
       }
 
-      /* While the keyboard is open the footer lives in document space at its
-         original full-screen position, physically underneath the keyboard. */
-      setDockTop();
+      /* Once docked, keep the footer at the same physical screen Y while the
+         keyboard closes and Safari's browser chrome settles. Before the first
+         dock, deliberately leave the hidden footer in native fixed positioning
+         so Safari's focus-scroll is not perturbed. */
+      if(footer.classList.contains("is-keyboard-docked")){
+        setDockTop();
+      }
 
       /* IMPORTANT: do not switch back to position:fixed when the viewport
          merely looks recovered. On the first iOS keyboard cycle Safari can
@@ -2926,10 +2950,23 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       footerKeyboardOpeningComfortTimers.forEach(clearTimeout);
       footerKeyboardOpeningComfortTimers=[];
 
-      /* pointerdown reaches here before focus/default keyboard layout, so the
-         absolute dock starts from the exact fixed-footer position. */
-      dock();
+      /* 05i: pointerdown arrives before Safari performs focus-scroll. Keep the
+         footer in normal fixed positioning during that native calculation, but
+         hide it so iOS cannot visibly lift it above the opening keyboard. sync()
+         will dock + reveal it only after the keyboard has materially opened. */
+      footer.classList.add("is-keyboard-opening");
       pumpForTransition();
+
+      /* Hardware-keyboard / no-viewport-shrink fallback. Never leave the footer
+         hidden if no software keyboard actually opens. */
+      footerKeyboardOpeningTimer=setTimeout(()=>{
+        if(
+          footerKeyboardOpeningSession &&
+          !footerKeyboardOpeningHasOpened
+        ){
+          footer.classList.remove("is-keyboard-opening");
+        }
+      },800);
     };
 
     footerKeyboardOpeningPointerDownHandler=e=>{
