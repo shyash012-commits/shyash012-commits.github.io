@@ -2040,7 +2040,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 18:41";
+  const BUILD_ID="2026-09-21 18:59";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2293,6 +2293,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   let footerScrollHandler=null;
   let footerScrollLock=null;
   let footerScrollUnlockTimer=null;
+  let recordKeyboardDismissHandler=null;
 
   function writeRecord(v){
     if(!state.lessonId)return;
@@ -2370,7 +2371,44 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     });
   }
 
+  function isKeyboardEntryControl(el){
+    if(el instanceof HTMLTextAreaElement)return true;
+    if(!(el instanceof HTMLInputElement))return false;
+    return ["text","number","search","tel","email","url","password"].includes(el.type);
+  }
+
+  function unbindRecordKeyboardDismiss(){
+    if(!recordKeyboardDismissHandler)return;
+    document.removeEventListener("pointerdown",recordKeyboardDismissHandler,true);
+    recordKeyboardDismissHandler=null;
+  }
+
+  function bindRecordKeyboardDismiss(){
+    unbindRecordKeyboardDismiss();
+
+    recordKeyboardDismissHandler=e=>{
+      const active=document.activeElement;
+      if(!isKeyboardEntryControl(active))return;
+
+      const target=e.target instanceof Element?e.target:null;
+      if(!target)return;
+
+      // Keep the keyboard when the user remains in the same field or moves
+      // directly to another keyboard-entry field. Everywhere else, leaving
+      // input mode should actually dismiss the iOS software keyboard.
+      if(target===active || active.contains(target))return;
+
+      const nextEntry=target.closest("input, textarea");
+      if(nextEntry && isKeyboardEntryControl(nextEntry))return;
+
+      active.blur();
+    };
+
+    document.addEventListener("pointerdown",recordKeyboardDismissHandler,true);
+  }
+
   function renderList(){
+    unbindRecordKeyboardDismiss();
     if(footerScrollHandler){
       window.removeEventListener("scroll",footerScrollHandler);
       footerScrollHandler=null;
@@ -2757,6 +2795,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     document.querySelectorAll("[data-footer-section]").forEach(btn=>{
       btn.onclick=()=>{
+        const active=document.activeElement;
+        if(isKeyboardEntryControl(active))active.blur();
+
         const key=btn.dataset.footerSection,target=targets[key];
         if(!target)return;
 
@@ -2820,10 +2861,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const allMaterials=availableMaterialsForLesson(l);
 
     bindRecordFooter(v);
+    bindRecordKeyboardDismiss();
     updateFooterCompletion(capture(v));
     const backBtn=document.getElementById("backBtn");
     bindPressFeedback(backBtn);
     backBtn.onclick=()=>{
+      const active=document.activeElement;
+      if(isKeyboardEntryControl(active))active.blur();
       autoSaveNow(v);
       renderList();
     };
@@ -2831,6 +2875,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const submitBtn=document.getElementById("submitBtn");
     bindPressFeedback(submitBtn);
     if(submitBtn)submitBtn.onclick=()=>{
+      const active=document.activeElement;
+      if(isKeyboardEntryControl(active))active.blur();
       autoSaveNow(v);
       toast("提出ボタンの動作は次に決めます");
     };
