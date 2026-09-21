@@ -728,20 +728,48 @@ html.line-inapp .header{
 .material-detail-stack{
   --material-page-input-width:calc(3ch + var(--record-horizontal-space)*2 + 6px);
   --material-range-separator-width:var(--record-control-font-size);
-  --material-range-controls-width:calc(
-    var(--material-page-input-width) +
-    var(--material-page-input-width) +
+  --material-left-track-width:calc(
+    var(--material-page-input-width) * 2 +
     var(--material-range-separator-width) +
-    var(--record-horizontal-space) +
-    var(--record-horizontal-space)
+    var(--record-horizontal-space) * 2
   );
+  --material-line-width:14px;
   display:grid;
-  grid-template-columns:max-content 14px minmax(0,1fr);
-  column-gap:10px;
-  align-items:start;
+  grid-template-columns:
+    var(--material-left-track-width)
+    var(--material-line-width)
+    minmax(0,1fr);
+  grid-template-rows:auto var(--record-control-height);
+  column-gap:var(--record-horizontal-space);
+  row-gap:var(--record-field-gap);
+  align-items:stretch;
 }
+
+/* The two labels and both controls live on one shared parent grid.
+   This keeps their control row identical in portrait and landscape. */
 .material-detail-field{
-  min-width:0;
+  display:contents;
+}
+
+.material-detail-stack > .material-detail-field:first-of-type > .label{
+  grid-column:1;
+  grid-row:1;
+}
+.material-detail-stack > .material-detail-field:first-of-type > .material-range-controls{
+  grid-column:1;
+  grid-row:2;
+}
+.material-detail-stack > .material-detail-field:last-of-type > .label{
+  grid-column:3;
+  grid-row:1;
+}
+.material-detail-stack > .material-detail-field:last-of-type > .material-unit-window{
+  grid-column:3;
+  grid-row:2;
+}
+.material-detail-stack > .material-detail-field > .label{
+  margin:0;
+  align-self:end;
 }
 .material-range-label{
   display:block;
@@ -758,19 +786,27 @@ html.line-inapp .header{
   font-weight:700;
 }
 .material-relation-line{
-  width:14px;
+  grid-column:2;
+  grid-row:2;
+  width:var(--material-line-width);
   height:var(--record-mark-stroke);
   align-self:center;
-  margin-bottom:0;
+  justify-self:center;
+  margin:0;
   transform:translateY(var(--record-mark-optical-y));
   border-radius:999px;
   background:#aeb8c3;
 }
 .material-range-controls{
-  display:flex;
+  display:grid;
+  grid-template-columns:
+    var(--material-page-input-width)
+    var(--material-range-separator-width)
+    var(--material-page-input-width);
+  column-gap:var(--record-horizontal-space);
   align-items:center;
-  gap:var(--record-horizontal-space);
-  width:max-content;
+  width:var(--material-left-track-width);
+  min-height:var(--record-control-height);
 }
 .material-page-input{
   flex:0 0 var(--material-page-input-width);
@@ -796,7 +832,9 @@ html.line-inapp .header{
   white-space:nowrap;
   color:#4f5b67;
   font-weight:var(--record-control-font-weight);
-  line-height:calc(var(--record-control-height) - 2px);
+  display:flex;
+  align-items:center;
+  line-height:1.45;
   scrollbar-width:none;
   -webkit-overflow-scrolling:touch;
   touch-action:pan-x;
@@ -808,6 +846,7 @@ html.line-inapp .header{
   display:inline-block;
   min-width:max-content;
   padding-right:2px;
+  line-height:1.45;
 }
 .material-text-action{
   display:inline-flex;
@@ -1785,203 +1824,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   }
 }
 
-/* --- material alignment final fix --- */
-.material-detail-stack{
-  --material-page-input-width:calc(3ch + var(--record-horizontal-space)*2 + 6px);
-  --material-range-separator-width:var(--record-control-font-size);
-  --material-left-track-width:calc(
-    var(--material-page-input-width) * 2 +
-    var(--material-range-separator-width) +
-    var(--record-horizontal-space) * 2
-  );
-  --material-line-width:14px;
-  display:grid !important;
-  grid-template-columns:var(--material-left-track-width) var(--material-line-width) minmax(0,1fr) !important;
-  grid-template-rows:auto var(--record-control-height);
-  column-gap:10px !important;
-  row-gap:8px;
-  align-items:stretch !important;
-}
-
-.material-detail-stack > .material-detail-field{
-  display:grid;
-  grid-template-rows:auto var(--record-control-height);
-  row-gap:8px;
-  align-content:start;
-}
-
-.material-detail-stack > .material-detail-field:first-of-type{
-  grid-column:1;
-  grid-row:1 / span 2;
-}
-
-.material-detail-stack > .material-detail-field:last-of-type{
-  grid-column:3;
-  grid-row:1 / span 2;
-}
-
-.material-detail-stack > .material-relation-line{
-  grid-column:2;
-  grid-row:2;
-  width:14px;
-  height:var(--record-mark-stroke);
-  align-self:center !important;
-  justify-self:center;
-  margin:0 !important;
-  transform:translateY(var(--record-mark-optical-y, 0.5px));
-}
-
-.material-detail-stack > .material-detail-field .label{
-  align-self:end;
-  margin:0;
-}
-
-.material-range-controls{
-  display:grid !important;
-  grid-template-columns:
-    var(--material-page-input-width)
-    var(--material-range-separator-width)
-    var(--material-page-input-width) !important;
-  column-gap:10px !important;
-  align-items:center !important;
-  min-height:var(--record-control-height);
-}
-
-.material-range-controls > .material-page-input,
-.material-range-controls > input{
-  width:var(--material-page-input-width);
-  min-width:0;
-}
-
-.material-range-controls > .material-range-separator,
-.material-range-controls > .material-separator{
-  width:var(--material-range-separator-width);
-  min-width:var(--material-range-separator-width);
-  text-align:center;
-  justify-self:center;
-  align-self:center;
-}
-
-.material-unit-window{
-  width:100%;
-  min-width:0;
-  min-height:var(--record-control-height);
-  display:flex !important;
-  align-items:center !important;
-  padding-top:0 !important;
-  padding-bottom:0 !important;
-  padding-left:var(--record-horizontal-space) !important;
-  padding-right:var(--record-horizontal-space) !important;
-  box-sizing:border-box;
-}
-
-.material-unit-track{
-  display:inline-block;
-  min-width:max-content;
-  line-height:1.45;
-}
-/* --- end material alignment final fix --- */
-
-
-/* --- material detail stack: stable portrait/landscape alignment --- */
-.material-detail-stack{
-  --material-page-input-width:calc(3ch + var(--record-horizontal-space)*2 + 6px);
-  --material-range-separator-width:var(--record-control-font-size);
-  --material-left-track-width:calc(
-    var(--material-page-input-width) * 2 +
-    var(--material-range-separator-width) +
-    var(--record-horizontal-space) * 2
-  );
-  --material-line-width:14px;
-  display:grid !important;
-  grid-template-columns:var(--material-left-track-width) var(--material-line-width) minmax(0,1fr) !important;
-  grid-template-rows:auto var(--record-control-height);
-  column-gap:10px !important;
-  row-gap:8px;
-  align-items:stretch !important;
-}
-
-.material-detail-stack > .material-detail-field{
-  display:grid !important;
-  grid-template-rows:auto var(--record-control-height);
-  row-gap:8px;
-  align-content:start;
-  min-width:0;
-}
-
-.material-detail-stack > .material-detail-field:first-of-type{
-  grid-column:1;
-  grid-row:1 / span 2;
-}
-
-.material-detail-stack > .material-detail-field:last-of-type{
-  grid-column:3;
-  grid-row:1 / span 2;
-}
-
-.material-detail-stack > .material-detail-field .label{
-  margin:0;
-  align-self:end;
-}
-
-.material-detail-stack > .material-relation-line{
-  grid-column:2;
-  grid-row:2;
-  width:var(--material-line-width);
-  height:var(--record-mark-stroke);
-  align-self:center !important;
-  justify-self:center;
-  margin:0 !important;
-  transform:translateY(var(--record-mark-optical-y,0.5px));
-}
-
-.material-range-controls{
-  display:grid !important;
-  grid-template-columns:
-    var(--material-page-input-width)
-    var(--material-range-separator-width)
-    var(--material-page-input-width) !important;
-  column-gap:10px !important;
-  align-items:center !important;
-  min-height:var(--record-control-height);
-}
-
-.material-range-controls > .material-page-input,
-.material-range-controls > input{
-  width:var(--material-page-input-width);
-  min-width:0;
-}
-
-.material-range-controls > .material-range-separator,
-.material-range-controls > .material-separator{
-  width:var(--material-range-separator-width);
-  min-width:var(--material-range-separator-width);
-  text-align:center;
-  justify-self:center;
-  align-self:center;
-}
-
-.material-unit-window{
-  width:100%;
-  min-width:0;
-  min-height:var(--record-control-height);
-  display:flex !important;
-  align-items:center !important;
-  padding-top:0 !important;
-  padding-bottom:0 !important;
-  padding-left:var(--record-horizontal-space) !important;
-  padding-right:var(--record-horizontal-space) !important;
-  box-sizing:border-box;
-}
-
-.material-unit-track{
-  display:inline-block;
-  min-width:max-content;
-  line-height:1.45;
-}
-/* --- end material detail stack alignment --- */
-
-
 /* iPhone landscape: keep every section-navigation capsule open.
    Colors/states remain exactly the same as portrait. */
 @media (orientation:landscape) and (max-height:500px) and (min-width:600px){
@@ -2048,7 +1890,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 16:03";
+  const BUILD_ID="2026-09-21 16:14";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
