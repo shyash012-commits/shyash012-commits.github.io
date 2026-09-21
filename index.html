@@ -215,6 +215,15 @@ html.line-inapp .header{
 .lesson-list{display:grid;gap:12px;margin-top:14px}
 .lesson-card{width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:var(--body-radius);padding:16px;display:grid;grid-template-columns:66px 1fr auto;gap:12px;align-items:center}
 .lesson-time{font-weight:700}.lesson-name{font-size:17px;font-weight:700}.lesson-meta{font-size:13px;color:var(--sub);margin-top:3px}
+.build-id{
+  margin-top:12px;
+  text-align:right;
+  font-size:11px;
+  font-weight:600;
+  color:#9aa3ad;
+  letter-spacing:.01em;
+  user-select:text;
+}
 .record-section{
   --record-list-inset:15px;
   --record-status-size:10.5px;
@@ -234,7 +243,7 @@ html.line-inapp .header{
 
   /* Body controls stay flat; header/footer own the glossy material language. */
   --record-control-height:42px;
-  --record-control-font-size:14px;
+  --record-control-font-size:16px;
   --record-control-font-weight:700;
   --record-control-bg:#fff;
   --record-control-border:#cbd3dc;
@@ -1744,6 +1753,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
+  const BUILD_ID="2026-09-21 14:06";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2052,7 +2062,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     clearTimeout(footerScrollUnlockTimer);
     footerScrollUnlockTimer=null;
     document.getElementById("app").innerHTML='<div class="app"><div class="header"><div class="header-row"><div></div><div class="header-center"><div class="header-title">授業記録システム v0.1</div><div class="header-meta">架空データ・試作版</div></div><div></div></div></div>'+
-    '<h1 class="page-title">今日の授業</h1><div class="page-sub">'+Y+'年'+M+'月'+D+'日</div><div class="lesson-list">'+lessons.map(l=>{const done=!!state.records[l.id];return '<button class="lesson-card" data-open="'+l.id+'"><div class="lesson-time">'+pad(l.hour)+':'+pad(l.minute)+'</div><div><div class="lesson-name">'+esc(l.student)+'</div><div class="lesson-meta">'+esc(l.grade)+'・'+esc(l.subject)+'・'+esc(l.type)+'</div></div><span class="badge '+(done?'done':'')+'">'+(done?'記録済み':'未記録')+'</span></button>'}).join("")+'</div><p class="note" style="margin-top:18px">この試作版は架空データを使用し、入力内容はこのiPhoneのブラウザ内に保存されます。</p></div>';
+    '<h1 class="page-title">今日の授業</h1><div class="page-sub">'+Y+'年'+M+'月'+D+'日</div><div class="lesson-list">'+lessons.map(l=>{const done=!!state.records[l.id];return '<button class="lesson-card" data-open="'+l.id+'"><div class="lesson-time">'+pad(l.hour)+':'+pad(l.minute)+'</div><div><div class="lesson-name">'+esc(l.student)+'</div><div class="lesson-meta">'+esc(l.grade)+'・'+esc(l.subject)+'・'+esc(l.type)+'</div></div><span class="badge '+(done?'done':'')+'">'+(done?'記録済み':'未記録')+'</span></button>'}).join("")+'</div><p class="note" style="margin-top:18px">この試作版は架空データを使用し、入力内容はこのiPhoneのブラウザ内に保存されます。</p><div class="build-id">Build '+BUILD_ID+'</div></div>';
     document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openRecord(b.dataset.open));
     scheduleLineHeaderLayout();
   }
