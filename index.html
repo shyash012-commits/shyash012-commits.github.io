@@ -351,12 +351,12 @@ html.line-inapp .header{
 }
 .record-section .inline-auto-hint{
   min-width:0;
-  margin:0 0 0 auto;
+  margin:0;
   align-self:baseline;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
-  text-align:right;
+  text-align:left;
   line-height:1.2;
 }
 
@@ -886,18 +886,15 @@ html.line-inapp .header{
 }
 .material-delete-action{
   width:0;
-  margin-left:0;
+  margin-left:auto;
   overflow:hidden;
   white-space:nowrap;
   pointer-events:none;
-  transition:
-    width var(--motion-dur) var(--motion-ease),
-    margin-left var(--motion-dur) var(--motion-ease);
+  transition:width var(--motion-dur) var(--motion-ease);
   will-change:width;
 }
 .material-delete-action.is-visible{
   width:2em;
-  margin-left:var(--record-label-gap);
   pointer-events:auto;
 }
 .material-delete-label{
@@ -1906,7 +1903,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 16:45";
+  const BUILD_ID="2026-09-21 16:50";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
