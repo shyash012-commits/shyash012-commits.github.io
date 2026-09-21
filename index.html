@@ -780,15 +780,12 @@ html.line-inapp .header{
 .material-detail-stack{
   --material-page-input-width:calc(3ch + var(--record-horizontal-space)*2 + 6px);
   --material-range-separator-width:var(--record-control-font-size);
-  --material-left-track-width:calc(
-    var(--material-page-input-width) * 2 +
-    var(--material-range-separator-width) +
-    var(--record-horizontal-space) * 2
-  );
   --material-line-width:14px;
   display:grid;
+  /* Let the first track measure the real rendered width of the page-range
+     controls. Do not recalculate that width in the parent with another 3ch. */
   grid-template-columns:
-    var(--material-left-track-width)
+    max-content
     var(--material-line-width)
     minmax(0,1fr);
   grid-template-rows:auto var(--record-control-height);
@@ -879,13 +876,15 @@ html.line-inapp .header{
 }
 .material-range-controls{
   display:grid;
+  /* The inputs own their width. max-content makes the grid use those actual
+     rendered widths, so both 10px gaps remain exactly 10px. */
   grid-template-columns:
-    var(--material-page-input-width)
+    max-content
     var(--material-range-separator-width)
-    var(--material-page-input-width);
+    max-content;
   column-gap:var(--record-horizontal-space);
   align-items:center;
-  width:var(--material-left-track-width);
+  width:max-content;
   min-height:var(--record-control-height);
 }
 .material-page-input{
@@ -1064,8 +1063,10 @@ html.line-inapp .header{
   margin:0;
 }
 .material-range-separator{
-  flex:0 0 var(--material-range-separator-width);
   width:var(--material-range-separator-width);
+  display:flex;
+  align-items:center;
+  justify-content:center;
   text-align:center;
   color:var(--record-control-text);
   font-size:var(--record-control-font-size);
@@ -2008,7 +2009,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 17:48";
+  const BUILD_ID="2026-09-21 17:58";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
