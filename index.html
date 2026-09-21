@@ -1514,6 +1514,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#20252b;color:#fff;padding:10px 14px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:50}.toast.show{opacity:1}
 .note{font-size:12px;color:var(--sub);line-height:1.6}
 
+/* Diagnostic: remove the fixed footer/spacer from Safari rendering entirely.
+   This is not a design change; it isolates whether the bottom fixed layer is
+   interfering with Safari's native Form Assistant / text interaction. */
+.record-footer,
+.record-footer-spacer{
+  display:none!important;
+}
+
 /* Record footer navigation */
 .record-footer{
   --footer-outer-h:62px;
@@ -2048,7 +2056,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 20:25";
+  const BUILD_ID="2026-09-21 20:30";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
