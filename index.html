@@ -596,12 +596,19 @@ html.line-inapp .header{
   min-width:0;
 }
 .material-range-label{
-  display:flex;
-  align-items:baseline;
-  gap:4px;
+  display:block;
 }
 .material-range-number{
-  font:inherit;
+  margin:0 4px;
+  font-size:inherit;
+  font-weight:inherit;
+}
+.material-range-number.hidden{
+  display:none;
+}
+.material-range-number-symbol{
+  font-size:inherit;
+  font-weight:700;
 }
 .material-relation-line{
   width:14px;
@@ -1726,7 +1733,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '<div class="material-range-clip">'+
         '<div class="material-range-content">'+
           '<div class="material-detail-stack">'+
-            '<div class="material-detail-field"><label class="label material-range-label"><span>範囲</span><span class="material-range-number" data-range-number></span><span>（ページ）</span></label>'+
+            '<div class="material-detail-field"><label class="label material-range-label">範囲<span class="material-range-number hidden" data-range-number><span class="material-range-number-symbol" data-range-number-symbol></span><span data-range-number-index></span></span>（ページ）</label>'+
               '<div class="material-range-controls">'+
                 '<input class="material-page-input" data-material-page-from inputmode="numeric" type="number" min="1" aria-label="開始ページ" value="'+esc(range.from||"")+'">'+
                 '<span class="material-range-separator" aria-hidden="true">〜</span>'+
@@ -2874,9 +2881,17 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           deleteBtn.setAttribute("aria-label","教材"+number+"を削除");
         }
 
-        [...entry.querySelectorAll("[data-material-range]")].forEach((range,rangeIndex)=>{
+        const ranges=[...entry.querySelectorAll("[data-material-range]")];
+        const showRangeNumbers=ranges.length>1;
+
+        ranges.forEach((range,rangeIndex)=>{
           const rangeNumber=range.querySelector("[data-range-number]");
-          if(rangeNumber)rangeNumber.textContent=number+"-"+(rangeIndex+1);
+          const rangeNumberSymbol=range.querySelector("[data-range-number-symbol]");
+          const rangeNumberIndex=range.querySelector("[data-range-number-index]");
+
+          rangeNumber?.classList.toggle("hidden",!showRangeNumbers);
+          if(rangeNumberSymbol)rangeNumberSymbol.textContent=showRangeNumbers?number:"";
+          if(rangeNumberIndex)rangeNumberIndex.textContent=showRangeNumbers?"-"+(rangeIndex+1):"";
         });
       });
 
