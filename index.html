@@ -562,10 +562,13 @@ html.line-inapp .header{
   overflow:hidden;
 }
 .material-range-content{
+  position:relative;
   min-width:0;
 }
 .material-range-delete{
-  align-self:start;
+  position:absolute;
+  top:0;
+  right:0;
   padding:0;
   border:0;
   background:none;
@@ -585,12 +588,20 @@ html.line-inapp .header{
 }
 .material-detail-stack{
   display:grid;
-  grid-template-columns:max-content 14px minmax(0,1fr) auto;
+  grid-template-columns:max-content 14px minmax(0,1fr);
   column-gap:10px;
   align-items:start;
 }
 .material-detail-field{
   min-width:0;
+}
+.material-range-label{
+  display:flex;
+  align-items:baseline;
+  gap:4px;
+}
+.material-range-number{
+  font:inherit;
 }
 .material-relation-line{
   width:14px;
@@ -780,13 +791,16 @@ select.dt-block{padding-right:var(--record-horizontal-space)}
   font-weight:var(--record-control-font-weight);
   color:var(--record-control-text);
 }
+.record-select-shell select[data-material-select]{
+  padding-left:var(--record-horizontal-space);
+}
 .record-select-icon{
   position:absolute;
   top:50%;
-  right:10px;
+  right:var(--record-horizontal-space);
   width:var(--record-mark-size);
   height:var(--record-mark-size);
-  transform:translateY(-50%);
+  transform:translateY(calc(-50% + var(--record-mark-optical-y)));
   color:var(--record-control-text);
   pointer-events:none;
 }
@@ -816,9 +830,7 @@ textarea{min-height:140px;resize:vertical;line-height:1.65}
   font-size:var(--record-control-font-size);
   font-weight:var(--record-control-font-weight);
   color:var(--record-control-text);
-  /* 1.65 line-height adds visual leading above the glyphs.
-     Reduce only the top inset so the visible text sits ~15px from top/left. */
-  padding:10.5px 15px 15px;
+  padding:12px var(--record-horizontal-space);
 }
 input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3px rgba(49,91,138,.10)}
 .row{
@@ -1714,7 +1726,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '<div class="material-range-clip">'+
         '<div class="material-range-content">'+
           '<div class="material-detail-stack">'+
-            '<div class="material-detail-field"><label class="label">範囲（ページ）</label>'+
+            '<div class="material-detail-field"><label class="label material-range-label"><span>範囲</span><span class="material-range-number" data-range-number></span><span>（ページ）</span></label>'+
               '<div class="material-range-controls">'+
                 '<input class="material-page-input" data-material-page-from inputmode="numeric" type="number" min="1" aria-label="開始ページ" value="'+esc(range.from||"")+'">'+
                 '<span class="material-range-separator" aria-hidden="true">〜</span>'+
@@ -1729,8 +1741,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
                   : '')+
               '</div>'+
             '</div>'+
-            '<button type="button" class="material-range-delete '+(showDelete?'':'hidden')+'" data-delete-range>削除</button>'+
           '</div>'+
+          '<button type="button" class="material-range-delete '+(showDelete?'':'hidden')+'" data-delete-range>削除</button>'+
         '</div>'+
       '</div>'+
     '</div>';
@@ -2861,6 +2873,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           deleteBtn.classList.add("is-visible");
           deleteBtn.setAttribute("aria-label","教材"+number+"を削除");
         }
+
+        [...entry.querySelectorAll("[data-material-range]")].forEach((range,rangeIndex)=>{
+          const rangeNumber=range.querySelector("[data-range-number]");
+          if(rangeNumber)rangeNumber.textContent=number+"-"+(rangeIndex+1);
+        });
       });
 
       if(multiple){
@@ -3058,6 +3075,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
             const finish=()=>{
               range.remove();
               updateRangeDeleteVisibility();
+              refreshMaterialEntryLabels();
               v.materials=capture(v).materials;
               autoSaveNow(v);
             };
@@ -3097,6 +3115,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         rangeList.append(range);
         bindRange(range);
         updateRangeDeleteVisibility();
+        refreshMaterialEntryLabels();
 
         if(prefersReducedMotion()){
           range.classList.remove("is-collapsed");
