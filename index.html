@@ -332,6 +332,9 @@ html.preview-layout-motion,
 html.preview-layout-motion body{
   overflow-anchor:none;
 }
+html.preview-layout-motion .record-section-title{
+  position:relative;
+}
 
 /* Preview shows only the values that were actually selected. */
 .app.preview-mode .record-section{
@@ -2159,7 +2162,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-22 01:58";
+  const BUILD_ID="2026-09-22 02:06";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -3233,10 +3236,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     let previewOptionAnimations=[];
 
     let previewLayoutAnimations=[];
+    let previewLayoutCleanupTimer=null;
 
     const PREVIEW_LAYOUT_SELECTOR=".record-section-title, .record-section > .card";
 
     function stopPreviewLayoutMotion(){
+      if(previewLayoutCleanupTimer){
+        clearTimeout(previewLayoutCleanupTimer);
+        previewLayoutCleanupTimer=null;
+      }
       previewLayoutAnimations.forEach(animation=>animation.cancel());
       previewLayoutAnimations=[];
       document.documentElement.classList.remove("preview-layout-motion");
@@ -3250,10 +3258,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     }
 
     function animatePreviewLayout(before){
-      if(prefersReducedMotion())return;
-
-      stopPreviewLayoutMotion();
-      document.documentElement.classList.add("preview-layout-motion");
+      if(prefersReducedMotion()){
+        document.documentElement.classList.remove("preview-layout-motion");
+        return;
+      }
 
       const viewportHeight=window.innerHeight;
 
@@ -3272,10 +3280,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
         if(Math.abs(dy)<.5)return;
 
+        // IMPORTANT: animate relative "top", not transform.
+        // Preview option morphing temporarily uses position:fixed on child cards.
+        // A transformed ancestor would become their containing block and make
+        // those option cards jump/fly during preview on/off.
         const animation=element.animate(
           [
-            {transform:`translateY(${dy}px)`},
-            {transform:"translateY(0)"}
+            {top:`${dy}px`},
+            {top:"0px"}
           ],
           {
             duration:MOTION.move,
@@ -3285,8 +3297,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         previewLayoutAnimations.push(animation);
       });
 
-      setTimeout(()=>{
+      previewLayoutCleanupTimer=setTimeout(()=>{
         previewLayoutAnimations=[];
+        previewLayoutCleanupTimer=null;
         document.documentElement.classList.remove("preview-layout-motion");
       },MOTION.move+30);
     }
@@ -3657,6 +3670,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const on=!recordFooter.classList.contains("preview-mode");
       clearTimeout(previewUnlockTimer);
       stopPreviewLayoutMotion();
+      document.documentElement.classList.add("preview-layout-motion");
       const previewLayoutBefore=capturePreviewLayout();
 
       if(on){
