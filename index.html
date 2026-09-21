@@ -1182,6 +1182,11 @@ textarea{
   font-size:inherit;
   font-weight:400;
 }
+input,
+textarea{
+  scroll-margin-block:0;
+}
+
 .vt-review #review{
   display:block;
   height:calc(var(--record-control-height) * 4);
@@ -1416,7 +1421,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .previous-review-meta{
   text-align:right;
   font-size:var(--record-label-font-size);
-  font-weight:400;
+  font-weight:600;
 }
 
 .rating{
@@ -2042,7 +2047,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 19:47";
+  const BUILD_ID="2026-09-21 19:52";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2419,7 +2424,39 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     // On iPhone, touchstart is the earliest reliable signal. Waiting for
     // pointer movement or pointerup made dismissal feel unresponsive.
     recordKeyboardTouchStartHandler=e=>{
-      dismissFromTarget(e.target);
+      const target=e.target instanceof Element?e.target:null;
+      if(!target)return;
+
+      const entry=target.closest("input, textarea");
+
+      /* iOS Safari normally focuses the control after touchstart and may first
+         pan the page so the whole control sits above the software keyboard.
+         Focus synchronously inside the user gesture with preventScroll so the
+         keyboard can open without that preliminary document jump. We do not
+         preventDefault: Safari still gets the original touch for native caret
+         placement / selection. */
+      if(entry&&isKeyboardEntryControl(entry)){
+        if(document.activeElement!==entry){
+          const x=window.scrollX;
+          const y=window.scrollY;
+
+          try{
+            entry.focus({preventScroll:true});
+          }catch{
+            entry.focus();
+          }
+
+          /* Older / partially-fixed WebKit builds have historically ignored
+             preventScroll on focus. Restore only an immediate document scroll
+             caused by focus itself; do not chase VisualViewport movement. */
+          if(window.scrollX!==x||window.scrollY!==y){
+            window.scrollTo(x,y);
+          }
+        }
+        return;
+      }
+
+      dismissFromTarget(target);
     };
 
     // Pointer fallback for mouse/trackpad/pen and browsers without touch.
