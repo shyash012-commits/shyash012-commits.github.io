@@ -16,7 +16,7 @@
   --fade-dur:.10s
 }
 *{box-sizing:border-box;min-width:0}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",sans-serif;font-variant-numeric:tabular-nums;overflow-x:clip}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",sans-serif;font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:clip}
 body{min-height:100vh}
 button,input,textarea,select{font:inherit;color:inherit}
 button{touch-action:manipulation}
@@ -1890,7 +1890,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 16:14";
+  const BUILD_ID="2026-09-21 16:20";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
