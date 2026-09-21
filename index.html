@@ -1552,9 +1552,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     inset 0 0 0 1.25px var(--footer-completed-outline),
     inset 0 1px 0 rgba(255,255,255,.76),
     inset 0 -1px 0 rgba(31,41,51,.05);
+  --footer-browser-keyboard-overlap:0px;
   position:fixed;
   left:50%;
-  bottom:10px;
+  bottom:calc(10px - var(--footer-browser-keyboard-overlap));
   z-index:30;
   transform:translateX(-50%);
   display:flex;
@@ -1577,11 +1578,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 html.standalone-app .record-footer{
   bottom:var(--standalone-footer-bottom);
-}
-
-.record-footer.is-keyboard-covered{
-  visibility:hidden;
-  pointer-events:none;
 }
 
 .record-nav-shell{
@@ -2074,7 +2070,7 @@ html.standalone-app .record-footer{
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 21:20";
+  const BUILD_ID="2026-09-21 21:26";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2500,7 +2496,7 @@ html.standalone-app .record-footer{
     requestAnimationFrame(updateStandaloneFooterInset);
   }
 
-  function unbindFooterKeyboardCover(){
+  function unbindFooterKeyboardUnderlay(){
     const viewport=window.visualViewport;
 
     if(footerKeyboardViewportHandler&&viewport){
@@ -2526,66 +2522,78 @@ html.standalone-app .record-footer{
     footerKeyboardBaselineHeight=0;
   }
 
-  function bindFooterKeyboardCover(){
-    unbindFooterKeyboardCover();
+  function bindFooterKeyboardUnderlay(){
+    unbindFooterKeyboardUnderlay();
+
+    if(IS_STANDALONE_APP)return;
 
     const footer=document.querySelector(".record-footer");
     const viewport=window.visualViewport;
     if(!footer||!viewport)return;
 
-    footerKeyboardBaselineHeight=viewport.height;
+    let baseBottom=viewport.offsetTop+viewport.height;
+    let tracking=false;
+    let raf=0;
 
-    const setCovered=covered=>{
-      footer.classList.toggle("is-keyboard-covered",covered);
-      footer.setAttribute("aria-hidden",String(covered));
+    const setOverlap=value=>{
+      footer.style.setProperty(
+        "--footer-browser-keyboard-overlap",
+        Math.max(0,value)+"px"
+      );
     };
 
     const sync=()=>{
-      const shrink=Math.max(0,footerKeyboardBaselineHeight-viewport.height);
+      raf=0;
 
-      if(shrink>100){
-        setCovered(true);
+      const currentBottom=viewport.offsetTop+viewport.height;
+      const active=isKeyboardEntryControl(document.activeElement);
+
+      if(active)tracking=true;
+
+      if(tracking){
+        const overlap=Math.max(0,baseBottom-currentBottom);
+        setOverlap(overlap);
+
+        /* When the keyboard has fully recovered, stop tracking only if the
+           input is no longer active. If focus remains, keep the baseline so a
+           later keyboard reopen still uses the same physical resting point. */
+        if(overlap<=0.5&&!active){
+          tracking=false;
+          baseBottom=currentBottom;
+          setOverlap(0);
+        }
         return;
       }
 
-      if(shrink<40){
-        setCovered(false);
+      baseBottom=currentBottom;
+      setOverlap(0);
+    };
 
-        /* Once Safari's visual viewport is fully recovered, establish the new
-           normal height. This handles browser chrome/orientation changes
-           without moving the footer during keyboard animation. */
-        footerKeyboardBaselineHeight=viewport.height;
-        requestAnimationFrame(updateStandaloneFooterInset);
-      }
+    const schedule=()=>{
+      if(raf)return;
+      raf=requestAnimationFrame(sync);
     };
 
     footerKeyboardFocusInHandler=e=>{
       if(!isKeyboardEntryControl(e.target))return;
 
-      /* Hide before Safari gets a chance to lift the fixed footer above the
-         keyboard. No transform is animated or continuously corrected. */
-      setCovered(true);
-
-      clearTimeout(footerKeyboardCheckTimer);
-      footerKeyboardCheckTimer=setTimeout(()=>{
-        /* Hardware keyboard / no software keyboard: restore if the viewport
-           never actually shrank. */
-        sync();
-      },350);
-    };
-
-    footerKeyboardFocusOutHandler=()=>{
-      clearTimeout(footerKeyboardCheckTimer);
-      footerKeyboardCheckTimer=setTimeout(sync,0);
-    };
-
-    footerKeyboardViewportHandler=()=>requestAnimationFrame(sync);
-    footerKeyboardWindowResizeHandler=()=>{
-      const shrink=Math.max(0,footerKeyboardBaselineHeight-viewport.height);
-      if(shrink<40){
-        footerKeyboardBaselineHeight=viewport.height;
+      /* Capture the normal visual-viewport bottom before iOS finishes opening
+         the keyboard. Do not recapture while already tracking another field. */
+      if(!tracking){
+        baseBottom=viewport.offsetTop+viewport.height;
       }
-      sync();
+      tracking=true;
+      schedule();
+    };
+
+    footerKeyboardFocusOutHandler=schedule;
+    footerKeyboardViewportHandler=schedule;
+    footerKeyboardWindowResizeHandler=()=>{
+      if(!tracking&&!isKeyboardEntryControl(document.activeElement)){
+        baseBottom=viewport.offsetTop+viewport.height;
+        setOverlap(0);
+      }
+      schedule();
     };
 
     document.addEventListener("focusin",footerKeyboardFocusInHandler);
@@ -2594,11 +2602,11 @@ html.standalone-app .record-footer{
     viewport.addEventListener("scroll",footerKeyboardViewportHandler,{passive:true});
     window.addEventListener("resize",footerKeyboardWindowResizeHandler,{passive:true});
 
-    setCovered(false);
+    setOverlap(0);
   }
 
   function renderList(){
-    unbindFooterKeyboardCover();
+    unbindFooterKeyboardUnderlay();
     unbindStandaloneFooterInset();
     if(footerScrollHandler){
       window.removeEventListener("scroll",footerScrollHandler);
@@ -3059,7 +3067,7 @@ html.standalone-app .record-footer{
     }
 
     bindRecordFooter(v);
-    bindFooterKeyboardCover();
+    bindFooterKeyboardUnderlay();
     bindStandaloneFooterInset();
     updateFooterCompletion(capture(v));
     const backBtn=document.getElementById("backBtn");
