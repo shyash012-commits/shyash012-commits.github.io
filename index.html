@@ -739,9 +739,6 @@ html.line-inapp .header{
   border:0;
   background:none;
   color:var(--primary);
-  font-size:var(--record-label-font-size);
-  font-weight:600;
-  line-height:1.2;
   white-space:nowrap;
   opacity:0;
   transform:translateX(-4px);
@@ -823,20 +820,28 @@ html.line-inapp .header{
   grid-column:3;
   grid-row:2;
 }
-.material-detail-label{
-  margin:0;
-  align-self:baseline;
+.material-detail-label,
+.material-range-delete{
   font-size:var(--record-label-font-size);
   font-weight:600;
   line-height:1.2;
   -webkit-text-size-adjust:100%;
   text-size-adjust:100%;
 }
+.material-detail-label{
+  margin:0;
+  align-self:baseline;
+}
 .material-range-label{
   display:block;
 }
 .material-range-number{
-  display:inline-block;
+  /* inline-block + overflow:hidden uses the box bottom as its baseline,
+     which lifted ①-1 / ①-2 like a superscript. An inline flex container
+     derives its baseline from the text inside, while still allowing the
+     horizontal clipping needed for the number reveal animation. */
+  display:inline-flex;
+  align-items:baseline;
   max-width:0;
   overflow:hidden;
   white-space:nowrap;
@@ -2003,7 +2008,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 17:38";
+  const BUILD_ID="2026-09-21 17:48";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
