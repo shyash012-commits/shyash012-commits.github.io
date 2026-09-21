@@ -1408,7 +1408,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   font-weight:var(--record-control-font-weight);
   color:var(--record-control-text);
   line-height:1.65;
-  white-space:pre-line;
+}
+.previous-review-body,
+.previous-review-meta{
+  display:block;
+}
+.previous-review-meta{
+  text-align:right;
 }
 
 .rating{
@@ -2034,7 +2040,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 18:32";
+  const BUILD_ID="2026-09-21 18:41";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2162,9 +2168,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     return [...new Set([...lesson.materials,...Object.keys(materialDb)])];
   }
 
-  function previousReviewText(lesson){
+  function previousReviewContent(lesson){
     const previous=lesson.history?.[0];
-    if(!previous)return "";
+    if(!previous)return {text:"",meta:""};
 
     const meta=[];
     if(previous.instructor||lesson.instructor)meta.push(previous.instructor||lesson.instructor);
@@ -2191,7 +2197,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       meta.push(previous.date+timeText);
     }
 
-    return previous.text+(meta.length?"\n（"+meta.join("・")+"）":"");
+    return {
+      text:previous.text||"",
+      meta:meta.length?"（"+meta.join("・")+"）":""
+    };
   }
 
 
@@ -2412,7 +2421,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const l=getLesson(),
       subjectOptions=subjectsForGrade(l.grade),
       allMaterials=availableMaterialsForLesson(l),
-      materialEntries=(v.materials?.length?v.materials:[normalizeMaterialEntry(null,l.materials[0])]);
+      materialEntries=(v.materials?.length?v.materials:[normalizeMaterialEntry(null,l.materials[0])]),
+      previousReview=previousReviewContent(l);
     document.getElementById("app").innerHTML='<div class="app">'+
     '<div class="header"><div class="header-row">'+
       '<div class="header-left"><button class="header-action header-back" id="backBtn" aria-label="一覧に戻る">'+
@@ -2448,7 +2458,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="card vt-review" data-card-status="review"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">講評</h2></div><div class="card-body">'+
       '<textarea id="review" placeholder="授業時の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter"><span class="counter-hint">*目安200字以内</span><span class="counter-value" id="reviewCount">'+String(v.review||"").length+'文字</span></div>'+
       '<div class="review-prev-row" id="prevRow"><button type="button" class="review-prev-toggle" id="prevBtn" aria-expanded="false"><span class="record-action-icon review-close-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M.875 5.25h8.75"/></svg></span><span id="prevBtnLabel">前回の講評を見る</span></button></div>'+
-      '<div class="previous-review-reveal" id="previousReview" aria-hidden="true"><div class="previous-review-clip"><div class="previous-review-content"><p class="previous-review-text">'+esc(previousReviewText(l))+'</p></div></div></div></div></section>'+
+      '<div class="previous-review-reveal" id="previousReview" aria-hidden="true"><div class="previous-review-clip"><div class="previous-review-content"><p class="previous-review-text"><span class="previous-review-body">'+esc(previousReview.text)+'</span>'+(previousReview.meta?'<span class="previous-review-meta">'+esc(previousReview.meta)+'</span>':'')+'</p></div></div></div></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="homework"><h1 class="record-section-title">宿題確認</h1>'+
     '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'"><span class="record-option-label">'+r+'</span></button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
@@ -3444,6 +3454,24 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       }
     };
 
+    const revealCollapsedShell=(shell,onStart)=>{
+      if(prefersReducedMotion()){
+        onStart?.(false);
+        shell.classList.remove("is-collapsed");
+        return;
+      }
+
+      /* The shell must first be painted in its closed state so the browser has
+         a real transition origin. Related numbering/delete UI is deliberately
+         deferred to that same reveal frame, not started earlier. */
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          onStart?.(true);
+          shell.classList.remove("is-collapsed");
+        });
+      });
+    };
+
     function setMaterialPreviewCompaction(compact){
       const entries=materialEntryList();
 
@@ -3813,16 +3841,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         range.classList.add("is-collapsed");
         rangeList.append(range);
         bindRange(range);
-        updateRangeDeleteVisibility();
-        refreshMaterialEntryLabels();
 
-        if(prefersReducedMotion()){
-          range.classList.remove("is-collapsed");
-        }else{
-          requestAnimationFrame(()=>{
-            requestAnimationFrame(()=>range.classList.remove("is-collapsed"));
-          });
-        }
+        revealCollapsedShell(range,animate=>{
+          /* Existing range numbers / delete actions and the new row now start
+             their motion in the same reveal frame. */
+          syncRangeChrome({animateNumbers:animate});
+        });
 
         v.materials=capture(v).materials;
         autoSaveNow(v);
@@ -3860,21 +3884,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     refreshMaterialEntryLabels({animateRangeNumbers:false});
 
-    const revealMaterialEntry=entry=>{
-      if(prefersReducedMotion()){
-        entry.classList.remove("is-collapsed");
-        return;
-      }
-
-      // Footer grammar: append in the closed state, then let the same DOM
-      // transition to its open state on the next frame.
-      requestAnimationFrame(()=>{
-        requestAnimationFrame(()=>{
-          entry.classList.remove("is-collapsed");
-        });
-      });
-    };
-
     addMaterialBtn.onclick=()=>{
       if(materialEntryList().length>=MATERIAL_MAX)return;
 
@@ -3893,8 +3902,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       entry.classList.add("is-collapsed");
       materialEntries.append(entry);
       bindMaterialEntry(entry);
-      refreshMaterialEntryLabels();
-      revealMaterialEntry(entry);
+
+      revealCollapsedShell(entry,animate=>{
+        /* Material numbering/delete chrome and the new material open together.
+           The two-frame wait remains only to establish the closed start state. */
+        refreshMaterialEntryLabels({animateRangeNumbers:animate});
+      });
+
       autoSaveNow(v);
     };
 
