@@ -2086,7 +2086,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 keyboard-dock-01";
+  const BUILD_ID="2026-09-21 keyboard-dock-02";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2347,6 +2347,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   let footerKeyboardOpeningFocusOutHandler=null;
   let footerKeyboardOpeningBaselineTop=0;
   let footerKeyboardOpeningBaselineHeight=0;
+  let footerKeyboardOpeningLastHeight=0;
+  let footerKeyboardOpeningMinHeight=Infinity;
+  let footerKeyboardOpeningHasOpened=false;
   let footerKeyboardOpeningTimer=null;
   let footerKeyboardOpeningRaf=0;
   let footerKeyboardOpeningSession=false;
@@ -2562,6 +2565,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     footerKeyboardOpeningBaselineTop=0;
     footerKeyboardOpeningBaselineHeight=0;
+    footerKeyboardOpeningLastHeight=0;
+    footerKeyboardOpeningMinHeight=Infinity;
+    footerKeyboardOpeningHasOpened=false;
     footerKeyboardOpeningSession=false;
     footerKeyboardOpeningClosing=false;
   }
@@ -2582,6 +2588,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     footerKeyboardOpeningBaselineTop=footerScreenTop();
     footerKeyboardOpeningBaselineHeight=viewport.height;
+    footerKeyboardOpeningLastHeight=viewport.height;
+    footerKeyboardOpeningMinHeight=viewport.height;
+    footerKeyboardOpeningHasOpened=false;
 
     const setDockTop=()=>{
       /* Keep the footer at the SAME full-screen Y it had before the keyboard.
@@ -2612,37 +2621,64 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       footer.style.removeProperty("--browser-keyboard-doc-top");
       footerKeyboardOpeningSession=false;
       footerKeyboardOpeningClosing=false;
+      footerKeyboardOpeningHasOpened=false;
       footerKeyboardOpeningBaselineHeight=viewport.height;
-      requestAnimationFrame(()=>{
-        if(!footerKeyboardOpeningSession){
-          footerKeyboardOpeningBaselineTop=footerScreenTop();
-        }
-      });
+      footerKeyboardOpeningLastHeight=viewport.height;
+      footerKeyboardOpeningMinHeight=viewport.height;
+      /* Do not derive the next session's screen Y here. Safari may still be
+         settling its browser chrome after the keyboard disappears. The next
+         pointerdown/focusin captures a fresh fixed-footer position instead. */
     };
 
     const viewportRecovered=()=>
-      viewport.height>=footerKeyboardOpeningBaselineHeight-2;
+      viewport.height>=footerKeyboardOpeningBaselineHeight-6;
 
     const sync=()=>{
       footerKeyboardOpeningRaf=0;
+      const h=viewport.height;
 
       if(!footerKeyboardOpeningSession){
         if(!isKeyboardEntryControl(document.activeElement)){
           footerKeyboardOpeningBaselineTop=footerScreenTop();
-          footerKeyboardOpeningBaselineHeight=viewport.height;
+          footerKeyboardOpeningBaselineHeight=h;
+          footerKeyboardOpeningLastHeight=h;
         }
         return;
       }
+
+      footerKeyboardOpeningMinHeight=Math.min(
+        footerKeyboardOpeningMinHeight,
+        h
+      );
+
+      const shrink=footerKeyboardOpeningBaselineHeight-h;
+      if(shrink>80){
+        footerKeyboardOpeningHasOpened=true;
+      }
+      if(h>footerKeyboardOpeningLastHeight+0.5){
+        footerKeyboardOpeningClosing=true;
+      }
+      footerKeyboardOpeningLastHeight=h;
 
       /* While the keyboard is open the footer lives in document space at its
          original full-screen position, physically underneath the keyboard. */
       setDockTop();
 
-      /* Do not switch back to fixed during the closing animation. That switch
-         is intentionally postponed until the visual viewport is fully back.
-         Until then the native keyboard simply uncovers the absolute footer. */
-      if(footerKeyboardOpeningClosing&&viewportRecovered()){
-        undock();
+      /* iOS usually keeps the textarea focused when the keyboard is dismissed
+         with its own close control, so focusout cannot define the keyboard
+         session. End the session from visualViewport recovery instead. This is
+         what makes the second, third, ... open/close cycle start cleanly. */
+      if(footerKeyboardOpeningHasOpened&&viewportRecovered()){
+        clearTimeout(footerKeyboardOpeningTimer);
+        footerKeyboardOpeningTimer=setTimeout(()=>{
+          if(
+            footerKeyboardOpeningSession&&
+            footerKeyboardOpeningHasOpened&&
+            viewportRecovered()
+          ){
+            undock();
+          }
+        },90);
       }
     };
 
@@ -2668,17 +2704,34 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     };
 
     const startSession=()=>{
+      clearTimeout(footerKeyboardOpeningTimer);
+      footerKeyboardOpeningTimer=null;
+
       if(footerKeyboardOpeningSession){
-        footerKeyboardOpeningClosing=false;
-        return;
+        /* A transfer between fields while the keyboard is still open belongs to
+           the same session. If the viewport has already recovered, however,
+           clean up the stale session first (iOS may have kept focus). */
+        if(footerKeyboardOpeningHasOpened&&viewportRecovered()){
+          undock();
+        }else{
+          footerKeyboardOpeningClosing=false;
+          return;
+        }
       }
 
+      /* Capture the footer's real current fixed position for EVERY keyboard
+         opening. Never reuse the previous close's baseline; Safari's toolbar
+         can settle to a slightly different visual viewport after each cycle. */
+      footerKeyboardOpeningBaselineTop=footerScreenTop();
+      footerKeyboardOpeningBaselineHeight=viewport.height;
+      footerKeyboardOpeningLastHeight=viewport.height;
+      footerKeyboardOpeningMinHeight=viewport.height;
+      footerKeyboardOpeningHasOpened=false;
       footerKeyboardOpeningSession=true;
       footerKeyboardOpeningClosing=false;
 
-      /* The baseline is continuously maintained while idle. Most importantly,
-         pointerdown calls this BEFORE the textarea receives focus, so we leave
-         position:fixed before Safari begins its keyboard re-anchoring. */
+      /* pointerdown reaches here before focus/default keyboard layout, so the
+         absolute dock starts from the exact fixed-footer position. */
       dock();
       pumpForTransition();
     };
@@ -2696,15 +2749,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     footerKeyboardOpeningFocusOutHandler=()=>{
       clearTimeout(footerKeyboardOpeningTimer);
       footerKeyboardOpeningTimer=setTimeout(()=>{
-        /* A focus transfer between two fields keeps the same keyboard session. */
+        /* A focus transfer between two fields keeps the same keyboard session.
+           Blur is only a hint; viewport recovery is the authoritative close. */
         if(isKeyboardEntryControl(document.activeElement)){
-          footerKeyboardOpeningClosing=false;
           return;
         }
         footerKeyboardOpeningClosing=true;
         pumpForTransition(72);
-        /* Some iOS builds deliver the final viewport event late. Keep checking
-           after the animation without changing the docked position. */
         footerKeyboardOpeningTimer=setTimeout(()=>{
           if(footerKeyboardOpeningSession){
             sync();
