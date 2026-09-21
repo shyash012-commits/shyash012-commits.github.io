@@ -328,8 +328,8 @@ html.line-inapp .header{
   row-gap:var(--record-item-gap);
 }
 
-html.preview-layout-anchoring,
-html.preview-layout-anchoring body{
+html.preview-layout-motion,
+html.preview-layout-motion body{
   overflow-anchor:none;
 }
 
@@ -2159,7 +2159,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-22 01:52";
+  const BUILD_ID="2026-09-22 01:58";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -3232,98 +3232,63 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     let previewOptionCleanupTimer=null;
     let previewOptionAnimations=[];
 
-    let previewLayoutAnchorRaf=0;
-    let previewLayoutAnchorElement=null;
-    let previewLayoutAnchorTop=0;
-    let previewLayoutAnchorStartedAt=0;
+    let previewLayoutAnimations=[];
 
-    function stopPreviewLayoutAnchor(){
-      if(previewLayoutAnchorRaf){
-        cancelAnimationFrame(previewLayoutAnchorRaf);
-        previewLayoutAnchorRaf=0;
-      }
-      previewLayoutAnchorElement=null;
-      previewLayoutAnchorTop=0;
-      previewLayoutAnchorStartedAt=0;
-      document.documentElement.classList.remove("preview-layout-anchoring");
+    const PREVIEW_LAYOUT_SELECTOR=".record-section-title, .record-section > .card";
+
+    function stopPreviewLayoutMotion(){
+      previewLayoutAnimations.forEach(animation=>animation.cancel());
+      previewLayoutAnimations=[];
+      document.documentElement.classList.remove("preview-layout-motion");
     }
 
-    function pickPreviewLayoutAnchor(){
-      if(window.scrollY<2)return null;
-
-      const footerTop=recordFooter
-        ? recordFooter.getBoundingClientRect().top
-        : window.innerHeight;
-      const header=document.querySelector(".header");
-      const headerBottom=header
-        ? Math.max(0,header.getBoundingClientRect().bottom)
-        : 0;
-      const probe=Math.min(
-        footerTop-28,
-        Math.max(headerBottom+36,window.innerHeight*.42)
+    function capturePreviewLayout(){
+      return new Map(
+        [...document.querySelectorAll(PREVIEW_LAYOUT_SELECTOR)]
+          .map(element=>[element,element.getBoundingClientRect()])
       );
+    }
 
-      const candidates=[
-        ...document.querySelectorAll(
-          ".record-section-title, .record-section > .card"
-        )
-      ].map(element=>({
-        element,
-        rect:element.getBoundingClientRect()
-      })).filter(({rect})=>
-        rect.bottom>headerBottom+8 &&
-        rect.top<footerTop-8
-      );
+    function animatePreviewLayout(before){
+      if(prefersReducedMotion())return;
 
-      if(!candidates.length)return null;
+      stopPreviewLayoutMotion();
+      document.documentElement.classList.add("preview-layout-motion");
 
-      candidates.sort((a,b)=>{
-        const aPoint=Math.min(Math.max(probe,a.rect.top),a.rect.bottom);
-        const bPoint=Math.min(Math.max(probe,b.rect.top),b.rect.bottom);
-        return Math.abs(aPoint-probe)-Math.abs(bPoint-probe);
+      const viewportHeight=window.innerHeight;
+
+      [...document.querySelectorAll(PREVIEW_LAYOUT_SELECTOR)].forEach(element=>{
+        const from=before.get(element);
+        if(!from)return;
+
+        const to=element.getBoundingClientRect();
+        const dy=from.top-to.top;
+
+        // Only animate blocks that were or are near the visible viewport.
+        if(
+          (from.bottom<-viewportHeight*.25 && to.bottom<-viewportHeight*.25) ||
+          (from.top>viewportHeight*1.25 && to.top>viewportHeight*1.25)
+        )return;
+
+        if(Math.abs(dy)<.5)return;
+
+        const animation=element.animate(
+          [
+            {transform:`translateY(${dy}px)`},
+            {transform:"translateY(0)"}
+          ],
+          {
+            duration:MOTION.move,
+            easing:MOTION.ease
+          }
+        );
+        previewLayoutAnimations.push(animation);
       });
 
-      return candidates[0].element;
-    }
-
-    function beginPreviewLayoutAnchor(){
-      stopPreviewLayoutAnchor();
-
-      const anchor=pickPreviewLayoutAnchor();
-      if(!anchor)return ()=>{};
-
-      previewLayoutAnchorElement=anchor;
-      previewLayoutAnchorTop=anchor.getBoundingClientRect().top;
-      previewLayoutAnchorStartedAt=performance.now();
-      document.documentElement.classList.add("preview-layout-anchoring");
-
-      return ()=>{
-        const tick=()=>{
-          if(!previewLayoutAnchorElement){
-            stopPreviewLayoutAnchor();
-            return;
-          }
-
-          const currentTop=previewLayoutAnchorElement.getBoundingClientRect().top;
-          const delta=currentTop-previewLayoutAnchorTop;
-
-          // Counter only the vertical reflow caused by preview-only elements
-          // collapsing/expanding above the visible content. This leaves each
-          // element's own local motion untouched while keeping the page from
-          // lurching as a whole.
-          if(Math.abs(delta)>.25){
-            window.scrollBy(0,delta);
-          }
-
-          if(performance.now()-previewLayoutAnchorStartedAt<MOTION.move+90){
-            previewLayoutAnchorRaf=requestAnimationFrame(tick);
-          }else{
-            stopPreviewLayoutAnchor();
-          }
-        };
-
-        previewLayoutAnchorRaf=requestAnimationFrame(tick);
-      };
+      setTimeout(()=>{
+        previewLayoutAnimations=[];
+        document.documentElement.classList.remove("preview-layout-motion");
+      },MOTION.move+30);
     }
 
     const px=value=>value+"px";
@@ -3691,7 +3656,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
       const on=!recordFooter.classList.contains("preview-mode");
       clearTimeout(previewUnlockTimer);
-      const runPreviewLayoutAnchor=beginPreviewLayoutAnchor();
+      stopPreviewLayoutMotion();
+      const previewLayoutBefore=capturePreviewLayout();
 
       if(on){
         // Close the keyboard before locking the form.
@@ -3708,7 +3674,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
         previewBtn.setAttribute("aria-pressed","true");
         previewBtn.setAttribute("aria-label","プレビューを閉じる");
-        runPreviewLayoutAnchor();
+        animatePreviewLayout(previewLayoutBefore);
         return;
       }
 
@@ -3719,7 +3685,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       expandPreviewOptions();
       previewBtn.setAttribute("aria-pressed","false");
       previewBtn.setAttribute("aria-label","プレビュー");
-      runPreviewLayoutAnchor();
+      animatePreviewLayout(previewLayoutBefore);
 
       previewUnlockTimer=setTimeout(()=>{
         // Unlock exactly when the shared preview morph finishes.
