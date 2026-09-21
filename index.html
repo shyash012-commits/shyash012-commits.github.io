@@ -1568,6 +1568,26 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   gap:10px;
   width:min(calc(100vw - 20px),700px);
 }
+/* Installed Web App only:
+   Match the bottom gap of the footer's inner 42px capsule to the top gap of
+   the header's 42px 一覧/提出 capsules.
+
+   Header capsule top gap:
+     env(safe-area-inset-top) + 10px
+
+   Footer inner capsule sits 10px inside the 62px outer shell:
+     footer bottom + 10px
+
+   Therefore footer bottom = env(safe-area-inset-top) makes both gaps equal. */
+@media (display-mode:standalone){
+  .record-footer{
+    bottom:env(safe-area-inset-top);
+  }
+}
+html.standalone-app .record-footer{
+  bottom:env(safe-area-inset-top);
+}
+
 .record-nav-shell{
   position:relative;
   flex:1 1 auto;
@@ -2051,10 +2071,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 <script>
 (() => {
   const IS_LINE_INAPP=/\bLine\//i.test(navigator.userAgent);
+  const IS_STANDALONE_APP=
+    window.matchMedia("(display-mode: standalone)").matches ||
+    navigator.standalone===true;
+  document.documentElement.classList.toggle("standalone-app",IS_STANDALONE_APP);
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 21:06";
+  const BUILD_ID="2026-09-21 21:12";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
