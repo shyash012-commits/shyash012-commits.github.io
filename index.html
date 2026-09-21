@@ -1389,6 +1389,44 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   background:var(--record-control-active-pressed-bg);
   border-color:var(--record-control-active-pressed-border);
 }
+
+.homework-choice-grid .choice-button{
+  width:var(--record-control-height);
+  min-width:var(--record-control-height);
+  padding:0;
+}
+
+/* Homework rating reveal uses the same motion grammar as other conditional fields:
+   layout 360ms / fade 180ms / small upward offset, with no display:none jump. */
+.homework-rating-reveal{
+  display:grid;
+  grid-template-rows:0fr;
+  opacity:0;
+  transform:translateY(-5px) scale(.995);
+  margin-top:0;
+  pointer-events:none;
+  transition:
+    grid-template-rows 360ms cubic-bezier(.16,1,.3,1),
+    opacity 180ms ease-out,
+    transform 360ms cubic-bezier(.16,1,.3,1),
+    margin-top 360ms cubic-bezier(.16,1,.3,1);
+}
+.homework-rating-reveal.open{
+  grid-template-rows:1fr;
+  opacity:1;
+  transform:translateY(0) scale(1);
+  margin-top:var(--record-field-gap);
+  pointer-events:auto;
+}
+.homework-rating-reveal-clip{
+  min-height:0;
+  overflow:hidden;
+}
+@media (prefers-reduced-motion:reduce){
+  .homework-rating-reveal{
+    transition:none;
+  }
+}
 .record-option-label{
   position:relative;
   z-index:1;
@@ -2160,7 +2198,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-22 01:36";
+  const BUILD_ID="2026-09-22 01:43";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2798,7 +2836,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '<div class="previous-review-reveal" id="previousReview" aria-hidden="true"><div class="previous-review-clip"><div class="previous-review-content"><p class="previous-review-text"><span class="previous-review-body">'+esc(previousReview.text)+'</span>'+(previousReview.meta?'<span class="previous-review-meta">'+esc(previousReview.meta)+'</span>':'')+'</p></div></div></div></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="homework"><h1 class="record-section-title">宿題確認</h1>'+
-    '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><div class="readonly prev-homework-readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">取り組み</label><div class="choice-grid" data-choice-scroll role="group" aria-label="宿題の取り組み">'+["済","途","未","忘"].map(x=>'<button type="button" class="choice-button '+(state.homeworkProgress===x?'active':'')+'" data-homework-progress="'+x+'" aria-pressed="'+(state.homeworkProgress===x)+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div></div><div class="field" id="homeworkRatingField"'+(["未","忘"].includes(state.homeworkProgress)?' hidden':'')+'><label class="label">評価</label><div class="choice-grid" data-choice-scroll role="group" aria-label="宿題の評価">'+["◎","○","△"].map(r=>'<button type="button" class="choice-button '+(state.rating===r?'active':'')+'" data-rating="'+r+'" aria-pressed="'+(state.rating===r)+'"><span class="record-option-label">'+r+'</span></button>').join("")+'</div></div><div class="field"><div class="field-label-row"><label class="label">コメント</label><p class="field-inline-hint">（任意）</p></div><textarea id="homeworkComment" class="homework-comment-input" placeholder="補足事項を記録してください。">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
+    '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><div class="readonly prev-homework-readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">取り組み</label><div class="choice-grid homework-choice-grid" data-choice-scroll role="group" aria-label="宿題の取り組み">'+["済","途","未","忘"].map(x=>'<button type="button" class="choice-button '+(state.homeworkProgress===x?'active':'')+'" data-homework-progress="'+x+'" aria-pressed="'+(state.homeworkProgress===x)+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div></div><div class="homework-rating-reveal '+(!["未","忘"].includes(state.homeworkProgress)?'open':'')+'" id="homeworkRatingField" aria-hidden="'+String(["未","忘"].includes(state.homeworkProgress))+'"><div class="homework-rating-reveal-clip"><div class="field"><label class="label">評価</label><div class="choice-grid homework-choice-grid" data-choice-scroll role="group" aria-label="宿題の評価">'+["◎","○","△"].map(r=>'<button type="button" class="choice-button '+(state.rating===r?'active':'')+'" data-rating="'+r+'" aria-pressed="'+(state.rating===r)+'"><span class="record-option-label">'+r+'</span></button>').join("")+'</div></div></div></div><div class="field"><div class="field-label-row"><label class="label">コメント</label><p class="field-inline-hint">（任意）</p></div><textarea id="homeworkComment" class="homework-comment-input" placeholder="補足事項を記録してください。">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
     '<section class="card vt-nexthomework" data-card-status="nexthomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">今回の宿題</h2></div><div class="card-body"><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="other"><h1 class="record-section-title">特記事項</h1>'+
@@ -4307,10 +4345,16 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
       const hideRating=["未","忘"].includes(state.homeworkProgress);
       const ratingField=document.getElementById("homeworkRatingField");
-      if(ratingField)ratingField.hidden=hideRating;
+      if(ratingField){
+        ratingField.classList.toggle("open",!hideRating);
+        ratingField.setAttribute("aria-hidden",String(hideRating));
+      }
       if(hideRating){
         state.rating="";
-        document.querySelectorAll("[data-rating]").forEach(x=>x.classList.remove("active"));
+        document.querySelectorAll("[data-rating]").forEach(x=>{
+          x.classList.remove("active");
+          x.setAttribute("aria-pressed","false");
+        });
       }
 
       autoSaveNow(v);
