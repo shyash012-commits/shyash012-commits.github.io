@@ -1175,6 +1175,13 @@ textarea{
   padding-left:var(--record-horizontal-space);
   padding-right:var(--record-horizontal-space);
 }
+.app.preview-mode .vt-review #review{
+  overflow-y:auto;
+  resize:none;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-y;
+  caret-color:transparent;
+}
 input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3px rgba(49,91,138,.10)}
 .row{
   display:grid;
@@ -2009,7 +2016,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 17:58";
+  const BUILD_ID="2026-09-21 18:11";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2789,13 +2796,19 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     const PREVIEW_OPTION_SELECTOR=".choice-button, .rating button, .chip";
     const PREVIEW_OPTION_GROUP_SELECTOR=".choice-grid, .rating, .chips";
-    const PREVIEW_EDITABLE_SELECTOR=".card input, .card textarea, .card select, .card button";
+    const PREVIEW_EDITABLE_SELECTOR=".card input, .card textarea:not(#review), .card select, .card button";
 
     function setPreviewInteractionLocked(locked){
       document.querySelectorAll(PREVIEW_EDITABLE_SELECTOR).forEach(control=>{
         if(locked)control.setAttribute("inert","");
         else control.removeAttribute("inert");
       });
+
+      const review=document.getElementById("review");
+      if(review){
+        review.readOnly=locked;
+        review.setAttribute("aria-readonly",String(locked));
+      }
     }
 
 
