@@ -2086,7 +2086,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 keyboard-dock-05f";
+  const BUILD_ID="2026-09-21 keyboard-dock-05g";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2712,18 +2712,27 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const rect=active.getBoundingClientRect();
       const screenTop=rect.top-viewport.offsetTop;
       const screenBottom=rect.bottom-viewport.offsetTop;
-      const desiredTop=165;
+      const comfortableTopMin=72;
+      const comfortableTopMax=250;
       const comfortableBottom=Math.max(300,viewport.height-110);
 
-      /* Leave Safari alone when it already produced a good composition.
-         The first screenshot case lands around 400px from the visual top and
-         therefore enters this branch; the second screenshot case does not. */
-      if(screenTop>250 || screenBottom>comfortableBottom){
-        const delta=screenTop-desiredTop;
-        if(Math.abs(delta)>8){
-          window.scrollBy({top:delta,behavior:"auto"});
-          setDockTop();
-        }
+      /* 05g: do not drag a low field to one hard-coded Y. That made later
+         keyboard cycles jump much farther upward than the first one. Keep
+         Safari's natural composition whenever it is already usable, and when
+         it is not, move only the minimum distance needed to enter the same
+         comfort band. This remains one-shot; there is no continuous chasing. */
+      let delta=0;
+      if(screenBottom>comfortableBottom){
+        delta=screenBottom-comfortableBottom;
+      }else if(screenTop>comfortableTopMax){
+        delta=screenTop-comfortableTopMax;
+      }else if(screenTop<comfortableTopMin){
+        delta=screenTop-comfortableTopMin;
+      }
+
+      if(Math.abs(delta)>8){
+        window.scrollBy({top:delta,behavior:"auto"});
+        setDockTop();
       }
     };
 
