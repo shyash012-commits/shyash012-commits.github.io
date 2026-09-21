@@ -1570,45 +1570,17 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .record-footer{
   --standalone-footer-bottom:10px;
 }
-@media (display-mode:standalone){
+@media (orientation:portrait) and (display-mode:standalone){
   .record-footer{
     bottom:var(--standalone-footer-bottom);
   }
 }
-html.standalone-app .record-footer{
-  bottom:var(--standalone-footer-bottom);
+@media (orientation:portrait){
+  html.standalone-app .record-footer{
+    bottom:var(--standalone-footer-bottom);
+  }
 }
 
-/* In installed landscape mode the viewport geometry changes several times
-   during rotation, so the portrait screen-height reconstruction can briefly
-   produce a huge bottom value and push the footer completely off-screen.
-   Landscape uses only stable CSS safe-area geometry. */
-@media (orientation:landscape) and (display-mode:standalone){
-  .record-footer{
-    bottom:max(10px,env(safe-area-inset-bottom));
-    width:min(
-      calc(
-        100vw - 20px -
-        env(safe-area-inset-left) -
-        env(safe-area-inset-right)
-      ),
-      700px
-    );
-  }
-}
-@media (orientation:landscape){
-  html.standalone-app .record-footer{
-    bottom:max(10px,env(safe-area-inset-bottom));
-    width:min(
-      calc(
-        100vw - 20px -
-        env(safe-area-inset-left) -
-        env(safe-area-inset-right)
-      ),
-      700px
-    );
-  }
-}
 
 .record-nav-shell{
   position:relative;
@@ -2100,7 +2072,7 @@ html.standalone-app .record-footer{
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 21:33";
+  const BUILD_ID="2026-09-21 21:37";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
