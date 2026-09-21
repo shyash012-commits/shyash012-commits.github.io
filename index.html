@@ -2086,7 +2086,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-22 keyboard-dock-05d-navfix";
+  const BUILD_ID="2026-09-22 keyboard-dock-05d-settle";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2356,6 +2356,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   let footerKeyboardOpeningClosing=false;
   let footerKeyboardOpeningClosePageTop=null;
   let footerKeyboardOpeningCloseLockUntil=0;
+  let footerKeyboardOpeningCloseLockStarted=false;
   let footerKeyboardOpeningComfortAdjusted=false;
   let footerKeyboardOpeningComfortTimers=[];
 
@@ -2578,6 +2579,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     footerKeyboardOpeningClosing=false;
     footerKeyboardOpeningClosePageTop=null;
     footerKeyboardOpeningCloseLockUntil=0;
+    footerKeyboardOpeningCloseLockStarted=false;
     footerKeyboardOpeningComfortAdjusted=false;
   }
 
@@ -2637,6 +2639,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       footerKeyboardOpeningClosing=false;
       footerKeyboardOpeningClosePageTop=null;
       footerKeyboardOpeningCloseLockUntil=0;
+      footerKeyboardOpeningCloseLockStarted=false;
       footerKeyboardOpeningHasOpened=false;
       footerKeyboardOpeningBaselineHeight=viewport.height;
       footerKeyboardOpeningLastHeight=viewport.height;
@@ -2658,26 +2661,31 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       footerKeyboardOpeningClosePageTop=null;
       footerKeyboardOpeningCloseLockUntil=0;
       footerKeyboardOpeningClosing=false;
+
+      /* Once the close animation has genuinely finished, restore the footer
+         to its ordinary fixed state while the screen is already still.
+         Carrying the docked state into the NEXT keyboard session made Safari
+         choose a different focus-scroll position on later openings. */
+      if(
+        footerKeyboardOpeningSession &&
+        footerKeyboardOpeningHasOpened &&
+        viewportRecovered()
+      ){
+        undock();
+      }
     };
 
     const beginClosePageLock=()=>{
-      /* A footer-navigation tap is an explicit new scroll intent. Once that
-         happens, the tail of the keyboard-close lock must never recreate
-         itself during the navigation scroll. startSession() clears this flag
-         for the next keyboard opening. */
-      if(footer.dataset.keyboardCloseLockDisabled==="1")return;
-      if(footerKeyboardOpeningClosePageTop==null){
-        footerKeyboardOpeningClosePageTop=visualPageTop();
-      }
+      /* One close lock per keyboard session. Repeated viewport/scroll events
+         must not keep extending it into the user's next navigation. */
+      if(footerKeyboardOpeningCloseLockStarted)return;
+      footerKeyboardOpeningCloseLockStarted=true;
+      footerKeyboardOpeningClosePageTop=visualPageTop();
       footerKeyboardOpeningCloseLockUntil=performance.now()+720;
       footerKeyboardOpeningClosing=true;
     };
 
     const holdClosePageTop=()=>{
-      if(footer.dataset.keyboardCloseLockDisabled==="1"){
-        releaseClosePageLock();
-        return;
-      }
       if(footerKeyboardOpeningClosePageTop==null)return;
       if(performance.now()>footerKeyboardOpeningCloseLockUntil){
         releaseClosePageLock();
@@ -2842,6 +2850,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
          content stays visually still while the native keyboard itself moves. */
       if(footerKeyboardOpeningClosing){
         holdClosePageTop();
+        if(!footerKeyboardOpeningSession)return;
       }
 
       /* While the keyboard is open the footer lives in document space at its
@@ -2888,9 +2897,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     };
 
     const startSession=()=>{
-      /* New keyboard session: keyboard-close scroll suppression is allowed
-         again. */
-      delete footer.dataset.keyboardCloseLockDisabled;
       clearTimeout(footerKeyboardOpeningTimer);
       footerKeyboardOpeningTimer=null;
 
@@ -2918,6 +2924,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       footerKeyboardOpeningClosing=false;
       footerKeyboardOpeningClosePageTop=null;
       footerKeyboardOpeningCloseLockUntil=0;
+      footerKeyboardOpeningCloseLockStarted=false;
       footerKeyboardOpeningComfortAdjusted=false;
       footerKeyboardOpeningComfortTimers.forEach(clearTimeout);
       footerKeyboardOpeningComfortTimers=[];
@@ -2929,6 +2936,19 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     };
 
     footerKeyboardOpeningPointerDownHandler=e=>{
+      /* Footer navigation is an explicit new scroll intent. If the keyboard is
+         already down, finish the close state before the navigation click runs
+         so nothing can fight the smooth scroll. */
+      const footerTap=e.target.closest?.(".record-footer");
+      if(
+        footerTap &&
+        footerKeyboardOpeningSession &&
+        footerKeyboardOpeningHasOpened &&
+        viewportRecovered()
+      ){
+        releaseClosePageLock();
+      }
+
       if(!isKeyboardEntryControl(e.target))return;
       startSession();
     };
@@ -3383,14 +3403,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     document.querySelectorAll("[data-footer-section]").forEach(btn=>{
       btn.onclick=()=>{
-        /* 05d nav fix: this tap is a deliberate page-scroll request. Mark it
-           BEFORE blur, because blur itself can emit the focusout that would
-           otherwise restart the keyboard-close page lock. */
-        const keyboardFooter=document.querySelector(".record-footer");
-        if(keyboardFooter){
-          keyboardFooter.dataset.keyboardCloseLockDisabled="1";
-        }
-
         const active=document.activeElement;
         if(isKeyboardEntryControl(active))active.blur();
 
