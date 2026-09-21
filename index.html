@@ -339,6 +339,86 @@ html.line-inapp .header{
   white-space:nowrap;
 }
 
+/* Preview rule: keep recorded values; remove edit/reference-only affordances. */
+.preview-edit-hint{
+  display:inline-block;
+  max-width:14em;
+  overflow:hidden;
+  opacity:1;
+  transform:translateX(0);
+  transition:
+    max-width var(--motion-dur) var(--motion-ease),
+    transform var(--motion-dur) var(--motion-ease),
+    opacity var(--fade-dur) ease;
+  will-change:max-width,opacity,transform;
+}
+.app.preview-mode .preview-edit-hint{
+  max-width:0;
+  opacity:0;
+  transform:translateX(-4px);
+}
+
+.vt-review .counter{
+  max-height:1.5em;
+  overflow:hidden;
+  opacity:1;
+  transform:translateX(0);
+  transition:
+    max-height var(--motion-dur) var(--motion-ease),
+    margin-top var(--motion-dur) var(--motion-ease),
+    transform var(--motion-dur) var(--motion-ease),
+    opacity var(--fade-dur) ease;
+}
+.app.preview-mode .vt-review .counter{
+  max-height:0;
+  margin-top:0;
+  opacity:0;
+  transform:translateX(-4px);
+}
+
+.app.preview-mode .vt-review #review::placeholder{
+  opacity:0;
+}
+.vt-review #review::placeholder{
+  transition:opacity var(--fade-dur) ease;
+}
+
+.app.preview-mode .vt-material .record-select-icon{
+  opacity:0;
+}
+.vt-material .record-select-icon{
+  opacity:1;
+  transition:
+    opacity var(--fade-dur) ease,
+    color var(--record-color-dur) var(--record-color-ease);
+}
+
+.review-prev-row{
+  max-height:1.5em;
+  overflow:hidden;
+  opacity:1;
+  transform:translateX(0);
+  transition:
+    max-height var(--motion-dur) var(--motion-ease),
+    margin-top var(--motion-dur) var(--motion-ease),
+    transform var(--motion-dur) var(--motion-ease),
+    opacity var(--fade-dur) ease;
+}
+.app.preview-mode .review-prev-row{
+  max-height:0;
+  margin-top:0;
+  opacity:0;
+  transform:translateX(-4px);
+  pointer-events:none;
+}
+.app.preview-mode .previous-review-reveal{
+  grid-template-rows:0fr;
+}
+.app.preview-mode .previous-review-content{
+  opacity:0;
+  transform:translateX(-4px);
+}
+
 /* Rounded square = content/input state. */
 .record-section .card-status{
   position:relative;
@@ -1077,7 +1157,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
 @media (prefers-reduced-motion:reduce){
   .previous-review-reveal,
-  .previous-review-content{
+  .previous-review-content,
+  .preview-edit-hint,
+  .vt-review .counter,
+  .vt-review #review::placeholder,
+  .vt-material .record-select-icon,
+  .review-prev-row{
     transition:none;
   }
 }
@@ -2025,15 +2110,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '</button></div>'+
     '</div></div>'+
     '<section class="record-section" data-record-section="basic"><h1 class="record-section-title">基本情報</h1>'+
-    '<section class="card vt-datetime" data-card-status="datetime"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">実施日時</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+datetimeBlocks(v)+'</div></section>'+
-    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="typeSegment" data-choice-scroll role="group" aria-label="授業区分">'+["通常","振替","講習"].map(t=>'<button type="button" class="choice-button '+(v.type===t?'active':'')+'" data-type="'+t+'" aria-pressed="'+(v.type===t)+'"><span class="record-option-label">'+t+'</span></button>').join("")+'</div></div></section>'+
-    '<section class="card vt-instructor" data-card-status="instructor"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">担当講師</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="instructorChoices" data-choice-scroll role="group" aria-label="担当講師">'+INSTRUCTORS.map(instructor=>'<button type="button" class="choice-button '+(v.instructor===instructor?'active':'')+'" data-instructor="'+instructor+'" aria-pressed="'+(v.instructor===instructor)+'"><span class="record-option-label">'+instructor+'</span></button>').join("")+'</div></div></section>'+
-    '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint">*自動表示（変更可）</p></div><div class="card-body">'+
+    '<section class="card vt-datetime" data-card-status="datetime"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">実施日時</h2><p class="hint inline-auto-hint preview-edit-hint">*自動表示（変更可）</p></div><div class="card-body">'+datetimeBlocks(v)+'</div></section>'+
+    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint preview-edit-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="typeSegment" data-choice-scroll role="group" aria-label="授業区分">'+["通常","振替","講習"].map(t=>'<button type="button" class="choice-button '+(v.type===t?'active':'')+'" data-type="'+t+'" aria-pressed="'+(v.type===t)+'"><span class="record-option-label">'+t+'</span></button>').join("")+'</div></div></section>'+
+    '<section class="card vt-instructor" data-card-status="instructor"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">担当講師</h2><p class="hint inline-auto-hint preview-edit-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="instructorChoices" data-choice-scroll role="group" aria-label="担当講師">'+INSTRUCTORS.map(instructor=>'<button type="button" class="choice-button '+(v.instructor===instructor?'active':'')+'" data-instructor="'+instructor+'" aria-pressed="'+(v.instructor===instructor)+'"><span class="record-option-label">'+instructor+'</span></button>').join("")+'</div></div></section>'+
+    '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint preview-edit-hint">*自動表示（変更可）</p></div><div class="card-body">'+
     '<div class="choice-grid" id="subjectChoices" data-choice-scroll role="group" aria-label="教科（複数選択可）">'+subjectOptions.map(subject=>'<button type="button" class="choice-button '+(v.subjects.includes(subject)?'active':'')+'" data-subject="'+subject+'" aria-pressed="'+v.subjects.includes(subject)+'"><span class="record-option-label">'+subject+'</span></button>').join("")+'</div>'+
     '</div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="lesson"><h1 class="record-section-title">授業内容</h1>'+
-    '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title material-card-title"><span>使用教材</span><span class="material-card-number-slot" id="materialCardNumber" aria-hidden="true"></span></h2><p class="hint inline-auto-hint">*登録済み教材を優先表示</p><button type="button" class="material-text-action material-delete-action" id="deleteFirstMaterialBtn"><span class="material-delete-label">削除</span></button></div><div class="card-body">'+
+    '<section class="card vt-material" data-card-status="material"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title material-card-title"><span>使用教材</span><span class="material-card-number-slot" id="materialCardNumber" aria-hidden="true"></span></h2><p class="hint inline-auto-hint preview-edit-hint">*登録済み教材を優先表示</p><button type="button" class="material-text-action material-delete-action" id="deleteFirstMaterialBtn"><span class="material-delete-label">削除</span></button></div><div class="card-body">'+
       '<div class="material-entries" id="materialEntries">'+
         materialEntries.map((entry,index)=>materialEntryMarkup(entry,allMaterials,index===0)).join("")+
       '</div>'+
