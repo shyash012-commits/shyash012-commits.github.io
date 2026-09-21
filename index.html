@@ -545,6 +545,38 @@ html.line-inapp .header{
 .material-detail-field{
   margin-top:0;
 }
+.material-selection-stack{
+  display:grid;
+}
+.material-custom-shell{
+  display:grid;
+  grid-template-rows:0fr;
+  pointer-events:none;
+  transition:grid-template-rows var(--motion-dur) var(--motion-ease);
+}
+.material-custom-shell.is-open{
+  grid-template-rows:1fr;
+  pointer-events:auto;
+}
+.material-custom-clip{
+  min-height:0;
+  overflow:hidden;
+}
+.material-custom-content{
+  padding-top:var(--record-item-gap);
+  opacity:0;
+  transform:translateX(-4px);
+  transition:
+    transform var(--motion-dur) var(--motion-ease),
+    opacity var(--fade-dur) ease;
+}
+.material-custom-shell.is-open .material-custom-content{
+  opacity:1;
+  transform:translateX(0);
+}
+.material-custom-field{
+  margin-top:0;
+}
 .material-range-list{
   display:grid;
   gap:var(--record-item-gap);
@@ -587,8 +619,17 @@ html.line-inapp .header{
   display:none;
 }
 .material-detail-stack{
+  --material-page-input-width:calc(3ch + var(--record-horizontal-space)*2 + 2px);
+  --material-range-separator-width:var(--record-control-font-size);
+  --material-range-controls-width:calc(
+    var(--material-page-input-width) +
+    var(--material-page-input-width) +
+    var(--material-range-separator-width) +
+    var(--record-horizontal-space) +
+    var(--record-horizontal-space)
+  );
   display:grid;
-  grid-template-columns:max-content 14px minmax(0,1fr);
+  grid-template-columns:var(--material-range-controls-width) 14px minmax(0,1fr);
   column-gap:10px;
   align-items:start;
 }
@@ -599,7 +640,6 @@ html.line-inapp .header{
   display:block;
 }
 .material-range-number{
-  margin:0 4px;
   font-size:inherit;
   font-weight:inherit;
 }
@@ -625,9 +665,9 @@ html.line-inapp .header{
   width:max-content;
 }
 .material-page-input{
-  flex:0 0 auto;
-  width:calc(3ch + var(--record-horizontal-space)*2 + 2px);
-  min-width:calc(3ch + var(--record-horizontal-space)*2 + 2px);
+  flex:0 0 var(--material-page-input-width);
+  width:var(--material-page-input-width);
+  min-width:var(--material-page-input-width);
   height:var(--record-control-height);
   padding:0 var(--record-horizontal-space);
   font-weight:var(--record-control-font-weight);
@@ -674,6 +714,12 @@ html.line-inapp .header{
 }
 .material-text-action:active{
   opacity:.58;
+}
+.material-add-action,
+.material-range-add-action{
+  display:flex;
+  width:max-content;
+  margin-left:auto;
 }
 .material-add-action{
   gap:6px;
@@ -722,6 +768,8 @@ html.line-inapp .header{
   .material-delete-label,
   .material-entry-shell,
   .material-range-shell,
+  .material-custom-shell,
+  .material-custom-content,
   .material-entry-content,
   .material-entry-content::before,
   .material-entry-heading{
@@ -750,7 +798,9 @@ html.line-inapp .header{
   margin:0;
 }
 .material-range-separator{
-  flex:0 0 auto;
+  flex:0 0 var(--material-range-separator-width);
+  width:var(--material-range-separator-width);
+  text-align:center;
   color:var(--record-control-text);
   font-size:var(--record-control-font-size);
   font-weight:var(--record-control-font-weight);
@@ -965,7 +1015,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 .review-prev-row{
   display:flex;
-  justify-content:flex-start;
+  justify-content:flex-end;
   margin-top:var(--record-content-gap);
 }
 .review-prev-row[hidden]{
@@ -1007,7 +1057,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 .previous-review-content{
   padding-top:var(--record-content-gap);
-  padding-left:calc(var(--record-status-size) + var(--review-action-gap));
   opacity:0;
   transform:translateX(-4px);
   transition:
@@ -1640,14 +1689,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
   const lessons=[
     {id:"l0",student:"山田 葵",familyName:"山田",givenName:"葵",familyKana:"やまだ",givenKana:"あおい",grade:"小5",subject:"算数",instructor:"石井",hour:15,minute:40,type:"通常",materials:["小学5年 算数 標準問題集"],prevHomework:"小学5年 算数 標準問題集 p.46〜47",history:[
-      {date:"2026/09/12",text:"通分してから計算する手順を確認しました。分母をそろえる理由を図でも確認し、自力で解ける問題が増えました。"}]},
+      {date:"2026/09/12",instructor:"石井",text:"通分してから計算する手順を確認しました。分母をそろえる理由を図でも確認し、自力で解ける問題が増えました。"}]},
     {id:"l1",student:"佐藤 陽菜",familyName:"佐藤",givenName:"陽菜",familyKana:"さとう",givenKana:"ひな",grade:"中2",subject:"数学",instructor:"石井",hour:17,minute:0,type:"通常",materials:["新中学問題集 数学2年","計算トレーニング 数学2年"],prevHomework:"新中学問題集 数学2年 p.46〜47 の残り（大問3・4）",history:[
-      {date:"2026/09/12",text:"加減法で係数をそろえる手順を確認しました。途中式を省略するとミスが出るため、一行ずつ書く練習を行いました。"},
-      {date:"2026/09/05",text:"分数を含む連立方程式を扱いました。分母をはらう処理を確認した後は、自力で解ける問題が増えました。"}]},
+      {date:"2026/09/12",instructor:"石井",text:"加減法で係数をそろえる手順を確認しました。途中式を省略するとミスが出るため、一行ずつ書く練習を行いました。"},
+      {date:"2026/09/05",instructor:"石井",text:"分数を含む連立方程式を扱いました。分母をはらう処理を確認した後は、自力で解ける問題が増えました。"}]},
     {id:"l2",student:"鈴木 大輝",familyName:"鈴木",givenName:"大輝",familyKana:"すずき",givenKana:"だいき",grade:"中2",subject:"英語",instructor:"田中",hour:18,minute:20,type:"振替",materials:["新中学問題集 英語2年"],prevHomework:"新中学問題集 英語2年 p.46〜47、単語テスト範囲の復習",history:[
-      {date:"2026/09/11",text:"不定詞の名詞的用法・副詞的用法の識別を演習しました。英作文ではtoの位置を確認しました。"}]},
+      {date:"2026/09/11",instructor:"石井",text:"不定詞の名詞的用法・副詞的用法の識別を演習しました。英作文ではtoの位置を確認しました。"}]},
     {id:"l3",student:"高橋 芽衣",familyName:"高橋",givenName:"芽衣",familyKana:"たかはし",givenKana:"めい",grade:"中3",subject:"国語",instructor:"石井",hour:19,minute:40,type:"講習",materials:["標準問題集 国語3年"],prevHomework:"標準問題集 国語3年 p.24〜25 の記述問題",history:[
-      {date:"2026/09/10",text:"接続語に着目して段落関係を整理しました。記述問題では必要な要素を意識して書けるようになりました。"}]}
+      {date:"2026/09/10",instructor:"石井",text:"接続語に着目して段落関係を整理しました。記述問題では必要な要素を意識して書けるようになりました。"}]}
   ];
 
   const state={lessonId:null,records:load(),forgot:new Set(),rating:"",showPrev:false};
@@ -1726,6 +1775,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     return [...new Set([...lesson.materials,...Object.keys(materialDb)])];
   }
 
+  function previousReviewText(lesson){
+    const previous=lesson.history?.[0];
+    if(!previous)return "";
+    const instructor=previous.instructor||lesson.instructor||"";
+    return previous.text+(instructor?"（"+instructor+"）":"");
+  }
+
+
   function materialRangeMarkup(range,material,showDelete=false){
     const units=unitListForRanges(material,[range]);
 
@@ -1733,7 +1790,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '<div class="material-range-clip">'+
         '<div class="material-range-content">'+
           '<div class="material-detail-stack">'+
-            '<div class="material-detail-field"><label class="label material-range-label">範囲<span class="material-range-number hidden" data-range-number><span class="material-range-number-symbol" data-range-number-symbol></span><span data-range-number-index></span></span>（ページ）</label>'+
+            '<div class="material-detail-field"><label class="label material-range-label">ページ範囲<span class="material-range-number hidden" data-range-number><span class="material-range-number-symbol" data-range-number-symbol></span><span data-range-number-index></span></span></label>'+
               '<div class="material-range-controls">'+
                 '<input class="material-page-input" data-material-page-from inputmode="numeric" type="number" min="1" aria-label="開始ページ" value="'+esc(range.from||"")+'">'+
                 '<span class="material-range-separator" aria-hidden="true">〜</span>'+
@@ -1766,18 +1823,23 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           '<button type="button" class="material-text-action material-delete-action is-visible" data-delete-material><span class="material-delete-label">削除</span></button>'+
         '</div>'+
         '<div class="material-entry">'+
-        '<div class="record-select-shell">'+
-          '<select data-material-select aria-label="教材">'+
-            allMaterials.map(material=>
-              '<option value="'+esc(material)+'" '+(entry.material===material?'selected':'')+'>'+esc(material)+'</option>'
-            ).join("")+
-            '<option value="__custom__" '+(entry.material==="__custom__"?'selected':'')+'>自由入力</option>'+
-          '</select>'+
-          '<span class="record-select-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M.875 2.65 5.25 7.025 9.625 2.65"/></svg></span>'+
-        '</div>'+
-        '<div class="field '+(entry.material==="__custom__"?'':'hidden')+'" data-custom-material-wrap>'+
-          '<label class="label">教材名</label>'+
-          '<input data-custom-material value="'+esc(entry.customMaterial||"")+'">'+
+        '<div class="material-selection-stack">'+
+          '<div class="record-select-shell">'+
+            '<select data-material-select aria-label="教材">'+
+              allMaterials.map(material=>
+                '<option value="'+esc(material)+'" '+(entry.material===material?'selected':'')+'>'+esc(material)+'</option>'
+              ).join("")+
+              '<option value="__custom__" '+(entry.material==="__custom__"?'selected':'')+'>自由入力</option>'+
+            '</select>'+
+            '<span class="record-select-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M.875 2.65 5.25 7.025 9.625 2.65"/></svg></span>'+
+          '</div>'+
+          '<div class="material-custom-shell '+(entry.material==="__custom__"?'is-open':'')+'" data-custom-material-wrap aria-hidden="'+(entry.material==="__custom__"?'false':'true')+'">'+
+            '<div class="material-custom-clip"><div class="material-custom-content">'+
+              '<div class="field material-custom-field"><label class="label">教材名</label>'+
+                '<input data-custom-material value="'+esc(entry.customMaterial||"")+'" '+(entry.material==="__custom__"?'':'disabled')+'>'+
+              '</div>'+
+            '</div></div>'+
+          '</div>'+
         '</div>'+
         '<div class="material-range-list" data-material-range-list>'+
           ranges.map(range=>materialRangeMarkup(range,entry.material,ranges.length>1)).join("")+
@@ -1974,7 +2036,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="card vt-review" data-card-status="review"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">講評</h2></div><div class="card-body">'+
       '<textarea id="review" placeholder="授業時の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter"><span class="counter-hint">*目安200字以内</span><span class="counter-value" id="reviewCount">'+String(v.review||"").length+'文字</span></div>'+
       '<div class="review-prev-row" id="prevRow"><button type="button" class="review-prev-toggle" id="prevBtn" aria-expanded="false"><span class="record-action-icon review-close-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M.875 5.25h8.75"/></svg></span><span id="prevBtnLabel">前回の講評を見る</span></button></div>'+
-      '<div class="previous-review-reveal" id="previousReview" aria-hidden="true"><div class="previous-review-clip"><div class="previous-review-content"><p class="previous-review-text">'+esc(l.history[0]?.text||"")+'</p></div></div></div></div></section>'+
+      '<div class="previous-review-reveal" id="previousReview" aria-hidden="true"><div class="previous-review-clip"><div class="previous-review-content"><p class="previous-review-text">'+esc(previousReviewText(l))+'</p></div></div></div></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="homework"><h1 class="record-section-title">宿題確認</h1>'+
     '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'"><span class="record-option-label">'+r+'</span></button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
@@ -3144,8 +3206,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         autoSaveNow(v);
       };
 
+      const updateCustomMaterialVisibility=()=>{
+        const open=mat.value==="__custom__";
+        customWrap?.classList.toggle("is-open",open);
+        customWrap?.setAttribute("aria-hidden",String(!open));
+        if(customInput)customInput.disabled=!open;
+      };
+
       mat.onchange=()=>{
-        customWrap?.classList.toggle("hidden",mat.value!=="__custom__");
+        updateCustomMaterialVisibility();
         rangeItems().forEach(updateRangeUnit);
         autoSaveNow(v);
       };
