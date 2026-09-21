@@ -224,6 +224,12 @@ html.line-inapp .header{
   letter-spacing:.01em;
   user-select:text;
 }
+.record-form{
+  margin:0;
+  padding:0;
+  border:0;
+}
+
 .record-section{
   --record-list-inset:15px;
   --record-status-size:10.5px;
@@ -2047,7 +2053,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 20:05";
+  const BUILD_ID="2026-09-21 20:17";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2591,6 +2597,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         '<span class="header-icon" aria-hidden="true"><svg class="icon-submit-svg" viewBox="0 0 20 20"><path d="M5.4 8.7 10 4.7 14.6 8.7"/><path d="M5.4 15.3 10 11.3 14.6 15.3"/></svg></span>'+
       '</button></div>'+
     '</div></div>'+
+    '<form id="recordForm" class="record-form" novalidate>'+
     '<section class="record-section" data-record-section="basic"><h1 class="record-section-title">基本情報</h1>'+
     '<section class="card vt-datetime" data-card-status="datetime"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">実施日時</h2></div><div class="card-body">'+datetimeBlocks(v)+'</div></section>'+
     '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2></div><div class="card-body"><div class="choice-grid" id="typeSegment" data-choice-scroll role="group" aria-label="授業区分">'+["通常","振替","講習"].map(t=>'<button type="button" class="choice-button '+(v.type===t?'active':'')+'" data-type="'+t+'" aria-pressed="'+(v.type===t)+'"><span class="record-option-label">'+t+'</span></button>').join("")+'</div></div></section>'+
@@ -2615,13 +2622,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '<div class="previous-review-reveal" id="previousReview" aria-hidden="true"><div class="previous-review-clip"><div class="previous-review-content"><p class="previous-review-text"><span class="previous-review-body">'+esc(previousReview.text)+'</span>'+(previousReview.meta?'<span class="previous-review-meta">'+esc(previousReview.meta)+'</span>':'')+'</p></div></div></div></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="homework"><h1 class="record-section-title">宿題確認</h1>'+
-    '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'"><span class="record-option-label">'+r+'</span></button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
+    '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button type="button" data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'"><span class="record-option-label">'+r+'</span></button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
     '<section class="card vt-nexthomework" data-card-status="nexthomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">今回の宿題</h2></div><div class="card-body"><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="other"><h1 class="record-section-title">特記事項</h1>'+
-    '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2><p class="hint inline-auto-hint">*複数選択可</p></div><div class="card-body"><div class="chips" id="forgotChips" data-choice-scroll>'+["なし","筆記用具","教材","宿題","連絡帳","その他"].map(x=>'<button class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></section>'+
+    '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2><p class="hint inline-auto-hint">*複数選択可</p></div><div class="card-body"><div class="chips" id="forgotChips" data-choice-scroll>'+["なし","筆記用具","教材","宿題","連絡帳","その他"].map(x=>'<button type="button" class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></section>'+
     '<section class="card vt-note" data-card-status="note"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">備考（内部用）</h2></div><div class="card-body"><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></div></section>'+
     '</section>'+
+    '</form>'+
     '<div class="record-footer-spacer" aria-hidden="true"></div>'+
     '<div class="record-footer" aria-label="授業記録の目次">'+
       '<nav class="record-nav-shell">'+
@@ -2975,6 +2983,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function bindRecord(v){
     const l=getLesson();
     const allMaterials=availableMaterialsForLesson(l);
+
+    const recordForm=document.getElementById("recordForm");
+    if(recordForm){
+      recordForm.addEventListener("submit",e=>e.preventDefault());
+    }
 
     bindRecordFooter(v);
     bindRecordKeyboardDismiss();
