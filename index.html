@@ -2034,7 +2034,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 18:26";
+  const BUILD_ID="2026-09-21 18:32";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -3626,8 +3626,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
       entriesBefore.slice(removedIndex+1).forEach((remaining,offset)=>{
         const nextIndex=removedIndex+offset;
+        const nextNumber=materialNumberLabel(nextIndex+1);
         const title=remaining.querySelector("[data-material-entry-title]");
-        const nextText="使用教材"+materialNumberLabel(nextIndex+1);
+        const nextText="使用教材"+nextNumber;
 
         if(nextIndex===0){
           if(title)title.textContent=nextText;
@@ -3635,18 +3636,33 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           animateMaterialTitleSwap(title,nextText);
         }
 
+        /* Renumber the surviving material's ranges in the same motion window
+           as the material itself collapses. Previously this waited for the
+           removed entry to leave the DOM and refreshMaterialEntryLabels(). */
+        const ranges=[...remaining.querySelectorAll("[data-material-range]")];
+        const showRangeNumbers=ranges.length>1;
+        ranges.forEach((range,rangeIndex)=>{
+          refreshRangeNumber(
+            range.querySelector("[data-range-number]"),
+            showRangeNumbers?nextNumber:"",
+            showRangeNumbers?"-"+(rangeIndex+1):"",
+            showRangeNumbers,
+            true
+          );
+        });
+
         const deleteBtn=remaining.querySelector("[data-delete-material]");
         if(deleteBtn){
           deleteBtn.setAttribute(
             "aria-label",
-            "教材"+materialNumberLabel(nextIndex+1)+"を削除"
+            "教材"+nextNumber+"を削除"
           );
         }
       });
 
       const finish=()=>{
         entry.remove();
-        refreshMaterialEntryLabels();
+        refreshMaterialEntryLabels({animateRangeNumbers:false});
         v.materials=capture(v).materials;
         autoSaveNow(v);
       };
