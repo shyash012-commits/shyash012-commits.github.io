@@ -2132,7 +2132,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-22 keyboard-footer-hide-only";
+  const BUILD_ID="2026-09-22 review-label-instant";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -4247,45 +4247,17 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       prevRow.hidden=true;
     }
 
-    const setPreviousReviewToggle=(open,{animate=true}={})=>{
+    const setPreviousReviewToggle=(open)=>{
       const nextLabel=open?"前回の講評を閉じる":"前回の講評を見る";
 
       previousReview.classList.toggle("open",open);
       previousReview.setAttribute("aria-hidden",String(!open));
       prevBtn.setAttribute("aria-expanded",String(open));
 
+      /* The 見る／閉じる control itself switches instantly.
+         Keep the content reveal behavior separate; do not animate the button text/icon. */
       prevBtnLabel.getAnimations().forEach(animation=>animation.cancel());
-
-      if(!animate||prefersReducedMotion()||prevBtnLabel.textContent===nextLabel){
-        prevBtnLabel.textContent=nextLabel;
-        return;
-      }
-
-      /* Same 210ms trajectory as other text substitutions:
-         current text exits left, swaps while transparent, then returns. */
-      const midpoint=MOTION.move/2;
-      const animation=prevBtnLabel.animate(
-        [
-          {opacity:1,transform:"translateX(0)",offset:0},
-          {opacity:0,transform:"translateX(-4px)",offset:.48},
-          {opacity:0,transform:"translateX(-4px)",offset:.52},
-          {opacity:1,transform:"translateX(0)",offset:1}
-        ],
-        {
-          duration:MOTION.move,
-          easing:MOTION.ease
-        }
-      );
-
-      const swapTimer=setTimeout(()=>{
-        prevBtnLabel.textContent=nextLabel;
-      },midpoint);
-
-      animation.onfinish=()=>{
-        clearTimeout(swapTimer);
-        prevBtnLabel.textContent=nextLabel;
-      };
-      animation.oncancel=()=>clearTimeout(swapTimer);
+      prevBtnLabel.textContent=nextLabel;
     };
 
     prevBtn.onclick=()=>{
