@@ -719,7 +719,6 @@ html.line-inapp .header{
 .material-range-add-action{
   display:flex;
   width:max-content;
-  margin-left:auto;
 }
 .material-add-action{
   gap:6px;
@@ -1015,7 +1014,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 .review-prev-row{
   display:flex;
-  justify-content:flex-end;
+  justify-content:flex-start;
   margin-top:var(--record-content-gap);
 }
 .review-prev-row[hidden]{
@@ -1057,6 +1056,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 .previous-review-content{
   padding-top:var(--record-content-gap);
+  padding-left:calc(var(--record-status-size) + var(--review-action-gap));
   opacity:0;
   transform:translateX(-4px);
   transition:
@@ -1778,8 +1778,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function previousReviewText(lesson){
     const previous=lesson.history?.[0];
     if(!previous)return "";
-    const instructor=previous.instructor||lesson.instructor||"";
-    return previous.text+(instructor?"（"+instructor+"）":"");
+
+    const meta=[];
+    if(previous.instructor||lesson.instructor)meta.push(previous.instructor||lesson.instructor);
+    if(previous.date)meta.push(previous.date);
+
+    return previous.text+(meta.length?"（"+meta.join("・")+"）":"");
   }
 
 
