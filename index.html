@@ -2086,7 +2086,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 keyboard-dock-05g";
+  const BUILD_ID="2026-09-21 keyboard-dock-05h";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2712,25 +2712,25 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const rect=active.getBoundingClientRect();
       const screenTop=rect.top-viewport.offsetTop;
       const screenBottom=rect.bottom-viewport.offsetTop;
-      const comfortableTopMin=72;
       const comfortableTopMax=250;
       const comfortableBottom=Math.max(300,viewport.height-110);
 
-      /* 05g: do not drag a low field to one hard-coded Y. That made later
-         keyboard cycles jump much farther upward than the first one. Keep
-         Safari's natural composition whenever it is already usable, and when
-         it is not, move only the minimum distance needed to enter the same
-         comfort band. This remains one-shot; there is no continuous chasing. */
+      /* 05h: never pull the page BACK upward after Safari has focused the
+         editor. In 05g a transient visualViewport offset during keyboard open
+         could make screenTop look negative for one sample, triggering a large
+         negative scroll just after Safari's own focus-scroll had finished.
+         That produced the visible two-step motion: native scroll, then snap
+         back. Preserve Safari's natural placement whenever the field is high
+         enough; only move farther DOWN the document when the field is still
+         too low / keyboard-obscured. */
       let delta=0;
       if(screenBottom>comfortableBottom){
         delta=screenBottom-comfortableBottom;
       }else if(screenTop>comfortableTopMax){
         delta=screenTop-comfortableTopMax;
-      }else if(screenTop<comfortableTopMin){
-        delta=screenTop-comfortableTopMin;
       }
 
-      if(Math.abs(delta)>8){
+      if(delta>8){
         window.scrollBy({top:delta,behavior:"auto"});
         setDockTop();
       }
