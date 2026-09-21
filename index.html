@@ -767,6 +767,9 @@ textarea{min-height:140px;resize:vertical;line-height:1.65}
 .record-section textarea::placeholder{
   font-size:inherit;
 }
+.vt-review #review::placeholder{
+  font-weight:400;
+}
 .vt-review #review{
   display:block;
   height:calc(var(--record-control-height) * 4);
@@ -910,10 +913,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .review-prev-row[hidden]{
   display:none;
 }
+.vt-review{
+  --review-action-gap:6px;
+}
 .review-prev-toggle{
   display:inline-flex;
   align-items:center;
-  gap:6px;
+  gap:var(--review-action-gap);
   padding:0;
   border:0;
   background:none;
@@ -943,6 +949,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 .previous-review-content{
   padding-top:var(--record-content-gap);
+  padding-left:calc(var(--record-status-size) + var(--review-action-gap));
   opacity:0;
   transform:translateX(-4px);
   transition:
