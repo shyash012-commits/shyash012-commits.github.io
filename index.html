@@ -223,6 +223,7 @@ html.line-inapp .header{
   --record-mark-optical-y:.5px;
   --record-label-gap:6.4px;
   --record-half-label-gap:3.2px;
+  --record-field-gap:6px;
   --record-content-gap:10px;
   --record-item-gap:15px;
   --record-horizontal-space-preferred:10px;
@@ -461,7 +462,7 @@ html.line-inapp .header{
 }
 .dt-block:active{background:#eef2f6}
 
-.field{margin-top:14px}.label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.field{margin-top:14px}.label{display:block;font-size:13px;font-weight:600;margin-bottom:var(--record-field-gap)}
 .material-entries{
   display:grid;
 }
@@ -573,7 +574,6 @@ html.line-inapp .header{
   min-width:calc(3ch + var(--record-horizontal-space)*2 + 2px);
   height:var(--record-control-height);
   padding:0 var(--record-horizontal-space);
-  font-size:var(--record-control-font-size);
   font-weight:var(--record-control-font-weight);
   color:var(--record-control-text);
   text-align:center;
@@ -591,7 +591,6 @@ html.line-inapp .header{
   padding:0 var(--record-horizontal-space);
   white-space:nowrap;
   color:#4f5b67;
-  font-size:var(--record-control-font-size);
   font-weight:var(--record-control-font-weight);
   line-height:calc(var(--record-control-height) - 2px);
   scrollbar-width:none;
@@ -673,13 +672,13 @@ html.line-inapp .header{
   }
 }
 
-.material-add-icon{
+.record-action-icon{
   width:var(--record-status-size);
   height:var(--record-status-size);
   flex:0 0 var(--record-status-size);
   transform:translateY(var(--record-mark-optical-y));
 }
-.material-add-icon svg{
+.record-action-icon svg{
   display:block;
   width:100%;
   height:100%;
@@ -687,9 +686,6 @@ html.line-inapp .header{
   stroke:currentColor;
   stroke-width:var(--record-mark-stroke);
   stroke-linecap:round;
-}
-.review-unit-prompt{
-  color:#8a5b22;
 }
 .material-page-input::-webkit-inner-spin-button,
 .material-page-input::-webkit-outer-spin-button{
@@ -711,6 +707,14 @@ input,textarea,select{
   background:#fff;
   padding:12px 13px;
   outline:none;
+}
+.record-section input,
+.record-section textarea,
+.record-section select,
+.record-section .readonly,
+.record-section .dt-block,
+.record-section .material-unit-window{
+  font-size:var(--record-control-font-size);
 }
 input,
 select{
@@ -734,7 +738,6 @@ select.dt-block{padding-right:var(--record-horizontal-space)}
   display:block;
   width:100%;
   padding-right:calc(var(--record-mark-size) + 30px);
-  font-size:var(--record-control-font-size);
   font-weight:var(--record-control-font-weight);
   color:var(--record-control-text);
 }
@@ -760,6 +763,14 @@ select.dt-block{padding-right:var(--record-horizontal-space)}
   shape-rendering:geometricPrecision;
 }
 textarea{min-height:140px;resize:vertical;line-height:1.65}
+.record-section input::placeholder,
+.record-section textarea::placeholder{
+  font-size:inherit;
+}
+.vt-review #review{
+  display:block;
+  padding:15px;
+}
 input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3px rgba(49,91,138,.10)}
 .row{
   display:grid;
@@ -866,9 +877,69 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   transform:translateX(0);
   will-change:opacity,transform;
 }
-.guide{font-size:13px;line-height:1.7;color:#4b5563;background:#faf9f5;border:1px solid #ebe4ce;border-radius:var(--body-radius);padding:10px 12px;margin-bottom:10px}
-.counter{text-align:right;font-size:12px;color:var(--sub);margin-top:6px}.link-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px}.link-btn{border:0;background:none;color:var(--primary);padding:8px 0;font-weight:600}
-.history{margin-top:10px;display:grid;gap:8px}.history-item{border:1px solid var(--line);background:#f7f8fa;border-radius:var(--body-radius);padding:11px}.history-date{font-size:12px;color:var(--sub);margin-bottom:5px}
+.counter{text-align:right;font-size:13px;color:var(--sub);margin-top:var(--record-field-gap)}
+.review-prev-toggle{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-left:auto;
+  padding:0;
+  border:0;
+  background:none;
+  color:var(--primary);
+  font-size:16px;
+  font-weight:700;
+  line-height:1.2;
+  white-space:nowrap;
+}
+.review-close-icon{
+  display:none;
+}
+.review-prev-toggle[aria-expanded="true"] .review-close-icon{
+  display:block;
+}
+.previous-review-reveal{
+  display:grid;
+  grid-template-rows:0fr;
+  transition:grid-template-rows var(--motion-dur) var(--motion-ease);
+}
+.previous-review-reveal.open{
+  grid-template-rows:1fr;
+}
+.previous-review-clip{
+  min-height:0;
+  overflow:hidden;
+}
+.previous-review-content{
+  padding-bottom:var(--record-content-gap);
+  opacity:0;
+  transform:translateX(-4px);
+  transition:
+    transform var(--motion-dur) var(--motion-ease),
+    opacity var(--fade-dur) ease;
+}
+.previous-review-reveal.open .previous-review-content{
+  opacity:1;
+  transform:translateX(0);
+}
+.previous-review-label{
+  display:block;
+  margin:0 0 var(--record-field-gap);
+  font-size:13px;
+  font-weight:600;
+}
+.previous-review-text{
+  margin:0;
+  font-size:var(--record-control-font-size);
+  line-height:1.65;
+}
+
+@media (prefers-reduced-motion:reduce){
+  .previous-review-reveal,
+  .previous-review-content{
+    transition:none;
+  }
+}
 .rating{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -954,8 +1025,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     margin-top:14px!important;
     pointer-events:auto;
   }
-  .history{overflow:hidden}
-
+  
   button{
     transition:
       background-color 180ms ease-out,
@@ -1488,7 +1558,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       {date:"2026/09/10",text:"接続語に着目して段落関係を整理しました。記述問題では必要な要素を意識して書けるようになりました。"}]}
   ];
 
-  const state={lessonId:null,records:load(),forgot:new Set(),rating:"",showPrev:false,showHistory:false};
+  const state={lessonId:null,records:load(),forgot:new Set(),rating:"",showPrev:false};
   const REDUCED_MOTION_QUERY=window.matchMedia("(prefers-reduced-motion: reduce)");
   const prefersReducedMotion=()=>REDUCED_MOTION_QUERY.matches;
 
@@ -1530,21 +1600,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       : [];
 
     return {material,customMaterial,ranges};
-  }
-
-  function rangeHasUnitData(material,range){
-    const from=Number(range?.from);
-    const to=Number(range?.to||range?.from);
-    if(!Number.isFinite(from))return false;
-    return (materialDb[material]||[]).some(unit=>
-      from<=unit.to&&to>=unit.from
-    );
-  }
-
-  function materialNeedsUnitPrompt(material,ranges=[]){
-    const enteredRanges=ranges.filter(range=>range?.from||range?.to);
-    return enteredRanges.length>0 &&
-      enteredRanges.some(range=>!rangeHasUnitData(material,range));
   }
 
   const MATERIAL_NUMBERS=[
@@ -1737,7 +1792,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   }
 
   function openRecord(id){
-    state.lessonId=id;state.showPrev=false;state.showHistory=false;
+    state.lessonId=id;state.showPrev=false;
     const l=getLesson(),r=getRecord();
     state.rating=r?.rating||"";
     state.forgot=new Set(r?.forgot||["なし"]);
@@ -1773,10 +1828,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const l=getLesson(),
       subjectOptions=subjectsForGrade(l.grade),
       allMaterials=availableMaterialsForLesson(l),
-      materialEntries=(v.materials?.length?v.materials:[normalizeMaterialEntry(null,l.materials[0])]),
-      showUnitPrompt=materialEntries.some(entry=>
-        materialNeedsUnitPrompt(entry.material,entry.ranges)
-      );
+      materialEntries=(v.materials?.length?v.materials:[normalizeMaterialEntry(null,l.materials[0])]);
     document.getElementById("app").innerHTML='<div class="app">'+
     '<div class="header"><div class="header-row">'+
       '<div class="header-left"><button class="header-action header-back" id="backBtn" aria-label="一覧に戻る">'+
@@ -1805,11 +1857,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         materialEntries.map((entry,index)=>materialEntryMarkup(entry,allMaterials,index===0)).join("")+
       '</div>'+
       '<button type="button" class="material-text-action material-add-action" id="addMaterialBtn" aria-label="教材を追加">'+
-        '<span class="material-add-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M5.25.875v8.75M.875 5.25h8.75"/></svg></span>'+
+        '<span class="record-action-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M5.25.875v8.75M.875 5.25h8.75"/></svg></span>'+
         '<span>教材を追加</span>'+
       '</button>'+
     '</div></section>'+
-    '<section class="card vt-review" data-card-status="review"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">講評</h2></div><div class="card-body"><div class="guide"><strong>書いてほしいこと</strong><br>・今日やったこと<br>・つまずいたこと／難しかったこと<br>・できたこと／できるようになったこと<span class="review-unit-prompt '+(showUnitPrompt?'':'hidden')+'" id="reviewUnitPrompt"><br>・単元情報が登録されていません。必要に応じて単元名を補足してください</span></div><textarea id="review" placeholder="授業の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter" id="reviewCount">'+String(v.review||"").length+'文字</div><div class="link-row"><button class="link-btn" id="prevBtn">前回の講評を見る</button><button class="link-btn" id="historyBtn">過去の講評を見る</button></div><div id="historyArea" class="history"></div></div></section>'+
+    '<section class="card vt-review" data-card-status="review"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">講評</h2><button type="button" class="review-prev-toggle" id="prevBtn" aria-expanded="false"><span class="record-action-icon review-close-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M.875 5.25h8.75"/></svg></span><span id="prevBtnLabel">前回の講評を見る</span></button></div><div class="card-body">'+
+      '<div class="previous-review-reveal" id="previousReview" aria-hidden="true"><div class="previous-review-clip"><div class="previous-review-content"><p class="previous-review-label">前回の講評</p><p class="previous-review-text">'+esc(l.history[0]?.text||"")+'</p></div></div></div>'+
+      '<textarea id="review" placeholder="授業の様子を記録してください。">'+esc(v.review)+'</textarea><div class="counter" id="reviewCount">'+String(v.review||"").length+'文字</div></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="homework"><h1 class="record-section-title">宿題確認</h1>'+
     '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><p class="hint">前回記録から自動表示</p><div class="readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">評価</label><div class="rating">'+["◎","○","△"].map(r=>'<button data-rating="'+r+'" class="'+(state.rating===r?'active':'')+'"><span class="record-option-label">'+r+'</span></button>').join("")+'</div></div><div class="field"><label class="label">宿題コメント（任意）</label><textarea id="homeworkComment" style="min-height:88px">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
@@ -2677,7 +2731,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       autoSaveNow(v);
     });
 
-    const reviewUnitPrompt=document.getElementById("reviewUnitPrompt");
     const materialEntries=document.getElementById("materialEntries");
     const materialCardNumber=document.getElementById("materialCardNumber");
     const deleteFirstMaterialBtn=document.getElementById("deleteFirstMaterialBtn");
@@ -2751,15 +2804,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         customMaterial,
         ranges:(from||to)?[{from,to}]:[]
       };
-    };
-
-    const updateUnitPrompt=()=>{
-      const materials=[...materialEntries.querySelectorAll("[data-material-entry]")]
-        .map(readMaterialEntry);
-      reviewUnitPrompt?.classList.toggle(
-        "hidden",
-        !materials.some(entry=>materialNeedsUnitPrompt(entry.material,entry.ranges))
-      );
     };
 
     const animateMaterialTitleSwap=(title,nextText)=>{
@@ -2839,7 +2883,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const finish=()=>{
         entry.remove();
         refreshMaterialEntryLabels();
-        updateUnitPrompt();
         v.materials=capture(v).materials;
         autoSaveNow(v);
       };
@@ -2893,7 +2936,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
             : "";
           unitDisplay.scrollLeft=0;
         }
-        updateUnitPrompt();
       };
 
       pageInputs.forEach(input=>{
@@ -2968,8 +3010,21 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       scheduleAutoSave(v);
     };
 
-    document.getElementById("prevBtn").onclick=()=>{state.showPrev=!state.showPrev;renderHistory()};
-    document.getElementById("historyBtn").onclick=()=>{state.showHistory=!state.showHistory;renderHistory()};
+    const prevBtn=document.getElementById("prevBtn");
+    const prevBtnLabel=document.getElementById("prevBtnLabel");
+    const previousReview=document.getElementById("previousReview");
+
+    if(!l.history[0]){
+      prevBtn.hidden=true;
+    }
+
+    prevBtn.onclick=()=>{
+      state.showPrev=!state.showPrev;
+      previousReview.classList.toggle("open",state.showPrev);
+      previousReview.setAttribute("aria-hidden",String(!state.showPrev));
+      prevBtn.setAttribute("aria-expanded",String(state.showPrev));
+      prevBtnLabel.textContent=state.showPrev?"閉じる":"前回の講評を見る";
+    };
 
     document.querySelectorAll("[data-rating]").forEach(b=>b.onclick=()=>{
       state.rating=b.dataset.rating;
@@ -2996,38 +3051,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     });
   }
 
-  function renderHistory(){
-    const l=getLesson(),a=document.getElementById("historyArea");
-    const oldHeight=a.getBoundingClientRect().height;
-    let items=[];
-    if(state.showPrev&&l.history[0])items=[l.history[0]];
-    if(state.showHistory)items=l.history;
-
-    a.innerHTML=items.map(h=>'<div class="history-item"><div class="history-date">'+esc(h.date)+'</div><div>'+esc(h.text)+'</div></div>').join("");
-    a.style.height="auto";
-    const newHeight=a.getBoundingClientRect().height;
-
-    if(window.prefersReducedMotion()){
-      a.style.height="";
-      a.style.opacity=newHeight?"1":"0";
-      return;
-    }
-
-    a.style.height=oldHeight+"px";
-    a.style.overflow="hidden";
-    const anim=a.animate(heightSpringFrames(oldHeight,newHeight,26),{
-      duration:420,easing:"linear",fill:"both"
-    });
-    a.animate([
-      {opacity:oldHeight?1:0,transform:oldHeight?"translateY(0)":"translateY(6px)"},
-      {opacity:newHeight?1:0,transform:"translateY(0)"}
-    ],{duration:220,easing:"cubic-bezier(.16,1,.3,1)",fill:"both"});
-    anim.onfinish=()=>{
-      a.style.height=newHeight+"px";
-      anim.cancel();
-      requestAnimationFrame(()=>{a.style.height="";a.style.overflow=""});
-    };
-  }
   window.addEventListener("resize",()=>{
     requestAnimationFrame(fitRecordHorizontalControls);
     scheduleLineHeaderLayout();
