@@ -1552,40 +1552,36 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     inset 0 0 0 1.25px var(--footer-completed-outline),
     inset 0 1px 0 rgba(255,255,255,.76),
     inset 0 -1px 0 rgba(31,41,51,.05);
-  /* Keep the footer at its pre-keyboard screen position.
-     iOS Safari re-anchors fixed elements to the shrunken visual viewport when
-     the software keyboard opens; --footer-keyboard-y pushes it back down by
-     exactly that lost viewport height, so it remains at the device-bottom
-     position and is simply covered by the keyboard. */
-  --footer-keyboard-y:0px;
   position:fixed;
   left:50%;
   bottom:10px;
   z-index:30;
-  transform:translate(-50%,var(--footer-keyboard-y));
+  transform:translateX(-50%);
   display:flex;
   align-items:center;
   gap:10px;
   width:min(calc(100vw - 20px),700px);
 }
 /* Installed Web App only:
-   Match the bottom gap of the footer's inner 42px capsule to the top gap of
-   the header's 42px 一覧/提出 capsules.
-
-   Header capsule top gap:
-     env(safe-area-inset-top) + 10px
-
-   Footer inner capsule sits 10px inside the 62px outer shell:
-     footer bottom + 10px
-
-   Therefore footer bottom = env(safe-area-inset-top) makes both gaps equal. */
+   JS measures the real physical top gap of the header capsule and mirrors it
+   at the bottom for the footer's inner 42px capsule. This avoids relying only
+   on env(safe-area-inset-top), which may be 0 when standalone content begins
+   below the status bar. */
+.record-footer{
+  --standalone-footer-bottom:10px;
+}
 @media (display-mode:standalone){
   .record-footer{
-    bottom:env(safe-area-inset-top);
+    bottom:var(--standalone-footer-bottom);
   }
 }
 html.standalone-app .record-footer{
-  bottom:env(safe-area-inset-top);
+  bottom:var(--standalone-footer-bottom);
+}
+
+.record-footer.is-keyboard-covered{
+  visibility:hidden;
+  pointer-events:none;
 }
 
 .record-nav-shell{
@@ -2078,7 +2074,7 @@ html.standalone-app .record-footer{
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 21:12";
+  const BUILD_ID="2026-09-21 21:20";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2335,8 +2331,9 @@ html.standalone-app .record-footer{
   let footerKeyboardWindowResizeHandler=null;
   let footerKeyboardFocusInHandler=null;
   let footerKeyboardFocusOutHandler=null;
-  let footerKeyboardBaseBottom=null;
-  let footerKeyboardRaf=0;
+  let footerKeyboardBaselineHeight=0;
+  let footerKeyboardCheckTimer=null;
+  let standaloneFooterResizeHandler=null;
 
   function writeRecord(v){
     if(!state.lessonId)return;
@@ -2420,7 +2417,90 @@ html.standalone-app .record-footer{
     return ["text","number","search","tel","email","url","password"].includes(el.type);
   }
 
-  function unbindFooterKeyboardPin(){
+  function currentScreenHeight(){
+    const portrait=window.innerHeight>=window.innerWidth;
+    return portrait
+      ? Math.max(window.screen.width,window.screen.height)
+      : Math.min(window.screen.width,window.screen.height);
+  }
+
+  function updateStandaloneFooterInset(){
+    if(!IS_STANDALONE_APP)return;
+
+    const footer=document.querySelector(".record-footer");
+    const headerCapsule=
+      document.querySelector(".header-back") ||
+      document.querySelector(".header-submit");
+    const shell=footer?.querySelector(".record-nav-shell");
+    const innerCapsule=footer?.querySelector(".record-nav-item");
+
+    if(!footer||!headerCapsule||!shell||!innerCapsule)return;
+
+    /* If the software keyboard is active, keep the last normal-screen value.
+       The footer is covered during keyboard use and should not be re-laid out
+       against the shrunken visual viewport. */
+    if(isKeyboardEntryControl(document.activeElement))return;
+
+    const screenTopOutsideViewport=Math.max(
+      0,
+      currentScreenHeight()-window.innerHeight
+    );
+
+    const headerTopFromPhysicalScreen=
+      screenTopOutsideViewport +
+      headerCapsule.getBoundingClientRect().top;
+
+    const shellRect=shell.getBoundingClientRect();
+    const innerRect=innerCapsule.getBoundingClientRect();
+    const innerBottomInset=Math.max(0,shellRect.bottom-innerRect.bottom);
+
+    /* Desired:
+       physical screen top -> header capsule top
+       ==
+       physical screen bottom -> footer inner capsule bottom
+
+       footer bottom + footer's internal bottom inset = header top gap */
+    const footerBottom=Math.max(
+      0,
+      headerTopFromPhysicalScreen-innerBottomInset
+    );
+
+    footer.style.setProperty(
+      "--standalone-footer-bottom",
+      footerBottom+"px"
+    );
+  }
+
+  function unbindStandaloneFooterInset(){
+    if(!standaloneFooterResizeHandler)return;
+    window.removeEventListener("resize",standaloneFooterResizeHandler);
+    window.removeEventListener("orientationchange",standaloneFooterResizeHandler);
+    standaloneFooterResizeHandler=null;
+  }
+
+  function bindStandaloneFooterInset(){
+    unbindStandaloneFooterInset();
+    if(!IS_STANDALONE_APP)return;
+
+    standaloneFooterResizeHandler=()=>{
+      requestAnimationFrame(updateStandaloneFooterInset);
+    };
+
+    window.addEventListener(
+      "resize",
+      standaloneFooterResizeHandler,
+      {passive:true}
+    );
+    window.addEventListener(
+      "orientationchange",
+      standaloneFooterResizeHandler,
+      {passive:true}
+    );
+
+    requestAnimationFrame(updateStandaloneFooterInset);
+  }
+
+  function unbindFooterKeyboardCover(){
     const viewport=window.visualViewport;
 
     if(footerKeyboardViewportHandler&&viewport){
@@ -2441,78 +2521,71 @@ html.standalone-app .record-footer{
       footerKeyboardFocusOutHandler=null;
     }
 
-    if(footerKeyboardRaf){
-      cancelAnimationFrame(footerKeyboardRaf);
-      footerKeyboardRaf=0;
-    }
-
-    footerKeyboardBaseBottom=null;
+    clearTimeout(footerKeyboardCheckTimer);
+    footerKeyboardCheckTimer=null;
+    footerKeyboardBaselineHeight=0;
   }
 
-  function bindFooterKeyboardPin(){
-    unbindFooterKeyboardPin();
+  function bindFooterKeyboardCover(){
+    unbindFooterKeyboardCover();
 
     const footer=document.querySelector(".record-footer");
     const viewport=window.visualViewport;
     if(!footer||!viewport)return;
 
-    const viewportBottom=()=>viewport.offsetTop+viewport.height;
-    footerKeyboardBaseBottom=viewportBottom();
+    footerKeyboardBaselineHeight=viewport.height;
 
-    const setY=value=>{
-      const y=Math.max(0,value);
-      footer.style.setProperty("--footer-keyboard-y",y+"px");
+    const setCovered=covered=>{
+      footer.classList.toggle("is-keyboard-covered",covered);
+      footer.setAttribute("aria-hidden",String(covered));
     };
 
     const sync=()=>{
-      footerKeyboardRaf=0;
+      const shrink=Math.max(0,footerKeyboardBaselineHeight-viewport.height);
 
-      if(footerKeyboardBaseBottom==null){
-        footerKeyboardBaseBottom=viewportBottom();
+      if(shrink>100){
+        setCovered(true);
+        return;
       }
 
-      const lostBottom=footerKeyboardBaseBottom-viewportBottom();
+      if(shrink<40){
+        setCovered(false);
 
-      /* Positive lostBottom means Safari shrank/panned the visual viewport
-         upward for the software keyboard. Push only the footer downward by the
-         same amount. When the keyboard closes, the value naturally returns 0. */
-      setY(lostBottom);
-
-      if(lostBottom<=0.5 && !isKeyboardEntryControl(document.activeElement)){
-        footerKeyboardBaseBottom=viewportBottom();
-        setY(0);
+        /* Once Safari's visual viewport is fully recovered, establish the new
+           normal height. This handles browser chrome/orientation changes
+           without moving the footer during keyboard animation. */
+        footerKeyboardBaselineHeight=viewport.height;
+        requestAnimationFrame(updateStandaloneFooterInset);
       }
-    };
-
-    const schedule=()=>{
-      if(footerKeyboardRaf)return;
-      footerKeyboardRaf=requestAnimationFrame(sync);
     };
 
     footerKeyboardFocusInHandler=e=>{
       if(!isKeyboardEntryControl(e.target))return;
 
-      /* Capture the normal visual-viewport bottom before the keyboard finishes
-         opening. If focus moves between inputs while the keyboard is already
-         open, keep the original baseline. */
-      const currentBottom=viewportBottom();
-      if(footerKeyboardBaseBottom==null || currentBottom>footerKeyboardBaseBottom-40){
-        footerKeyboardBaseBottom=Math.max(
-          footerKeyboardBaseBottom??currentBottom,
-          currentBottom
-        );
-      }
-      schedule();
+      /* Hide before Safari gets a chance to lift the fixed footer above the
+         keyboard. No transform is animated or continuously corrected. */
+      setCovered(true);
+
+      clearTimeout(footerKeyboardCheckTimer);
+      footerKeyboardCheckTimer=setTimeout(()=>{
+        /* Hardware keyboard / no software keyboard: restore if the viewport
+           never actually shrank. */
+        sync();
+      },350);
     };
 
-    footerKeyboardFocusOutHandler=schedule;
-    footerKeyboardViewportHandler=schedule;
+    footerKeyboardFocusOutHandler=()=>{
+      clearTimeout(footerKeyboardCheckTimer);
+      footerKeyboardCheckTimer=setTimeout(sync,0);
+    };
+
+    footerKeyboardViewportHandler=()=>requestAnimationFrame(sync);
     footerKeyboardWindowResizeHandler=()=>{
-      if(!isKeyboardEntryControl(document.activeElement)){
-        footerKeyboardBaseBottom=viewportBottom();
-        setY(0);
+      const shrink=Math.max(0,footerKeyboardBaselineHeight-viewport.height);
+      if(shrink<40){
+        footerKeyboardBaselineHeight=viewport.height;
       }
-      schedule();
+      sync();
     };
 
     document.addEventListener("focusin",footerKeyboardFocusInHandler);
@@ -2521,11 +2594,12 @@ html.standalone-app .record-footer{
     viewport.addEventListener("scroll",footerKeyboardViewportHandler,{passive:true});
     window.addEventListener("resize",footerKeyboardWindowResizeHandler,{passive:true});
 
-    sync();
+    setCovered(false);
   }
 
   function renderList(){
-    unbindFooterKeyboardPin();
+    unbindFooterKeyboardCover();
+    unbindStandaloneFooterInset();
     if(footerScrollHandler){
       window.removeEventListener("scroll",footerScrollHandler);
       footerScrollHandler=null;
@@ -2985,7 +3059,8 @@ html.standalone-app .record-footer{
     }
 
     bindRecordFooter(v);
-    bindFooterKeyboardPin();
+    bindFooterKeyboardCover();
+    bindStandaloneFooterInset();
     updateFooterCompletion(capture(v));
     const backBtn=document.getElementById("backBtn");
     bindPressFeedback(backBtn);
