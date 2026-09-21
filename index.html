@@ -2078,7 +2078,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 close-emerge-02";
+  const BUILD_ID="2026-09-21 close-emerge-03";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2604,14 +2604,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
       const coverThreshold=Math.max(72,footer.getBoundingClientRect().height+8);
 
-      /* The one-frame opening guard ends as soon as EITHER visual-viewport
-         measurement says the keyboard has travelled far enough to cover the
-         footer. The previous build used lostBottom alone; when Safari panned
-         the viewport at the same time, that value could stay below threshold
-         forever, leaving visibility:hidden in place until the keyboard had
-         completely closed. */
+      /* Hide only during the very first part of keyboard opening. As soon as
+         the visual viewport has started moving by a meaningful amount, the
+         downward compensation is active and the footer can stay rendered
+         underneath the native keyboard. It MUST already be visible while the
+         keyboard is fully open; otherwise iOS can keep visibility:hidden until
+         the final close frame, causing the footer to pop in only afterward. */
       if(footerKeyboardOpeningGuard){
-        if(keyboardTravel<coverThreshold){
+        if(keyboardTravel<18){
           suppress();
         }else{
           footerKeyboardOpeningGuard=false;
@@ -2678,20 +2678,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
       footerKeyboardOpeningTimer=setTimeout(()=>{
         sync();
-        /* Hardware keyboard / no visual-viewport change: nothing needs cover. */
-        const fallbackLostBottom=Math.max(
-          0,
-          footerKeyboardOpeningBaselineBottom-viewportBottom()
-        );
-        const fallbackHeightShrink=Math.max(
-          0,
-          footerKeyboardOpeningBaselineHeight-viewport.height
-        );
-        if(fallbackLostBottom<2&&fallbackHeightShrink<2){
-          footerKeyboardOpeningGuard=false;
-          release();
-        }
-      },380);
+        /* Never allow the opening-only visibility guard to survive into the
+           steady keyboard-open state. iOS sometimes reports viewport geometry
+           in a way that never reaches our threshold, even though the keyboard
+           is already fully open. Releasing unconditionally here means closing
+           starts with the footer rendered behind the keyboard, so the keyboard
+           edge can uncover it naturally instead of a last-frame pop. */
+        footerKeyboardOpeningGuard=false;
+        release();
+      },320);
     };
 
     footerKeyboardOpeningFocusOutHandler=()=>{
