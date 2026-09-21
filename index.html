@@ -1689,14 +1689,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
   const lessons=[
     {id:"l0",student:"山田 葵",familyName:"山田",givenName:"葵",familyKana:"やまだ",givenKana:"あおい",grade:"小5",subject:"算数",instructor:"石井",hour:15,minute:40,type:"通常",materials:["小学5年 算数 標準問題集"],prevHomework:"小学5年 算数 標準問題集 p.46〜47",history:[
-      {date:"2026/09/12",instructor:"石井",text:"通分してから計算する手順を確認しました。分母をそろえる理由を図でも確認し、自力で解ける問題が増えました。"}]},
+      {date:"2026/09/12",hour:15,minute:40,instructor:"石井",text:"通分してから計算する手順を確認しました。分母をそろえる理由を図でも確認し、自力で解ける問題が増えました。"}]},
     {id:"l1",student:"佐藤 陽菜",familyName:"佐藤",givenName:"陽菜",familyKana:"さとう",givenKana:"ひな",grade:"中2",subject:"数学",instructor:"石井",hour:17,minute:0,type:"通常",materials:["新中学問題集 数学2年","計算トレーニング 数学2年"],prevHomework:"新中学問題集 数学2年 p.46〜47 の残り（大問3・4）",history:[
-      {date:"2026/09/12",instructor:"石井",text:"加減法で係数をそろえる手順を確認しました。途中式を省略するとミスが出るため、一行ずつ書く練習を行いました。"},
-      {date:"2026/09/05",instructor:"石井",text:"分数を含む連立方程式を扱いました。分母をはらう処理を確認した後は、自力で解ける問題が増えました。"}]},
+      {date:"2026/09/12",hour:17,minute:0,instructor:"石井",text:"加減法で係数をそろえる手順を確認しました。途中式を省略するとミスが出るため、一行ずつ書く練習を行いました。"},
+      {date:"2026/09/05",hour:17,minute:0,instructor:"石井",text:"分数を含む連立方程式を扱いました。分母をはらう処理を確認した後は、自力で解ける問題が増えました。"}]},
     {id:"l2",student:"鈴木 大輝",familyName:"鈴木",givenName:"大輝",familyKana:"すずき",givenKana:"だいき",grade:"中2",subject:"英語",instructor:"田中",hour:18,minute:20,type:"振替",materials:["新中学問題集 英語2年"],prevHomework:"新中学問題集 英語2年 p.46〜47、単語テスト範囲の復習",history:[
-      {date:"2026/09/11",instructor:"石井",text:"不定詞の名詞的用法・副詞的用法の識別を演習しました。英作文ではtoの位置を確認しました。"}]},
+      {date:"2026/09/11",hour:18,minute:20,instructor:"石井",text:"不定詞の名詞的用法・副詞的用法の識別を演習しました。英作文ではtoの位置を確認しました。"}]},
     {id:"l3",student:"高橋 芽衣",familyName:"高橋",givenName:"芽衣",familyKana:"たかはし",givenKana:"めい",grade:"中3",subject:"国語",instructor:"石井",hour:19,minute:40,type:"講習",materials:["標準問題集 国語3年"],prevHomework:"標準問題集 国語3年 p.24〜25 の記述問題",history:[
-      {date:"2026/09/10",instructor:"石井",text:"接続語に着目して段落関係を整理しました。記述問題では必要な要素を意識して書けるようになりました。"}]}
+      {date:"2026/09/10",hour:19,minute:40,instructor:"石井",text:"接続語に着目して段落関係を整理しました。記述問題では必要な要素を意識して書けるようになりました。"}]}
   ];
 
   const state={lessonId:null,records:load(),forgot:new Set(),rating:"",showPrev:false};
@@ -1781,7 +1781,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     const meta=[];
     if(previous.instructor||lesson.instructor)meta.push(previous.instructor||lesson.instructor);
-    if(previous.date)meta.push(previous.date);
+
+    if(previous.date){
+      const hasStartTime=Number.isInteger(previous.hour)&&Number.isInteger(previous.minute);
+      const startTime=hasStartTime?" "+pad(previous.hour)+":"+pad(previous.minute)+"〜":"";
+      meta.push(previous.date+startTime);
+    }
 
     return previous.text+(meta.length?"（"+meta.join("・")+"）":"");
   }
