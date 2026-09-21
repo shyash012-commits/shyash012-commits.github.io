@@ -723,11 +723,20 @@ html.line-inapp .header{
   padding-bottom:var(--record-item-gap);
   transition:padding-bottom var(--motion-dur) var(--motion-ease);
 }
-/* In preview the edit actions disappear, so the final range no longer needs
-   the spacer that separated it from "＋範囲を追加". The card's own 16px
-   bottom padding remains as the single spacing before the divider. */
-.app.preview-mode .material-range-shell:last-child .material-range-content{
+/* Preview may omit empty ranges. The last range that actually remains visible
+   releases the edit-mode spacer before "＋範囲を追加"; the card itself keeps
+   the single 16px spacing before the divider. */
+.app.preview-mode .material-range-shell.is-preview-last-visible .material-range-content{
   padding-bottom:0;
+}
+.app.preview-mode .material-range-shell.is-preview-empty,
+.app.preview-mode .material-entry-shell.is-preview-empty{
+  grid-template-rows:0fr;
+  pointer-events:none;
+}
+.app.preview-mode .material-entry-shell.is-preview-empty .material-entry-heading{
+  opacity:0;
+  transform:translateX(-4px);
 }
 .material-range-delete{
   grid-column:3;
@@ -917,6 +926,13 @@ html.line-inapp .header{
   scrollbar-width:none;
   -webkit-overflow-scrolling:touch;
   touch-action:pan-x;
+  transition:
+    background-color var(--record-color-dur) var(--record-color-ease),
+    border-color var(--record-color-dur) var(--record-color-ease);
+}
+.app.preview-mode .material-unit-window{
+  background:var(--record-control-bg);
+  border-color:var(--record-control-border);
 }
 .material-unit-window::-webkit-scrollbar{
   display:none;
@@ -1015,6 +1031,7 @@ html.line-inapp .header{
   .record-section .card-status,
   .record-section-title::before,
   .choice-scroll-chevron,
+  .material-unit-window,
   .preview-edit-hint,
   .material-card-number-slot,
   .material-range-number,
@@ -1391,6 +1408,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   font-weight:var(--record-control-font-weight);
   color:var(--record-control-text);
   line-height:1.65;
+  white-space:pre-line;
 }
 
 .rating{
@@ -2016,7 +2034,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 18:11";
+  const BUILD_ID="2026-09-21 18:22";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2047,14 +2065,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
   const lessons=[
     {id:"l0",student:"山田 葵",familyName:"山田",givenName:"葵",familyKana:"やまだ",givenKana:"あおい",grade:"小5",subject:"算数",instructor:"石井",hour:15,minute:40,type:"通常",materials:["小学5年 算数 標準問題集"],prevHomework:"小学5年 算数 標準問題集 p.46〜47",history:[
-      {date:"2026/09/12",hour:15,minute:40,instructor:"石井",text:"通分してから計算する手順を確認しました。分母をそろえる理由を図でも確認し、自力で解ける問題が増えました。"}]},
+      {date:"2026/09/12",hour:15,minute:40,duration:70,instructor:"石井",text:"通分してから計算する手順を確認しました。分母をそろえる理由を図でも確認し、自力で解ける問題が増えました。"}]},
     {id:"l1",student:"佐藤 陽菜",familyName:"佐藤",givenName:"陽菜",familyKana:"さとう",givenKana:"ひな",grade:"中2",subject:"数学",instructor:"石井",hour:17,minute:0,type:"通常",materials:["新中学問題集 数学2年","計算トレーニング 数学2年"],prevHomework:"新中学問題集 数学2年 p.46〜47 の残り（大問3・4）",history:[
-      {date:"2026/09/12",hour:17,minute:0,instructor:"石井",text:"加減法で係数をそろえる手順を確認しました。途中式を省略するとミスが出るため、一行ずつ書く練習を行いました。"},
-      {date:"2026/09/05",hour:17,minute:0,instructor:"石井",text:"分数を含む連立方程式を扱いました。分母をはらう処理を確認した後は、自力で解ける問題が増えました。"}]},
+      {date:"2026/09/12",hour:17,minute:0,duration:70,instructor:"石井",text:"加減法で係数をそろえる手順を確認しました。途中式を省略するとミスが出るため、一行ずつ書く練習を行いました。"},
+      {date:"2026/09/05",hour:17,minute:0,duration:70,instructor:"石井",text:"分数を含む連立方程式を扱いました。分母をはらう処理を確認した後は、自力で解ける問題が増えました。"}]},
     {id:"l2",student:"鈴木 大輝",familyName:"鈴木",givenName:"大輝",familyKana:"すずき",givenKana:"だいき",grade:"中2",subject:"英語",instructor:"田中",hour:18,minute:20,type:"振替",materials:["新中学問題集 英語2年"],prevHomework:"新中学問題集 英語2年 p.46〜47、単語テスト範囲の復習",history:[
-      {date:"2026/09/11",hour:18,minute:20,instructor:"石井",text:"不定詞の名詞的用法・副詞的用法の識別を演習しました。英作文ではtoの位置を確認しました。"}]},
+      {date:"2026/09/11",hour:18,minute:20,duration:70,instructor:"石井",text:"不定詞の名詞的用法・副詞的用法の識別を演習しました。英作文ではtoの位置を確認しました。"}]},
     {id:"l3",student:"高橋 芽衣",familyName:"高橋",givenName:"芽衣",familyKana:"たかはし",givenKana:"めい",grade:"中3",subject:"国語",instructor:"石井",hour:19,minute:40,type:"講習",materials:["標準問題集 国語3年"],prevHomework:"標準問題集 国語3年 p.24〜25 の記述問題",history:[
-      {date:"2026/09/10",hour:19,minute:40,instructor:"石井",text:"接続語に着目して段落関係を整理しました。記述問題では必要な要素を意識して書けるようになりました。"}]}
+      {date:"2026/09/10",hour:19,minute:40,duration:70,instructor:"石井",text:"接続語に着目して段落関係を整理しました。記述問題では必要な要素を意識して書けるようになりました。"}]}
   ];
 
   const state={lessonId:null,records:load(),forgot:new Set(),rating:"",showPrev:false};
@@ -2107,8 +2125,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           }))
           .filter(range=>range.from||range.to)
       : [];
+    const draft=entry?.draft===true;
 
-    return {material,customMaterial,ranges};
+    return {material,customMaterial,ranges,draft};
   }
 
   const MATERIAL_NUMBERS=[
@@ -2152,11 +2171,27 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     if(previous.date){
       const hasStartTime=Number.isInteger(previous.hour)&&Number.isInteger(previous.minute);
-      const startTime=hasStartTime?" "+pad(previous.hour)+":"+pad(previous.minute)+"〜":"";
-      meta.push(previous.date+startTime);
+      let timeText="";
+
+      if(hasStartTime){
+        const startMinutes=previous.hour*60+previous.minute;
+        const duration=Number(previous.duration);
+        const hasDuration=Number.isFinite(duration)&&duration>0;
+
+        if(hasDuration){
+          const endMinutes=startMinutes+duration;
+          const endHour=Math.floor(endMinutes/60)%24;
+          const endMinute=endMinutes%60;
+          timeText=" "+pad(previous.hour)+":"+pad(previous.minute)+"〜"+pad(endHour)+":"+pad(endMinute);
+        }else{
+          timeText=" "+pad(previous.hour)+":"+pad(previous.minute);
+        }
+      }
+
+      meta.push(previous.date+timeText);
     }
 
-    return previous.text+(meta.length?"（"+meta.join("・")+"）":"");
+    return previous.text+(meta.length?"\n（"+meta.join("・")+"）":"");
   }
 
 
@@ -2192,7 +2227,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function materialEntryMarkup(entry,allMaterials,isPrimary=false){
     const ranges=entry.ranges.length?entry.ranges:[{from:"",to:""}];
 
-    return '<div class="material-entry-shell '+(isPrimary?'is-primary':'')+'" data-material-entry>'+
+    return '<div class="material-entry-shell '+(isPrimary?'is-primary':'')+'" data-material-entry data-material-draft="'+String(entry.draft===true)+'">'+
       '<div class="material-entry-clip">'+
       '<div class="material-entry-content">'+
         '<div class="material-entry-heading">'+
@@ -2580,7 +2615,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         return {
           material,
           customMaterial,
-          ranges
+          ranges,
+          draft:entry.dataset.materialDraft==="true"
         };
       }),
       review:document.getElementById("review")?.value??v.review,
@@ -3207,6 +3243,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         }
 
         stopPreviewOptionMotion(false);
+        setMaterialPreviewCompaction(true);
         recordApp.classList.add("preview-mode");
         setPreviewInteractionLocked(true);
         recordFooter.classList.add("preview-mode");
@@ -3220,6 +3257,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       stopPreviewOptionMotion(true);
       recordFooter.classList.remove("preview-mode");
       recordApp.classList.remove("preview-mode");
+      setMaterialPreviewCompaction(false);
       expandPreviewOptions();
       previewBtn.setAttribute("aria-pressed","false");
       previewBtn.setAttribute("aria-label","プレビュー");
@@ -3406,6 +3444,90 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       }
     };
 
+    function setMaterialPreviewCompaction(compact){
+      const entries=materialEntryList();
+
+      if(!compact){
+        entries.forEach(entry=>{
+          entry.classList.remove("is-preview-empty");
+          entry.removeAttribute("aria-hidden");
+
+          entry.querySelectorAll("[data-material-range]").forEach(range=>{
+            range.classList.remove("is-preview-empty","is-preview-last-visible");
+            range.removeAttribute("aria-hidden");
+          });
+        });
+
+        refreshMaterialEntryLabels({animateRangeNumbers:false});
+        return;
+      }
+
+      entries.forEach((entry,index)=>{
+        const ranges=[...entry.querySelectorAll("[data-material-range]")];
+        const hasRangeValue=ranges.some(range=>{
+          const from=range.querySelector("[data-material-page-from]")?.value.trim()||"";
+          const to=range.querySelector("[data-material-page-to]")?.value.trim()||"";
+          return !!(from||to);
+        });
+
+        const material=entry.querySelector("[data-material-select]")?.value||"";
+        const custom=entry.querySelector("[data-custom-material]")?.value.trim()||"";
+        const isDraft=entry.dataset.materialDraft==="true";
+
+        /* The first material is the card's primary value and is never omitted.
+           Extra entries disappear only when they are still an untouched draft,
+           or when "自由入力" contains no actual material name or range. */
+        const hideEntry=index>0 && (
+          (isDraft&&!hasRangeValue) ||
+          (material==="__custom__"&&!custom&&!hasRangeValue) ||
+          (!material&&!hasRangeValue)
+        );
+
+        entry.classList.toggle("is-preview-empty",hideEntry);
+        if(hideEntry)entry.setAttribute("aria-hidden","true");
+        else entry.removeAttribute("aria-hidden");
+
+        ranges.forEach(range=>{
+          const from=range.querySelector("[data-material-page-from]")?.value.trim()||"";
+          const to=range.querySelector("[data-material-page-to]")?.value.trim()||"";
+          const hideRange=!(from||to);
+
+          range.classList.toggle("is-preview-empty",hideRange);
+          range.classList.remove("is-preview-last-visible");
+          if(hideRange)range.setAttribute("aria-hidden","true");
+          else range.removeAttribute("aria-hidden");
+        });
+      });
+
+      const visibleEntries=entries.filter(entry=>!entry.classList.contains("is-preview-empty"));
+      const multipleMaterials=visibleEntries.length>1;
+
+      materialCardNumber.textContent="①";
+      materialCardNumber.classList.toggle("is-visible",multipleMaterials);
+
+      visibleEntries.forEach((entry,visibleEntryIndex)=>{
+        const number=materialNumberLabel(visibleEntryIndex+1);
+        const title=entry.querySelector("[data-material-entry-title]");
+        if(title)title.textContent="使用教材"+number;
+
+        const visibleRanges=[...entry.querySelectorAll("[data-material-range]")]
+          .filter(range=>!range.classList.contains("is-preview-empty"));
+
+        visibleRanges.at(-1)?.classList.add("is-preview-last-visible");
+
+        const showRangeNumbers=visibleRanges.length>1;
+        visibleRanges.forEach((range,visibleRangeIndex)=>{
+          refreshRangeNumber(
+            range.querySelector("[data-range-number]"),
+            showRangeNumbers?number:"",
+            showRangeNumbers?"-"+(visibleRangeIndex+1):"",
+            showRangeNumbers,
+            false
+          );
+        });
+      });
+    }
+
     const NATIVE_CONFIRM_DISMISS_MS=180;
 
     const runAfterNativeConfirmDismiss=callback=>{
@@ -3442,7 +3564,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       return {
         material,
         customMaterial,
-        ranges
+        ranges,
+        draft:entry.dataset.materialDraft==="true"
       };
     };
 
@@ -3587,6 +3710,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const bindRange=range=>{
         range.querySelectorAll("[data-material-page-from],[data-material-page-to]").forEach(input=>{
           input.oninput=()=>{
+            entry.dataset.materialDraft="false";
             updateRangeUnit(range);
             scheduleAutoSave(v);
           };
@@ -3662,12 +3786,16 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       };
 
       mat.onchange=()=>{
+        entry.dataset.materialDraft="false";
         updateCustomMaterialVisibility();
         rangeItems().forEach(updateRangeUnit);
         autoSaveNow(v);
       };
 
-      customInput?.addEventListener("input",()=>scheduleAutoSave(v));
+      customInput?.addEventListener("input",()=>{
+        entry.dataset.materialDraft="false";
+        scheduleAutoSave(v);
+      });
 
       if(deleteBtn){
         deleteBtn.onclick=()=>requestMaterialDelete(entry);
@@ -3704,7 +3832,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       v.materials=current.materials;
 
       const newEntry=normalizeMaterialEntry(
-        null,
+        {draft:true},
         l.materials[0]||allMaterials[0]||""
       );
       v.materials.push(newEntry);
