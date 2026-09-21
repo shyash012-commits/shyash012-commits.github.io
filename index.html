@@ -2078,7 +2078,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 21:56";
+  const BUILD_ID="2026-09-21 close-emerge-02";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2336,6 +2336,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   let footerKeyboardOpeningFocusInHandler=null;
   let footerKeyboardOpeningFocusOutHandler=null;
   let footerKeyboardOpeningBaselineBottom=0;
+  let footerKeyboardOpeningBaselineHeight=0;
   let footerKeyboardOpeningTimer=null;
   let footerKeyboardOpeningRaf=0;
   let footerKeyboardOpeningSession=false;
@@ -2535,6 +2536,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       footerKeyboardOpeningRaf=0;
     }
     footerKeyboardOpeningBaselineBottom=0;
+    footerKeyboardOpeningBaselineHeight=0;
     footerKeyboardOpeningSession=false;
     footerKeyboardOpeningGuard=false;
   }
@@ -2550,6 +2552,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     const viewportBottom=()=>viewport.offsetTop+viewport.height;
     footerKeyboardOpeningBaselineBottom=viewportBottom();
+    footerKeyboardOpeningBaselineHeight=viewport.height;
 
     const setY=value=>{
       footer.style.setProperty(
@@ -2576,6 +2579,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
          visual viewport by the time focusin is delivered. */
       if(!footerKeyboardOpeningSession&&!editing){
         footerKeyboardOpeningBaselineBottom=currentBottom;
+        footerKeyboardOpeningBaselineHeight=viewport.height;
         setY(0);
         release();
         return;
@@ -2585,23 +2589,29 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         0,
         footerKeyboardOpeningBaselineBottom-currentBottom
       );
+      const heightShrink=Math.max(
+        0,
+        footerKeyboardOpeningBaselineHeight-viewport.height
+      );
 
-      /* Safari may re-anchor position:fixed to the shrunken visual viewport.
-         Move the footer down by exactly the bottom edge that was lost. This
-         pins it to its pre-keyboard screen position, underneath the keyboard.
-         During closing the value decreases continuously, so the footer emerges
-         from behind the keyboard instead of popping back after it closes. */
-      setY(lostBottom);
+      /* offsetTop can increase while Safari pans the focused field, so
+         baselineBottom-currentBottom may stay surprisingly small even with a
+         fully open keyboard. viewport.height shrink is the reliable keyboard
+         travel signal. Use the larger value for the downward compensation so
+         the footer cannot be lifted above the keyboard. */
+      const keyboardTravel=Math.max(lostBottom,heightShrink);
+      setY(keyboardTravel);
 
       const coverThreshold=Math.max(72,footer.getBoundingClientRect().height+8);
 
-      /* Hide only while the keyboard is OPENING and our compensation is not
-         yet large enough to put the whole footer behind it. Do not use the
-         focused state here: on iOS the textarea can stay focused while the
-         keyboard is CLOSING. Re-hiding at that point is exactly what causes
-         the footer to pop back only after the keyboard has fully disappeared. */
+      /* The one-frame opening guard ends as soon as EITHER visual-viewport
+         measurement says the keyboard has travelled far enough to cover the
+         footer. The previous build used lostBottom alone; when Safari panned
+         the viewport at the same time, that value could stay below threshold
+         forever, leaving visibility:hidden in place until the keyboard had
+         completely closed. */
       if(footerKeyboardOpeningGuard){
-        if(lostBottom<coverThreshold){
+        if(keyboardTravel<coverThreshold){
           suppress();
         }else{
           footerKeyboardOpeningGuard=false;
@@ -2611,13 +2621,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         release();
       }
 
-      /* Closing is complete only when focus has left the input and the visual
-         viewport bottom has actually returned. Until then keep the session and
-         the compensation alive so the close animation stays continuous. */
-      if(!editing&&lostBottom<=0.5){
+      /* Once openingGuard is gone, closing never hides the footer again.
+         keyboardTravel falls with visualViewport.height as the keyboard moves
+         down, so the footer stays rendered underneath it and is revealed by
+         the keyboard edge instead of appearing only after the final frame. */
+      if(!editing&&lostBottom<=0.5&&heightShrink<=0.5){
         footerKeyboardOpeningSession=false;
         footerKeyboardOpeningGuard=false;
         footerKeyboardOpeningBaselineBottom=currentBottom;
+        footerKeyboardOpeningBaselineHeight=viewport.height;
         setY(0);
         release();
       }
@@ -2667,12 +2679,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       footerKeyboardOpeningTimer=setTimeout(()=>{
         sync();
         /* Hardware keyboard / no visual-viewport change: nothing needs cover. */
-        if(
-          Math.max(
-            0,
-            footerKeyboardOpeningBaselineBottom-viewportBottom()
-          )<2
-        ){
+        const fallbackLostBottom=Math.max(
+          0,
+          footerKeyboardOpeningBaselineBottom-viewportBottom()
+        );
+        const fallbackHeightShrink=Math.max(
+          0,
+          footerKeyboardOpeningBaselineHeight-viewport.height
+        );
+        if(fallbackLostBottom<2&&fallbackHeightShrink<2){
           footerKeyboardOpeningGuard=false;
           release();
         }
