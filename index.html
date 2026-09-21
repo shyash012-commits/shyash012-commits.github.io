@@ -545,6 +545,47 @@ html.line-inapp .header{
 .material-detail-field{
   margin-top:0;
 }
+.material-range-list{
+  display:grid;
+  gap:var(--record-item-gap);
+}
+.material-range-shell{
+  display:grid;
+  grid-template-rows:1fr;
+  transition:grid-template-rows var(--motion-dur) var(--motion-ease);
+}
+.material-range-shell.is-collapsed{
+  grid-template-rows:0fr;
+}
+.material-range-clip{
+  min-height:0;
+  overflow:hidden;
+}
+.material-range-content{
+  min-width:0;
+}
+.material-range-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:var(--record-field-gap);
+}
+.material-range-delete{
+  padding:0;
+  border:0;
+  background:none;
+  color:var(--primary);
+  font-size:13px;
+  font-weight:600;
+  line-height:1.2;
+}
+.material-range-add-action{
+  gap:6px;
+  margin-top:var(--record-item-gap);
+}
+.app.preview-mode .material-range-add-action,
+.app.preview-mode .material-range-delete{
+  display:none;
+}
 .material-detail-stack{
   display:grid;
   grid-template-columns:max-content 14px minmax(0,1fr);
@@ -665,6 +706,7 @@ html.line-inapp .header{
   .material-delete-action,
   .material-delete-label,
   .material-entry-shell,
+  .material-range-shell,
   .material-entry-content,
   .material-entry-content::before,
   .material-entry-heading{
@@ -1668,9 +1710,39 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     return [...new Set([...lesson.materials,...Object.keys(materialDb)])];
   }
 
+  function materialRangeMarkup(range,material,showDelete=false){
+    const units=unitListForRanges(material,[range]);
+
+    return '<div class="material-range-shell" data-material-range>'+
+      '<div class="material-range-clip">'+
+        '<div class="material-range-content">'+
+          '<div class="material-detail-stack">'+
+            '<div class="material-detail-field"><label class="label">範囲（ページ）</label>'+
+              '<div class="material-range-controls">'+
+                '<input class="material-page-input" data-material-page-from inputmode="numeric" type="number" min="1" aria-label="開始ページ" value="'+esc(range.from||"")+'">'+
+                '<span class="material-range-separator" aria-hidden="true">〜</span>'+
+                '<input class="material-page-input" data-material-page-to inputmode="numeric" type="number" min="1" aria-label="終了ページ" value="'+esc(range.to||"")+'">'+
+              '</div>'+
+            '</div>'+
+            '<span class="material-relation-line" aria-hidden="true"></span>'+
+            '<div class="material-detail-field"><label class="label">単元</label>'+
+              '<div class="material-unit-window" data-material-unit aria-label="単元名" aria-readonly="true">'+
+                (units.length
+                  ? '<span class="material-unit-track">'+units.map(esc).join(" ／ ")+'</span>'
+                  : '')+
+              '</div>'+
+            '</div>'+
+          '</div>'+
+          '<div class="material-range-actions '+(showDelete?'':'hidden')+'" data-range-delete-wrap>'+
+            '<button type="button" class="material-range-delete" data-delete-range>削除</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }
+
   function materialEntryMarkup(entry,allMaterials,isPrimary=false){
-    const range=entry.ranges[0]||{from:"",to:""};
-    const units=unitListForRanges(entry.material,entry.ranges);
+    const ranges=entry.ranges.length?entry.ranges:[{from:"",to:""}];
 
     return '<div class="material-entry-shell '+(isPrimary?'is-primary':'')+'" data-material-entry>'+
       '<div class="material-entry-clip">'+
@@ -1693,23 +1765,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           '<label class="label">教材名</label>'+
           '<input data-custom-material value="'+esc(entry.customMaterial||"")+'">'+
         '</div>'+
-        '<div class="material-detail-stack">'+
-          '<div class="material-detail-field"><label class="label">範囲（ページ）</label>'+
-            '<div class="material-range-controls">'+
-              '<input class="material-page-input" data-material-page-from inputmode="numeric" type="number" min="1" aria-label="開始ページ" value="'+esc(range.from)+'">'+
-              '<span class="material-range-separator" aria-hidden="true">〜</span>'+
-              '<input class="material-page-input" data-material-page-to inputmode="numeric" type="number" min="1" aria-label="終了ページ" value="'+esc(range.to)+'">'+
-            '</div>'+
-          '</div>'+
-          '<span class="material-relation-line" aria-hidden="true"></span>'+
-          '<div class="material-detail-field"><label class="label">単元</label>'+
-            '<div class="material-unit-window" data-material-unit aria-label="単元名" aria-readonly="true">'+
-              (units.length
-                ? '<span class="material-unit-track">'+units.map(esc).join(" ／ ")+'</span>'
-                : '')+
-            '</div>'+
-          '</div>'+
+        '<div class="material-range-list" data-material-range-list>'+
+          ranges.map(range=>materialRangeMarkup(range,entry.material,ranges.length>1)).join("")+
         '</div>'+
+        '<button type="button" class="material-text-action material-range-add-action" data-add-range>'+
+          '<span class="record-action-icon" aria-hidden="true"><svg viewBox="0 0 10.5 10.5"><path d="M5.25.875v8.75M.875 5.25h8.75"/></svg></span>'+
+          '<span>範囲を追加</span>'+
+        '</button>'+
       '</div>'+
     '</div>'+
     '</div>'+
@@ -2090,12 +2152,17 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         const fallback=v.materials?.[index]||{};
         const material=entry.querySelector("[data-material-select]")?.value||fallback.material||"";
         const customMaterial=entry.querySelector("[data-custom-material]")?.value||"";
-        const from=entry.querySelector("[data-material-page-from]")?.value||"";
-        const to=entry.querySelector("[data-material-page-to]")?.value||"";
+        const ranges=[...entry.querySelectorAll("[data-material-range]")]
+          .map(range=>{
+            const from=range.querySelector("[data-material-page-from]")?.value||"";
+            const to=range.querySelector("[data-material-page-to]")?.value||"";
+            return {from,to};
+          })
+          .filter(range=>range.from||range.to);
         return {
           material,
           customMaterial,
-          ranges:(from||to)?[{from,to}]:[]
+          ranges
         };
       }),
       review:document.getElementById("review")?.value??v.review,
@@ -2832,12 +2899,17 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const readMaterialEntry=entry=>{
       const material=entry.querySelector("[data-material-select]")?.value||"";
       const customMaterial=entry.querySelector("[data-custom-material]")?.value||"";
-      const from=entry.querySelector("[data-material-page-from]")?.value||"";
-      const to=entry.querySelector("[data-material-page-to]")?.value||"";
+      const ranges=[...entry.querySelectorAll("[data-material-range]")]
+        .map(range=>{
+          const from=range.querySelector("[data-material-page-from]")?.value||"";
+          const to=range.querySelector("[data-material-page-to]")?.value||"";
+          return {from,to};
+        })
+        .filter(range=>range.from||range.to);
       return {
         material,
         customMaterial,
-        ranges:(from||to)?[{from,to}]:[]
+        ranges
       };
     };
 
@@ -2948,22 +3020,24 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const mat=entry.querySelector("[data-material-select]");
       const customWrap=entry.querySelector("[data-custom-material-wrap]");
       const customInput=entry.querySelector("[data-custom-material]");
-      const pageInputs=[
-        entry.querySelector("[data-material-page-from]"),
-        entry.querySelector("[data-material-page-to]")
-      ];
-      const unitDisplay=entry.querySelector("[data-material-unit]");
+      const rangeList=entry.querySelector("[data-material-range-list]");
+      const addRangeBtn=entry.querySelector("[data-add-range]");
       const deleteBtn=entry.querySelector("[data-delete-material]");
 
-      const currentRanges=()=>{
-        const from=pageInputs[0]?.value||"";
-        const to=pageInputs[1]?.value||"";
-        return (from||to)?[{from,to}]:[];
+      const rangeItems=()=>[...entry.querySelectorAll("[data-material-range]")];
+
+      const updateRangeDeleteVisibility=()=>{
+        const multiple=rangeItems().length>1;
+        rangeItems().forEach(range=>{
+          range.querySelector("[data-range-delete-wrap]")?.classList.toggle("hidden",!multiple);
+        });
       };
 
-      const updateUnit=()=>{
-        const ranges=currentRanges();
-        const units=unitListForRanges(mat?.value,ranges);
+      const updateRangeUnit=range=>{
+        const from=range.querySelector("[data-material-page-from]")?.value||"";
+        const to=range.querySelector("[data-material-page-to]")?.value||"";
+        const unitDisplay=range.querySelector("[data-material-unit]");
+        const units=unitListForRanges(mat?.value,(from||to)?[{from,to}]:[]);
 
         if(unitDisplay){
           unitDisplay.innerHTML=units.length
@@ -2973,16 +3047,77 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         }
       };
 
-      pageInputs.forEach(input=>{
-        input.oninput=()=>{
-          updateUnit();
-          scheduleAutoSave(v);
-        };
-      });
+      const bindRange=range=>{
+        range.querySelectorAll("[data-material-page-from],[data-material-page-to]").forEach(input=>{
+          input.oninput=()=>{
+            updateRangeUnit(range);
+            scheduleAutoSave(v);
+          };
+        });
+
+        const deleteRangeBtn=range.querySelector("[data-delete-range]");
+        if(deleteRangeBtn){
+          deleteRangeBtn.onclick=()=>{
+            if(rangeItems().length<=1)return;
+
+            const finish=()=>{
+              range.remove();
+              updateRangeDeleteVisibility();
+              v.materials=capture(v).materials;
+              autoSaveNow(v);
+            };
+
+            if(prefersReducedMotion()){
+              finish();
+              return;
+            }
+
+            let finished=false;
+            const finishOnce=()=>{
+              if(finished)return;
+              finished=true;
+              finish();
+            };
+
+            range.addEventListener("transitionend",e=>{
+              if(e.target===range && e.propertyName==="grid-template-rows"){
+                finishOnce();
+              }
+            },{once:true});
+
+            range.classList.add("is-collapsed");
+            setTimeout(finishOnce,MOTION.move+80);
+          };
+        }
+      };
+
+      rangeItems().forEach(bindRange);
+      updateRangeDeleteVisibility();
+
+      addRangeBtn.onclick=()=>{
+        const holder=document.createElement("div");
+        holder.innerHTML=materialRangeMarkup({from:"",to:""},mat?.value||"",true);
+        const range=holder.firstElementChild;
+        range.classList.add("is-collapsed");
+        rangeList.append(range);
+        bindRange(range);
+        updateRangeDeleteVisibility();
+
+        if(prefersReducedMotion()){
+          range.classList.remove("is-collapsed");
+        }else{
+          requestAnimationFrame(()=>{
+            requestAnimationFrame(()=>range.classList.remove("is-collapsed"));
+          });
+        }
+
+        v.materials=capture(v).materials;
+        autoSaveNow(v);
+      };
 
       mat.onchange=()=>{
         customWrap?.classList.toggle("hidden",mat.value!=="__custom__");
-        updateUnit();
+        rangeItems().forEach(updateRangeUnit);
         autoSaveNow(v);
       };
 
@@ -2992,7 +3127,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         deleteBtn.onclick=()=>requestMaterialDelete(entry);
       }
     };
-
     materialEntries.querySelectorAll("[data-material-entry]").forEach(bindMaterialEntry);
 
     deleteFirstMaterialBtn.onclick=()=>{
