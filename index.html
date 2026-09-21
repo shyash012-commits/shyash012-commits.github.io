@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=overlays-content">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#f3f5f7">
 <title>授業記録システム v0.1</title>
@@ -1549,12 +1549,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   left:50%;
   bottom:10px;
   z-index:30;
-  /* iOS moves fixed elements with the shrinking visual viewport when the
-     software keyboard opens. JS feeds the lost viewport height back into this
-     Y offset so the footer stays at its original screen position and is simply
-     covered by the keyboard instead of riding above it. */
-  --footer-viewport-offset:0px;
-  transform:translate(-50%,var(--footer-viewport-offset));
+  transform:translateX(-50%);
   display:flex;
   align-items:center;
   gap:10px;
@@ -2046,7 +2041,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 19:41";
+  const BUILD_ID="2026-09-21 19:44";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2302,11 +2297,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   let recordKeyboardTouchStartHandler=null;
   let recordKeyboardPointerDownHandler=null;
   let recordKeyboardScrollHandler=null;
-  let footerViewportResizeHandler=null;
-  let footerViewportScrollHandler=null;
-  let footerViewportWindowResizeHandler=null;
-  let footerViewportFocusInHandler=null;
-  let footerViewportFocusOutHandler=null;
 
   function writeRecord(v){
     if(!state.lessonId)return;
@@ -2458,123 +2448,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     });
   }
 
-  function unbindRecordFooterViewportPin(){
-    const viewport=window.visualViewport;
-
-    if(footerViewportResizeHandler&&viewport){
-      viewport.removeEventListener("resize",footerViewportResizeHandler);
-      footerViewportResizeHandler=null;
-    }
-    if(footerViewportScrollHandler&&viewport){
-      viewport.removeEventListener("scroll",footerViewportScrollHandler);
-      footerViewportScrollHandler=null;
-    }
-    if(footerViewportWindowResizeHandler){
-      window.removeEventListener("resize",footerViewportWindowResizeHandler);
-      footerViewportWindowResizeHandler=null;
-    }
-    if(footerViewportFocusInHandler){
-      document.removeEventListener("focusin",footerViewportFocusInHandler);
-      footerViewportFocusInHandler=null;
-    }
-    if(footerViewportFocusOutHandler){
-      document.removeEventListener("focusout",footerViewportFocusOutHandler);
-      footerViewportFocusOutHandler=null;
-    }
-  }
-
-  function bindRecordFooterViewportPin(){
-    unbindRecordFooterViewportPin();
-
-    const footer=document.querySelector(".record-footer");
-    const viewport=window.visualViewport;
-    if(!footer||!viewport)return;
-
-    let restBottom=viewport.offsetTop+viewport.height;
-    let pinActive=false;
-    let raf=0;
-
-    const setOffset=offset=>{
-      const y=Math.max(0,offset);
-      footer.style.setProperty("--footer-viewport-offset",y+"px");
-    };
-
-    const sync=()=>{
-      raf=0;
-
-      const currentBottom=viewport.offsetTop+viewport.height;
-      const editing=isKeyboardEntryControl(document.activeElement);
-
-      /* A focused text/number field means a keyboard can be opening even
-         before Safari has finished shrinking the visual viewport. Once pinning
-         starts, keep compensating through the whole close animation too. */
-      if(editing)pinActive=true;
-
-      if(pinActive){
-        const lostBottom=Math.max(0,restBottom-currentBottom);
-        setOffset(lostBottom);
-
-        /* Keyboard fully recovered. Keeping the old restBottom lets the same
-           still-focused field reopen the keyboard later without needing a new
-           focus event. */
-        if(lostBottom<=0.5&&!editing){
-          pinActive=false;
-          restBottom=currentBottom;
-        }
-        return;
-      }
-
-      setOffset(0);
-      restBottom=currentBottom;
-    };
-
-    const scheduleSync=()=>{
-      if(raf)return;
-      raf=requestAnimationFrame(sync);
-    };
-
-    footerViewportFocusInHandler=e=>{
-      if(!isKeyboardEntryControl(e.target))return;
-
-      /* Capture the bottom edge before iOS starts the keyboard animation. If
-         another input receives focus while the keyboard is already open, do
-         not overwrite the original rest position with the shrunken viewport. */
-      if(!pinActive){
-        restBottom=viewport.offsetTop+viewport.height;
-      }
-      pinActive=true;
-      scheduleSync();
-    };
-
-    footerViewportFocusOutHandler=()=>{
-      /* Do not release here. iOS closes the keyboard after focus changes; the
-         viewport listeners keep the footer stationary until that animation has
-         actually finished. */
-      scheduleSync();
-    };
-
-    footerViewportResizeHandler=scheduleSync;
-    footerViewportScrollHandler=scheduleSync;
-    footerViewportWindowResizeHandler=()=>{
-      if(!pinActive&&!isKeyboardEntryControl(document.activeElement)){
-        restBottom=viewport.offsetTop+viewport.height;
-        setOffset(0);
-      }
-      scheduleSync();
-    };
-
-    document.addEventListener("focusin",footerViewportFocusInHandler);
-    document.addEventListener("focusout",footerViewportFocusOutHandler);
-    viewport.addEventListener("resize",footerViewportResizeHandler,{passive:true});
-    viewport.addEventListener("scroll",footerViewportScrollHandler,{passive:true});
-    window.addEventListener("resize",footerViewportWindowResizeHandler,{passive:true});
-
-    sync();
-  }
-
   function renderList(){
     unbindRecordKeyboardDismiss();
-    unbindRecordFooterViewportPin();
     if(footerScrollHandler){
       window.removeEventListener("scroll",footerScrollHandler);
       footerScrollHandler=null;
@@ -3028,7 +2903,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     bindRecordFooter(v);
     bindRecordKeyboardDismiss();
-    bindRecordFooterViewportPin();
     updateFooterCompletion(capture(v));
     const backBtn=document.getElementById("backBtn");
     bindPressFeedback(backBtn);
