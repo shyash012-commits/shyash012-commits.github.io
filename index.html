@@ -1595,14 +1595,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   bottom:auto;
   transform:translateX(-50%);
 }
-/* 05i: during the native keyboard's opening transition, leave the footer in
-   its ordinary fixed mode so Safari can perform its normal focus-scroll. Hide
-   only the footer itself; once the keyboard is materially open we atomically
-   move it into the absolute dock underneath the keyboard, then reveal it there. */
-.record-footer.is-keyboard-opening{
-  visibility:hidden;
-  pointer-events:none;
-}
 
 .record-nav-shell{
   position:relative;
@@ -2094,7 +2086,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-22 keyboard-dock-05i";
+  const BUILD_ID="2026-09-22 keyboard-dock-05d-navfix";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2364,7 +2356,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   let footerKeyboardOpeningClosing=false;
   let footerKeyboardOpeningClosePageTop=null;
   let footerKeyboardOpeningCloseLockUntil=0;
-  let footerKeyboardOpeningCloseLockStarted=false;
   let footerKeyboardOpeningComfortAdjusted=false;
   let footerKeyboardOpeningComfortTimers=[];
 
@@ -2575,7 +2566,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const footer=document.querySelector(".record-footer");
     if(footer){
       footer.classList.remove("is-keyboard-docked");
-      footer.classList.remove("is-keyboard-opening");
       footer.style.removeProperty("--browser-keyboard-doc-top");
     }
 
@@ -2588,7 +2578,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     footerKeyboardOpeningClosing=false;
     footerKeyboardOpeningClosePageTop=null;
     footerKeyboardOpeningCloseLockUntil=0;
-    footerKeyboardOpeningCloseLockStarted=false;
     footerKeyboardOpeningComfortAdjusted=false;
   }
 
@@ -2643,13 +2632,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     const undock=()=>{
       footer.classList.remove("is-keyboard-docked");
-      footer.classList.remove("is-keyboard-opening");
       footer.style.removeProperty("--browser-keyboard-doc-top");
       footerKeyboardOpeningSession=false;
       footerKeyboardOpeningClosing=false;
       footerKeyboardOpeningClosePageTop=null;
       footerKeyboardOpeningCloseLockUntil=0;
-      footerKeyboardOpeningCloseLockStarted=false;
       footerKeyboardOpeningHasOpened=false;
       footerKeyboardOpeningBaselineHeight=viewport.height;
       footerKeyboardOpeningLastHeight=viewport.height;
@@ -2674,18 +2661,23 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     };
 
     const beginClosePageLock=()=>{
-      /* 05e: close-lock is ONE SHOT per keyboard session. In 05d every resize/
-         scroll frame extended the 720ms deadline again, so after the keyboard
-         had closed the footer navigation could still be fighting an endlessly
-         renewed scroll lock. */
-      if(footerKeyboardOpeningCloseLockStarted)return;
-      footerKeyboardOpeningCloseLockStarted=true;
-      footerKeyboardOpeningClosePageTop=visualPageTop();
+      /* A footer-navigation tap is an explicit new scroll intent. Once that
+         happens, the tail of the keyboard-close lock must never recreate
+         itself during the navigation scroll. startSession() clears this flag
+         for the next keyboard opening. */
+      if(footer.dataset.keyboardCloseLockDisabled==="1")return;
+      if(footerKeyboardOpeningClosePageTop==null){
+        footerKeyboardOpeningClosePageTop=visualPageTop();
+      }
       footerKeyboardOpeningCloseLockUntil=performance.now()+720;
       footerKeyboardOpeningClosing=true;
     };
 
     const holdClosePageTop=()=>{
+      if(footer.dataset.keyboardCloseLockDisabled==="1"){
+        releaseClosePageLock();
+        return;
+      }
       if(footerKeyboardOpeningClosePageTop==null)return;
       if(performance.now()>footerKeyboardOpeningCloseLockUntil){
         releaseClosePageLock();
@@ -2708,13 +2700,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const comfortFocusedControl=()=>{
       if(!footerKeyboardOpeningSession)return;
 
-      /* 05f: judge the OPEN state directly from the current visualViewport
-         shrink. The close-lock can leave the old min-height/closing state alive
-         for a short time after one cycle, which made later openings skip this
-         correction even though the keyboard was fully open. */
-      const keyboardStillOpen=
-        footerKeyboardOpeningBaselineHeight-viewport.height>80;
-      if(!keyboardStillOpen)return;
+      /* A tiny visualViewport-height rebound can happen while Safari is still
+         OPENING the keyboard / settling its toolbar. Treat it as a real close
+         only after the viewport has recovered materially from the smallest
+         height seen in this keyboard session. This keeps the one-shot comfort
+         correction from being cancelled by a harmless opening-phase wobble. */
+      const genuinelyClosing=
+        footerKeyboardOpeningHasOpened &&
+        viewport.height-footerKeyboardOpeningMinHeight>42;
+      if(genuinelyClosing)return;
 
       const active=document.activeElement;
       if(!isKeyboardEntryControl(active))return;
@@ -2722,27 +2716,18 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const rect=active.getBoundingClientRect();
       const screenTop=rect.top-viewport.offsetTop;
       const screenBottom=rect.bottom-viewport.offsetTop;
-      const comfortableTopMax=250;
+      const desiredTop=165;
       const comfortableBottom=Math.max(300,viewport.height-110);
 
-      /* 05h: never pull the page BACK upward after Safari has focused the
-         editor. In 05g a transient visualViewport offset during keyboard open
-         could make screenTop look negative for one sample, triggering a large
-         negative scroll just after Safari's own focus-scroll had finished.
-         That produced the visible two-step motion: native scroll, then snap
-         back. Preserve Safari's natural placement whenever the field is high
-         enough; only move farther DOWN the document when the field is still
-         too low / keyboard-obscured. */
-      let delta=0;
-      if(screenBottom>comfortableBottom){
-        delta=screenBottom-comfortableBottom;
-      }else if(screenTop>comfortableTopMax){
-        delta=screenTop-comfortableTopMax;
-      }
-
-      if(delta>8){
-        window.scrollBy({top:delta,behavior:"auto"});
-        setDockTop();
+      /* Leave Safari alone when it already produced a good composition.
+         The first screenshot case lands around 400px from the visual top and
+         therefore enters this branch; the second screenshot case does not. */
+      if(screenTop>250 || screenBottom>comfortableBottom){
+        const delta=screenTop-desiredTop;
+        if(Math.abs(delta)>8){
+          window.scrollBy({top:delta,behavior:"auto"});
+          setDockTop();
+        }
       }
     };
 
@@ -2750,6 +2735,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       if(
         footerKeyboardOpeningComfortAdjusted ||
         !footerKeyboardOpeningSession ||
+        footerKeyboardOpeningClosing ||
         !footerKeyboardOpeningHasOpened
       )return;
 
@@ -2770,11 +2756,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           !footerKeyboardOpeningHasOpened
         )return;
 
-        /* Do not let stale close-state from the previous keyboard cycle cancel
-           a fresh opening. Continue only while this keyboard is actually open. */
-        const keyboardStillOpen=
-          footerKeyboardOpeningBaselineHeight-viewport.height>80;
-        if(!keyboardStillOpen)return;
+        const genuinelyClosing=
+          viewport.height-footerKeyboardOpeningMinHeight>42;
+        if(genuinelyClosing)return;
 
         const active=document.activeElement;
         if(!isKeyboardEntryControl(active))return;
@@ -2839,17 +2823,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       if(shrink>80){
         if(!footerKeyboardOpeningHasOpened){
           footerKeyboardOpeningHasOpened=true;
-
-          /* 05i: Safari has now completed the important part of its native
-             focus-scroll while the footer was still an ordinary fixed layer.
-             Move the hidden footer into document space at the original physical
-             screen Y, then reveal it. It is already behind the keyboard, so the
-             user never sees the positioning-mode handoff. No post-focus page
-             correction is needed, which removes the up -> down -> up wobble. */
-          dock();
-          requestAnimationFrame(()=>{
-            footer.classList.remove("is-keyboard-opening");
-          });
+          scheduleComfortFocusedControl();
         }
       }
       /* Do not call every tiny height rebound a keyboard close. Safari can
@@ -2870,13 +2844,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         holdClosePageTop();
       }
 
-      /* Once docked, keep the footer at the same physical screen Y while the
-         keyboard closes and Safari's browser chrome settles. Before the first
-         dock, deliberately leave the hidden footer in native fixed positioning
-         so Safari's focus-scroll is not perturbed. */
-      if(footer.classList.contains("is-keyboard-docked")){
-        setDockTop();
-      }
+      /* While the keyboard is open the footer lives in document space at its
+         original full-screen position, physically underneath the keyboard. */
+      setDockTop();
 
       /* IMPORTANT: do not switch back to position:fixed when the viewport
          merely looks recovered. On the first iOS keyboard cycle Safari can
@@ -2918,6 +2888,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     };
 
     const startSession=()=>{
+      /* New keyboard session: keyboard-close scroll suppression is allowed
+         again. */
+      delete footer.dataset.keyboardCloseLockDisabled;
       clearTimeout(footerKeyboardOpeningTimer);
       footerKeyboardOpeningTimer=null;
 
@@ -2945,40 +2918,17 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       footerKeyboardOpeningClosing=false;
       footerKeyboardOpeningClosePageTop=null;
       footerKeyboardOpeningCloseLockUntil=0;
-      footerKeyboardOpeningCloseLockStarted=false;
       footerKeyboardOpeningComfortAdjusted=false;
       footerKeyboardOpeningComfortTimers.forEach(clearTimeout);
       footerKeyboardOpeningComfortTimers=[];
 
-      /* 05i: pointerdown arrives before Safari performs focus-scroll. Keep the
-         footer in normal fixed positioning during that native calculation, but
-         hide it so iOS cannot visibly lift it above the opening keyboard. sync()
-         will dock + reveal it only after the keyboard has materially opened. */
-      footer.classList.add("is-keyboard-opening");
+      /* pointerdown reaches here before focus/default keyboard layout, so the
+         absolute dock starts from the exact fixed-footer position. */
+      dock();
       pumpForTransition();
-
-      /* Hardware-keyboard / no-viewport-shrink fallback. Never leave the footer
-         hidden if no software keyboard actually opens. */
-      footerKeyboardOpeningTimer=setTimeout(()=>{
-        if(
-          footerKeyboardOpeningSession &&
-          !footerKeyboardOpeningHasOpened
-        ){
-          footer.classList.remove("is-keyboard-opening");
-        }
-      },800);
     };
 
     footerKeyboardOpeningPointerDownHandler=e=>{
-      /* Once the keyboard is fully gone, an explicit footer-navigation tap is
-         the user's new scroll intent. Never let the tail of the close lock
-         fight that navigation. The one-shot flag stays consumed, so sync()
-         cannot immediately recreate the lock. */
-      const footerTap=e.target.closest?.(".record-footer");
-      if(footerTap&&viewportRecovered()&&footerKeyboardOpeningCloseLockStarted){
-        releaseClosePageLock();
-      }
-
       if(!isKeyboardEntryControl(e.target))return;
       startSession();
     };
@@ -3433,6 +3383,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     document.querySelectorAll("[data-footer-section]").forEach(btn=>{
       btn.onclick=()=>{
+        /* 05d nav fix: this tap is a deliberate page-scroll request. Mark it
+           BEFORE blur, because blur itself can emit the focusout that would
+           otherwise restart the keyboard-close page lock. */
+        const keyboardFooter=document.querySelector(".record-footer");
+        if(keyboardFooter){
+          keyboardFooter.dataset.keyboardCloseLockDisabled="1";
+        }
+
         const active=document.activeElement;
         if(isKeyboardEntryControl(active))active.blur();
 
