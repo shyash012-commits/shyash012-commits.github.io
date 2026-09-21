@@ -2086,7 +2086,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 keyboard-dock-03";
+  const BUILD_ID="2026-09-21 keyboard-dock-04";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2593,13 +2593,16 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     footerKeyboardOpeningHasOpened=false;
 
     const setDockTop=()=>{
-      /* Keep the footer at the SAME full-screen Y it had before the keyboard.
-         It is absolute, not fixed, so Safari cannot re-anchor it to the
-         shrunken visual viewport. window.scrollY + offsetTop converts that
-         physical Y back into a document coordinate while Safari pans inputs. */
+      /* Keep the footer at the SAME physical Y it had before the keyboard.
+         visualViewport.pageTop is the visual viewport's document-space top
+         in one atomic value. That matters when Safari auto-scrolls a low input:
+         window.scrollY and offsetTop can settle on different frames, which made
+         the footer miss the closing animation and pop in at the end. */
+      const visualPageTop=Number.isFinite(viewport.pageTop)
+        ?viewport.pageTop
+        :(window.scrollY+viewport.offsetTop);
       const documentTop=
-        window.scrollY+
-        viewport.offsetTop+
+        visualPageTop+
         footerKeyboardOpeningBaselineTop;
 
       footer.style.setProperty(
@@ -2760,8 +2763,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       },0);
     };
 
-    footerKeyboardOpeningViewportHandler=schedule;
-    footerKeyboardOpeningWindowScrollHandler=schedule;
+    /* A low field (like the review box in the first screenshot) makes Safari
+       auto-scroll the page for the keyboard. During keyboard close Safari can
+       restore that page scroll late, after the last convenient resize event.
+       Once ANY viewport/scroll movement begins, sample geometry every frame for
+       long enough to cover the whole native transition and the late scroll
+       restoration. This is what makes the low-scroll and high-scroll cases use
+       the same closing path. */
+    footerKeyboardOpeningViewportHandler=()=>pumpForTransition(110);
+    footerKeyboardOpeningWindowScrollHandler=()=>pumpForTransition(110);
 
     document.addEventListener(
       "pointerdown",
