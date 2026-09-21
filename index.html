@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=overlays-content">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#f3f5f7">
 <title>授業記録システム v0.1</title>
@@ -1182,11 +1182,6 @@ textarea{
   font-size:inherit;
   font-weight:400;
 }
-input,
-textarea{
-  scroll-margin-block:0;
-}
-
 .vt-review #review{
   display:block;
   height:calc(var(--record-control-height) * 4);
@@ -1561,6 +1556,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   gap:10px;
   width:min(calc(100vw - 20px),700px);
 }
+.record-footer.is-keyboard-covered{
+  visibility:hidden;
+  pointer-events:none;
+}
+
 .record-nav-shell{
   position:relative;
   flex:1 1 auto;
@@ -2047,7 +2047,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 19:52";
+  const BUILD_ID="2026-09-21 20:05";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2302,7 +2302,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   let footerScrollUnlockTimer=null;
   let recordKeyboardTouchStartHandler=null;
   let recordKeyboardPointerDownHandler=null;
-  let recordKeyboardScrollHandler=null;
+  let keyboardCoverViewportHandler=null;
+  let keyboardCoverFocusInHandler=null;
+  let keyboardCoverFocusOutHandler=null;
+  let keyboardCoverBaseline=0;
+  let keyboardCoverPendingTimer=null;
 
   function writeRecord(v){
     if(!state.lessonId)return;
@@ -2395,10 +2399,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       document.removeEventListener("pointerdown",recordKeyboardPointerDownHandler,true);
       recordKeyboardPointerDownHandler=null;
     }
-    if(recordKeyboardScrollHandler){
-      document.removeEventListener("scroll",recordKeyboardScrollHandler,true);
-      recordKeyboardScrollHandler=null;
-    }
   }
 
   function bindRecordKeyboardDismiss(){
@@ -2424,39 +2424,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     // On iPhone, touchstart is the earliest reliable signal. Waiting for
     // pointer movement or pointerup made dismissal feel unresponsive.
     recordKeyboardTouchStartHandler=e=>{
-      const target=e.target instanceof Element?e.target:null;
-      if(!target)return;
-
-      const entry=target.closest("input, textarea");
-
-      /* iOS Safari normally focuses the control after touchstart and may first
-         pan the page so the whole control sits above the software keyboard.
-         Focus synchronously inside the user gesture with preventScroll so the
-         keyboard can open without that preliminary document jump. We do not
-         preventDefault: Safari still gets the original touch for native caret
-         placement / selection. */
-      if(entry&&isKeyboardEntryControl(entry)){
-        if(document.activeElement!==entry){
-          const x=window.scrollX;
-          const y=window.scrollY;
-
-          try{
-            entry.focus({preventScroll:true});
-          }catch{
-            entry.focus();
-          }
-
-          /* Older / partially-fixed WebKit builds have historically ignored
-             preventScroll on focus. Restore only an immediate document scroll
-             caused by focus itself; do not chase VisualViewport movement. */
-          if(window.scrollX!==x||window.scrollY!==y){
-            window.scrollTo(x,y);
-          }
-        }
-        return;
-      }
-
-      dismissFromTarget(target);
+      dismissFromTarget(e.target);
     };
 
     // Pointer fallback for mouse/trackpad/pen and browsers without touch.
@@ -2465,29 +2433,98 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       dismissFromTarget(e.target);
     };
 
-    // If the page itself starts scrolling while an entry field is still
-    // focused, leave input mode immediately. This also catches gestures that
-    // Safari routes around the original touch target.
-    recordKeyboardScrollHandler=e=>{
-      const active=document.activeElement;
-      if(!isKeyboardEntryControl(active))return;
-      if(e.target===active)return;
-      active.blur();
-    };
-
     document.addEventListener("touchstart",recordKeyboardTouchStartHandler,{
       capture:true,
       passive:true
     });
     document.addEventListener("pointerdown",recordKeyboardPointerDownHandler,true);
-    document.addEventListener("scroll",recordKeyboardScrollHandler,{
-      capture:true,
-      passive:true
-    });
+  }
+
+  function unbindKeyboardFooterCover(){
+    const viewport=window.visualViewport;
+
+    if(keyboardCoverViewportHandler&&viewport){
+      viewport.removeEventListener("resize",keyboardCoverViewportHandler);
+      viewport.removeEventListener("scroll",keyboardCoverViewportHandler);
+      keyboardCoverViewportHandler=null;
+    }
+    if(keyboardCoverFocusInHandler){
+      document.removeEventListener("focusin",keyboardCoverFocusInHandler);
+      keyboardCoverFocusInHandler=null;
+    }
+    if(keyboardCoverFocusOutHandler){
+      document.removeEventListener("focusout",keyboardCoverFocusOutHandler);
+      keyboardCoverFocusOutHandler=null;
+    }
+    clearTimeout(keyboardCoverPendingTimer);
+    keyboardCoverPendingTimer=null;
+    keyboardCoverBaseline=0;
+  }
+
+  function bindKeyboardFooterCover(){
+    unbindKeyboardFooterCover();
+
+    const footer=document.querySelector(".record-footer");
+    const viewport=window.visualViewport;
+    if(!footer||!viewport)return;
+
+    keyboardCoverBaseline=viewport.height;
+
+    const setCovered=covered=>{
+      footer.classList.toggle("is-keyboard-covered",covered);
+    };
+
+    const sync=()=>{
+      const active=isKeyboardEntryControl(document.activeElement);
+      const shrink=Math.max(0,keyboardCoverBaseline-viewport.height);
+
+      if(shrink>100){
+        setCovered(true);
+        return;
+      }
+
+      if(shrink<40){
+        /* The keyboard is actually gone. This also handles iOS keeping the
+           textarea focused after the user dismisses the keyboard. */
+        setCovered(false);
+        if(!active){
+          keyboardCoverBaseline=viewport.height;
+        }
+      }
+    };
+
+    keyboardCoverFocusInHandler=e=>{
+      if(!isKeyboardEntryControl(e.target))return;
+
+      /* Capture the full-height baseline before the software keyboard settles.
+         Hide immediately so no intermediate lifted-footer frame is visible. */
+      if(viewport.height>keyboardCoverBaseline-40){
+        keyboardCoverBaseline=Math.max(keyboardCoverBaseline,viewport.height);
+      }
+      setCovered(true);
+
+      /* If a hardware keyboard/no software keyboard is in use, don't leave the
+         footer hidden forever. */
+      clearTimeout(keyboardCoverPendingTimer);
+      keyboardCoverPendingTimer=setTimeout(sync,350);
+    };
+
+    keyboardCoverFocusOutHandler=()=>{
+      clearTimeout(keyboardCoverPendingTimer);
+      keyboardCoverPendingTimer=setTimeout(sync,0);
+    };
+
+    keyboardCoverViewportHandler=()=>requestAnimationFrame(sync);
+
+    document.addEventListener("focusin",keyboardCoverFocusInHandler);
+    document.addEventListener("focusout",keyboardCoverFocusOutHandler);
+    viewport.addEventListener("resize",keyboardCoverViewportHandler,{passive:true});
+    viewport.addEventListener("scroll",keyboardCoverViewportHandler,{passive:true});
   }
 
   function renderList(){
     unbindRecordKeyboardDismiss();
+    unbindKeyboardFooterCover();
     if(footerScrollHandler){
       window.removeEventListener("scroll",footerScrollHandler);
       footerScrollHandler=null;
@@ -2941,6 +2978,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     bindRecordFooter(v);
     bindRecordKeyboardDismiss();
+    bindKeyboardFooterCover();
     updateFooterCompletion(capture(v));
     const backBtn=document.getElementById("backBtn");
     bindPressFeedback(backBtn);
