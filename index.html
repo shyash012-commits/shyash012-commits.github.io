@@ -316,7 +316,7 @@ html.line-inapp .header{
 }
 .record-section .card-title-row{
   display:flex;
-  align-items:center;
+  align-items:baseline;
   gap:var(--record-label-gap);
   min-height:calc(var(--record-card-title-font-size) + 4px);
   margin:0 0 var(--record-content-gap);
@@ -352,7 +352,7 @@ html.line-inapp .header{
 .record-section .inline-auto-hint{
   min-width:0;
   margin:0 0 0 auto;
-  align-self:center;
+  align-self:baseline;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
@@ -514,25 +514,24 @@ html.line-inapp .header{
   line-height:1.45;
 }
 
-/* Direct-edit date/time blocks */
+/* Direct-edit date/time blocks.
+   Layout is structural: the date/time group stays intact, while duration
+   naturally moves to the next line when the row becomes too narrow. */
 .datetime-blocks{
+  --record-horizontal-space:var(--record-horizontal-space-preferred);
   display:flex;
   align-items:center;
+  flex-wrap:wrap;
   gap:var(--record-horizontal-space);
   min-width:0;
   width:100%;
 }
 .datetime-main{
-  display:flex;
+  display:grid;
+  grid-template-columns:max-content max-content max-content max-content;
   align-items:center;
-  gap:var(--record-horizontal-space);
+  column-gap:var(--record-horizontal-space);
   min-width:0;
-}
-.datetime-blocks.datetime-wrap{
-  flex-wrap:wrap;
-}
-.datetime-blocks.datetime-wrap .datetime-duration{
-  margin-left:var(--record-control-inset);
 }
 .datetime-main .dt-block,
 .datetime-blocks > .dt-block{
@@ -540,6 +539,12 @@ html.line-inapp .header{
 }
 .datetime-duration{
   margin-left:auto;
+  flex:0 0 auto;
+}
+@media(max-width:380px){
+  .datetime-blocks{
+    --record-horizontal-space:var(--record-horizontal-space-min);
+  }
 }
 .datetime-end-time{
   flex:0 0 auto;
@@ -881,15 +886,18 @@ html.line-inapp .header{
 }
 .material-delete-action{
   width:0;
-  margin-left:auto;
+  margin-left:0;
   overflow:hidden;
   white-space:nowrap;
   pointer-events:none;
-  transition:width var(--motion-dur) var(--motion-ease);
+  transition:
+    width var(--motion-dur) var(--motion-ease),
+    margin-left var(--motion-dur) var(--motion-ease);
   will-change:width;
 }
 .material-delete-action.is-visible{
   width:2em;
+  margin-left:var(--record-label-gap);
   pointer-events:auto;
 }
 .material-delete-label{
@@ -1898,7 +1906,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 16:26";
+  const BUILD_ID="2026-09-21 16:37";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2268,7 +2276,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '<section class="card vt-datetime" data-card-status="datetime"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">実施日時</h2><p class="hint inline-auto-hint preview-edit-hint">*自動表示（変更可）</p></div><div class="card-body">'+datetimeBlocks(v)+'</div></section>'+
     '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint preview-edit-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="typeSegment" data-choice-scroll role="group" aria-label="授業区分">'+["通常","振替","講習"].map(t=>'<button type="button" class="choice-button '+(v.type===t?'active':'')+'" data-type="'+t+'" aria-pressed="'+(v.type===t)+'"><span class="record-option-label">'+t+'</span></button>').join("")+'</div></div></section>'+
     '<section class="card vt-instructor" data-card-status="instructor"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">担当講師</h2><p class="hint inline-auto-hint preview-edit-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="instructorChoices" data-choice-scroll role="group" aria-label="担当講師">'+INSTRUCTORS.map(instructor=>'<button type="button" class="choice-button '+(v.instructor===instructor?'active':'')+'" data-instructor="'+instructor+'" aria-pressed="'+(v.instructor===instructor)+'"><span class="record-option-label">'+instructor+'</span></button>').join("")+'</div></div></section>'+
-    '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint preview-edit-hint">*自動表示（変更可）</p></div><div class="card-body">'+
+    '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint preview-edit-hint">*自動表示（変更／複数選択可）</p></div><div class="card-body">'+
     '<div class="choice-grid" id="subjectChoices" data-choice-scroll role="group" aria-label="教科（複数選択可）">'+subjectOptions.map(subject=>'<button type="button" class="choice-button '+(v.subjects.includes(subject)?'active':'')+'" data-subject="'+subject+'" aria-pressed="'+v.subjects.includes(subject)+'"><span class="record-option-label">'+subject+'</span></button>').join("")+'</div>'+
     '</div></section>'+
     '</section>'+
@@ -2335,7 +2343,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div>';
     bindRecord(v);
     scheduleLineHeaderLayout();
-    requestAnimationFrame(fitRecordHorizontalControls);
+    requestAnimationFrame(refreshRecordHorizontalControls);
   }
 
   function endTimeLabel(dt,duration){
@@ -2359,40 +2367,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '</div>'+
       '<select class="dt-block datetime-duration" data-dt-part="duration" aria-label="授業時間を変更">'+durationOptions+'</select>'+
     '</div>';
-  }
-
-  function horizontalSpacingLimits(root){
-    const style=getComputedStyle(root);
-    return {
-      preferred:parseFloat(style.getPropertyValue("--record-horizontal-space-preferred"))||10,
-      minimum:parseFloat(style.getPropertyValue("--record-horizontal-space-min"))||6
-    };
-  }
-
-  function fitDateTimeControls(){
-    const root=document.querySelector(".datetime-blocks");
-    if(!root)return;
-
-    const controls=[...root.querySelectorAll(".dt-block")];
-    const endTime=root.querySelector(".datetime-end-time");
-    if(controls.length!==4||!endTime)return;
-
-    const {preferred,minimum}=horizontalSpacingLimits(root);
-
-    root.classList.remove("datetime-wrap");
-    root.style.setProperty("--record-horizontal-space","0px");
-
-    const controlsWidth=controls.reduce((sum,control)=>sum+control.getBoundingClientRect().width,0);
-    const endWidth=endTime.getBoundingClientRect().width;
-    const available=root.clientWidth;
-
-    // 4 controls × 2 inner paddings + 4 horizontal gaps = 12 equal slots.
-    const spacingSlots=controls.length*2+4;
-    const fitted=(available-controlsWidth-endWidth)/spacingSlots;
-    const spacing=Math.max(minimum,Math.min(preferred,fitted));
-
-    root.style.setProperty("--record-horizontal-space",spacing.toFixed(3)+"px");
-    root.classList.toggle("datetime-wrap",fitted<minimum);
   }
 
   function updateChoiceScrollAffordance(group){
@@ -2442,8 +2416,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     });
   }
 
-  function fitRecordHorizontalControls(){
-    fitDateTimeControls();
+  function refreshRecordHorizontalControls(){
     setupChoiceScrollAffordances();
   }
 
@@ -2465,7 +2438,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     if(timeEl)timeEl.value=pad(dt.hour)+':'+pad(dt.minute);
     if(durationEl)durationEl.value=String(Number(v.duration||70));
     if(endTimeEl)endTimeEl.textContent=endTimeLabel(dt,v.duration);
-    requestAnimationFrame(fitRecordHorizontalControls);
+    requestAnimationFrame(refreshRecordHorizontalControls);
   }
 
 
@@ -3579,7 +3552,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   }
 
   window.addEventListener("resize",()=>{
-    requestAnimationFrame(fitRecordHorizontalControls);
+    requestAnimationFrame(refreshRecordHorizontalControls);
     scheduleLineHeaderLayout();
   },{passive:true});
   if(IS_LINE_INAPP&&window.visualViewport){
