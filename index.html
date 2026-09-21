@@ -2086,7 +2086,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 keyboard-dock-05a";
+  const BUILD_ID="2026-09-21 keyboard-dock-05b";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2682,27 +2682,62 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         !footerKeyboardOpeningHasOpened
       )return;
 
-      /* Do not race Safari's own focus auto-scroll. The 05 build corrected
-         immediately and again at fixed delays; on later keyboard cycles Safari
-         could apply its own scroll after ours, pushing the focused textarea too
-         high. Instead, wait until viewport/scroll activity has been quiet for a
-         moment, then make at most ONE one-way comfort correction. */
-      footerKeyboardOpeningComfortTimers.forEach(clearTimeout);
-      footerKeyboardOpeningComfortTimers=[];
+      /* 05b: Safari can auto-scroll a focused textarea in more than one step.
+         Do not correct while that native movement is still in progress. Watch
+         geometry passively, then make exactly ONE one-way comfort correction
+         after it has stayed still for a short window. This keeps the stable 05
+         footer path intact and avoids the active chasing that destabilized 06. */
+      footerKeyboardOpeningComfortAdjusted=true;
 
-      const timer=setTimeout(()=>{
-        footerKeyboardOpeningComfortTimers=[];
+      let lastGeometry=null;
+      let stableSamples=0;
+      const started=performance.now();
+
+      const sample=()=>{
         if(
           !footerKeyboardOpeningSession ||
           footerKeyboardOpeningClosing ||
           !footerKeyboardOpeningHasOpened
         )return;
 
-        /* Mark before scrolling so the scroll event produced by our own
-           correction cannot schedule another correction. */
-        footerKeyboardOpeningComfortAdjusted=true;
-        comfortFocusedControl();
-      },180);
+        const active=document.activeElement;
+        if(!isKeyboardEntryControl(active))return;
+
+        const rect=active.getBoundingClientRect();
+        const pageTop=Number.isFinite(viewport.pageTop)
+          ?viewport.pageTop
+          :(window.scrollY+viewport.offsetTop);
+        const geometry=[
+          viewport.height,
+          viewport.offsetTop,
+          pageTop,
+          rect.top,
+          rect.bottom
+        ];
+
+        if(lastGeometry){
+          const movement=Math.max(
+            ...geometry.map((value,index)=>
+              Math.abs(value-lastGeometry[index])
+            )
+          );
+          stableSamples=movement<1?stableSamples+1:0;
+        }
+        lastGeometry=geometry;
+
+        /* Five quiet 45ms samples ~= 225ms of settled native geometry. The
+           timeout is only a fallback; either path still performs one correction
+           at most, never a continuing up/down chase. */
+        if(stableSamples>=5 || performance.now()-started>=780){
+          comfortFocusedControl();
+          return;
+        }
+
+        const timer=setTimeout(sample,45);
+        footerKeyboardOpeningComfortTimers.push(timer);
+      };
+
+      const timer=setTimeout(sample,90);
       footerKeyboardOpeningComfortTimers.push(timer);
     };
 
@@ -2846,14 +2881,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
        long enough to cover the whole native transition and the late scroll
        restoration. This is what makes the low-scroll and high-scroll cases use
        the same closing path. */
-    footerKeyboardOpeningViewportHandler=()=>{
-      pumpForTransition(110);
-      scheduleComfortFocusedControl();
-    };
-    footerKeyboardOpeningWindowScrollHandler=()=>{
-      pumpForTransition(110);
-      scheduleComfortFocusedControl();
-    };
+    footerKeyboardOpeningViewportHandler=()=>pumpForTransition(110);
+    footerKeyboardOpeningWindowScrollHandler=()=>pumpForTransition(110);
 
     document.addEventListener(
       "pointerdown",
