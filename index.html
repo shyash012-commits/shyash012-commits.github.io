@@ -2086,7 +2086,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 keyboard-dock-05d";
+  const BUILD_ID="2026-09-21 keyboard-dock-05e";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2356,6 +2356,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   let footerKeyboardOpeningClosing=false;
   let footerKeyboardOpeningClosePageTop=null;
   let footerKeyboardOpeningCloseLockUntil=0;
+  let footerKeyboardOpeningCloseLockStarted=false;
   let footerKeyboardOpeningComfortAdjusted=false;
   let footerKeyboardOpeningComfortTimers=[];
 
@@ -2578,6 +2579,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     footerKeyboardOpeningClosing=false;
     footerKeyboardOpeningClosePageTop=null;
     footerKeyboardOpeningCloseLockUntil=0;
+    footerKeyboardOpeningCloseLockStarted=false;
     footerKeyboardOpeningComfortAdjusted=false;
   }
 
@@ -2637,6 +2639,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       footerKeyboardOpeningClosing=false;
       footerKeyboardOpeningClosePageTop=null;
       footerKeyboardOpeningCloseLockUntil=0;
+      footerKeyboardOpeningCloseLockStarted=false;
       footerKeyboardOpeningHasOpened=false;
       footerKeyboardOpeningBaselineHeight=viewport.height;
       footerKeyboardOpeningLastHeight=viewport.height;
@@ -2654,10 +2657,20 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
        emerges correctly. Freeze the VISUAL page top at the position where the
        close began, and let only the native keyboard reveal more of the page.
        This is a short close-only lock, not a continuing open-state chase. */
+    const releaseClosePageLock=()=>{
+      footerKeyboardOpeningClosePageTop=null;
+      footerKeyboardOpeningCloseLockUntil=0;
+      footerKeyboardOpeningClosing=false;
+    };
+
     const beginClosePageLock=()=>{
-      if(footerKeyboardOpeningClosePageTop==null){
-        footerKeyboardOpeningClosePageTop=visualPageTop();
-      }
+      /* 05e: close-lock is ONE SHOT per keyboard session. In 05d every resize/
+         scroll frame extended the 720ms deadline again, so after the keyboard
+         had closed the footer navigation could still be fighting an endlessly
+         renewed scroll lock. */
+      if(footerKeyboardOpeningCloseLockStarted)return;
+      footerKeyboardOpeningCloseLockStarted=true;
+      footerKeyboardOpeningClosePageTop=visualPageTop();
       footerKeyboardOpeningCloseLockUntil=performance.now()+720;
       footerKeyboardOpeningClosing=true;
     };
@@ -2665,8 +2678,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const holdClosePageTop=()=>{
       if(footerKeyboardOpeningClosePageTop==null)return;
       if(performance.now()>footerKeyboardOpeningCloseLockUntil){
-        footerKeyboardOpeningClosePageTop=null;
-        footerKeyboardOpeningClosing=false;
+        releaseClosePageLock();
         return;
       }
 
@@ -2901,6 +2913,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       footerKeyboardOpeningClosing=false;
       footerKeyboardOpeningClosePageTop=null;
       footerKeyboardOpeningCloseLockUntil=0;
+      footerKeyboardOpeningCloseLockStarted=false;
       footerKeyboardOpeningComfortAdjusted=false;
       footerKeyboardOpeningComfortTimers.forEach(clearTimeout);
       footerKeyboardOpeningComfortTimers=[];
@@ -2912,6 +2925,15 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     };
 
     footerKeyboardOpeningPointerDownHandler=e=>{
+      /* Once the keyboard is fully gone, an explicit footer-navigation tap is
+         the user's new scroll intent. Never let the tail of the close lock
+         fight that navigation. The one-shot flag stays consumed, so sync()
+         cannot immediately recreate the lock. */
+      const footerTap=e.target.closest?.(".record-footer");
+      if(footerTap&&viewportRecovered()&&footerKeyboardOpeningCloseLockStarted){
+        releaseClosePageLock();
+      }
+
       if(!isKeyboardEntryControl(e.target))return;
       startSession();
     };
