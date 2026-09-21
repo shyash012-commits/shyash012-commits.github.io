@@ -1906,7 +1906,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 16:37";
+  const BUILD_ID="2026-09-21 16:45";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2273,10 +2273,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '</button></div>'+
     '</div></div>'+
     '<section class="record-section" data-record-section="basic"><h1 class="record-section-title">基本情報</h1>'+
-    '<section class="card vt-datetime" data-card-status="datetime"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">実施日時</h2><p class="hint inline-auto-hint preview-edit-hint">*自動表示（変更可）</p></div><div class="card-body">'+datetimeBlocks(v)+'</div></section>'+
-    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2><p class="hint inline-auto-hint preview-edit-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="typeSegment" data-choice-scroll role="group" aria-label="授業区分">'+["通常","振替","講習"].map(t=>'<button type="button" class="choice-button '+(v.type===t?'active':'')+'" data-type="'+t+'" aria-pressed="'+(v.type===t)+'"><span class="record-option-label">'+t+'</span></button>').join("")+'</div></div></section>'+
-    '<section class="card vt-instructor" data-card-status="instructor"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">担当講師</h2><p class="hint inline-auto-hint preview-edit-hint">*自動表示（変更可）</p></div><div class="card-body"><div class="choice-grid" id="instructorChoices" data-choice-scroll role="group" aria-label="担当講師">'+INSTRUCTORS.map(instructor=>'<button type="button" class="choice-button '+(v.instructor===instructor?'active':'')+'" data-instructor="'+instructor+'" aria-pressed="'+(v.instructor===instructor)+'"><span class="record-option-label">'+instructor+'</span></button>').join("")+'</div></div></section>'+
-    '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint preview-edit-hint">*自動表示（変更／複数選択可）</p></div><div class="card-body">'+
+    '<section class="card vt-datetime" data-card-status="datetime"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">実施日時</h2></div><div class="card-body">'+datetimeBlocks(v)+'</div></section>'+
+    '<section class="card vt-type" data-card-status="type"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">授業区分</h2></div><div class="card-body"><div class="choice-grid" id="typeSegment" data-choice-scroll role="group" aria-label="授業区分">'+["通常","振替","講習"].map(t=>'<button type="button" class="choice-button '+(v.type===t?'active':'')+'" data-type="'+t+'" aria-pressed="'+(v.type===t)+'"><span class="record-option-label">'+t+'</span></button>').join("")+'</div></div></section>'+
+    '<section class="card vt-instructor" data-card-status="instructor"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">担当講師</h2></div><div class="card-body"><div class="choice-grid" id="instructorChoices" data-choice-scroll role="group" aria-label="担当講師">'+INSTRUCTORS.map(instructor=>'<button type="button" class="choice-button '+(v.instructor===instructor?'active':'')+'" data-instructor="'+instructor+'" aria-pressed="'+(v.instructor===instructor)+'"><span class="record-option-label">'+instructor+'</span></button>').join("")+'</div></div></section>'+
+    '<section class="card vt-subject" data-card-status="subject"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">教科</h2><p class="hint inline-auto-hint">*複数選択可</p></div><div class="card-body">'+
     '<div class="choice-grid" id="subjectChoices" data-choice-scroll role="group" aria-label="教科（複数選択可）">'+subjectOptions.map(subject=>'<button type="button" class="choice-button '+(v.subjects.includes(subject)?'active':'')+'" data-subject="'+subject+'" aria-pressed="'+v.subjects.includes(subject)+'"><span class="record-option-label">'+subject+'</span></button>').join("")+'</div>'+
     '</div></section>'+
     '</section>'+
@@ -2357,7 +2357,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const maxDay=new Date(dt.year,dt.month,0).getDate();
     const dayOptions=Array.from({length:maxDay},(_,i)=>i+1).map(value=>'<option value="'+value+'" '+(Number(dt.day)===value?'selected':'')+'>'+pad(value)+'日</option>').join("");
     const timeOptions=["11:00","13:00","14:20","15:40","17:00","18:20","19:40"].map(value=>'<option value="'+value+'" '+((pad(dt.hour)+':'+pad(dt.minute))===value?'selected':'')+'>'+value+'</option>').join("");
-    const durationOptions=[30,70].map(value=>'<option value="'+value+'" '+(Number(v.duration||70)===value?'selected':'')+'>'+value+'分</option>').join("");
+    const durationOptions=[70,30].map(value=>'<option value="'+value+'" '+(Number(v.duration||70)===value?'selected':'')+'>'+value+'分</option>').join("");
     return '<div class="datetime-blocks" aria-label="実施日時">'+
       '<div class="datetime-main">'+
         '<select class="dt-block" data-dt-part="month" aria-label="月を変更">'+monthOptions+'</select>'+
