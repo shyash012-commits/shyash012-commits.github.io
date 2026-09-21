@@ -719,10 +719,16 @@ html.line-inapp .header{
 .material-range-content{
   position:relative;
   min-width:0;
-  /* Each range owns the following 16px spacing.
-     Because the spacing lives inside the collapsible shell, add/remove
-     animations no longer create an instant external grid-gap jump. */
+  /* In edit mode each range owns the following 16px spacing so add/remove
+     motion stays inside the collapsible shell. */
   padding-bottom:var(--record-item-gap);
+  transition:padding-bottom var(--motion-dur) var(--motion-ease);
+}
+/* In preview the edit actions disappear, so the final range no longer needs
+   the spacer that separated it from "＋範囲を追加". The card's own 16px
+   bottom padding remains as the single spacing before the divider. */
+.app.preview-mode .material-range-shell:last-child .material-range-content{
+  padding-bottom:0;
 }
 .material-range-delete{
   position:absolute;
@@ -849,6 +855,8 @@ html.line-inapp .header{
   transform:translateX(0);
 }
 .material-range-number-symbol{
+  position:relative;
+  top:1px;
   font-size:inherit;
   font-weight:700;
 }
@@ -1013,6 +1021,7 @@ html.line-inapp .header{
   .material-delete-label,
   .material-entry-shell,
   .material-range-shell,
+  .material-range-content,
   .material-custom-shell,
   .material-custom-content,
   .material-entry-content,
@@ -1994,7 +2003,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 17:22";
+  const BUILD_ID="2026-09-21 17:30";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
