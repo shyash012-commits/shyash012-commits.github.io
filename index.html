@@ -2078,7 +2078,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 21:48";
+  const BUILD_ID="2026-09-21 21:56";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2339,6 +2339,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   let footerKeyboardOpeningTimer=null;
   let footerKeyboardOpeningRaf=0;
   let footerKeyboardOpeningSession=false;
+  let footerKeyboardOpeningGuard=false;
 
   function writeRecord(v){
     if(!state.lessonId)return;
@@ -2535,6 +2536,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     }
     footerKeyboardOpeningBaselineBottom=0;
     footerKeyboardOpeningSession=false;
+    footerKeyboardOpeningGuard=false;
   }
 
   function bindBrowserFooterKeyboardOpening(){
@@ -2593,11 +2595,18 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
       const coverThreshold=Math.max(72,footer.getBoundingClientRect().height+8);
 
-      /* Keep the footer invisible only during the tiny opening interval in
-         which Safari has started lifting it but our downward compensation is
-         not yet large enough to put the whole footer behind the keyboard. */
-      if(editing&&lostBottom<coverThreshold){
-        suppress();
+      /* Hide only while the keyboard is OPENING and our compensation is not
+         yet large enough to put the whole footer behind it. Do not use the
+         focused state here: on iOS the textarea can stay focused while the
+         keyboard is CLOSING. Re-hiding at that point is exactly what causes
+         the footer to pop back only after the keyboard has fully disappeared. */
+      if(footerKeyboardOpeningGuard){
+        if(lostBottom<coverThreshold){
+          suppress();
+        }else{
+          footerKeyboardOpeningGuard=false;
+          release();
+        }
       }else{
         release();
       }
@@ -2607,6 +2616,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
          the compensation alive so the close animation stays continuous. */
       if(!editing&&lostBottom<=0.5){
         footerKeyboardOpeningSession=false;
+        footerKeyboardOpeningGuard=false;
         footerKeyboardOpeningBaselineBottom=currentBottom;
         setY(0);
         release();
@@ -2646,7 +2656,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       /* For the first focused field, hide immediately before Safari can expose
          a one-frame lifted footer. Moving between fields while the keyboard is
          already open must not cause a blink. */
-      if(!alreadyOpen)suppress();
+      if(!alreadyOpen){
+        footerKeyboardOpeningGuard=true;
+        suppress();
+      }
 
       clearTimeout(footerKeyboardOpeningTimer);
       pumpForTransition();
@@ -2660,6 +2673,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
             footerKeyboardOpeningBaselineBottom-viewportBottom()
           )<2
         ){
+          footerKeyboardOpeningGuard=false;
           release();
         }
       },380);
