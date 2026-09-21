@@ -1580,6 +1580,37 @@ html.standalone-app .record-footer{
   bottom:var(--standalone-footer-bottom);
 }
 
+/* In installed landscape mode the viewport geometry changes several times
+   during rotation, so the portrait screen-height reconstruction can briefly
+   produce a huge bottom value and push the footer completely off-screen.
+   Landscape uses only stable CSS safe-area geometry. */
+@media (orientation:landscape) and (display-mode:standalone){
+  .record-footer{
+    bottom:max(10px,env(safe-area-inset-bottom));
+    width:min(
+      calc(
+        100vw - 20px -
+        env(safe-area-inset-left) -
+        env(safe-area-inset-right)
+      ),
+      700px
+    );
+  }
+}
+@media (orientation:landscape){
+  html.standalone-app .record-footer{
+    bottom:max(10px,env(safe-area-inset-bottom));
+    width:min(
+      calc(
+        100vw - 20px -
+        env(safe-area-inset-left) -
+        env(safe-area-inset-right)
+      ),
+      700px
+    );
+  }
+}
+
 .record-nav-shell{
   position:relative;
   flex:1 1 auto;
@@ -2070,7 +2101,7 @@ html.standalone-app .record-footer{
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 21:26";
+  const BUILD_ID="2026-09-21 21:30";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2422,6 +2453,7 @@ html.standalone-app .record-footer{
 
   function updateStandaloneFooterInset(){
     if(!IS_STANDALONE_APP)return;
+    if(window.matchMedia("(orientation: landscape)").matches)return;
 
     const footer=document.querySelector(".record-footer");
     const headerCapsule=
@@ -2479,7 +2511,11 @@ html.standalone-app .record-footer{
     if(!IS_STANDALONE_APP)return;
 
     standaloneFooterResizeHandler=()=>{
-      requestAnimationFrame(updateStandaloneFooterInset);
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          updateStandaloneFooterInset();
+        });
+      });
     };
 
     window.addEventListener(
