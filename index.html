@@ -539,7 +539,7 @@ html.line-inapp .header{
 }
 .material-entry{
   display:grid;
-  gap:14px;
+  gap:var(--record-item-gap);
 }
 .material-entry>.field,
 .material-detail-field{
@@ -564,12 +564,8 @@ html.line-inapp .header{
 .material-range-content{
   min-width:0;
 }
-.material-range-actions{
-  display:flex;
-  justify-content:flex-end;
-  margin-top:var(--record-field-gap);
-}
 .material-range-delete{
+  align-self:start;
   padding:0;
   border:0;
   background:none;
@@ -577,10 +573,11 @@ html.line-inapp .header{
   font-size:13px;
   font-weight:600;
   line-height:1.2;
+  white-space:nowrap;
 }
 .material-range-add-action{
   gap:6px;
-  margin-top:var(--record-item-gap);
+  margin-top:0;
 }
 .app.preview-mode .material-range-add-action,
 .app.preview-mode .material-range-delete{
@@ -588,7 +585,7 @@ html.line-inapp .header{
 }
 .material-detail-stack{
   display:grid;
-  grid-template-columns:max-content 14px minmax(0,1fr);
+  grid-template-columns:max-content 14px minmax(0,1fr) auto;
   column-gap:10px;
   align-items:start;
 }
@@ -1732,9 +1729,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
                   : '')+
               '</div>'+
             '</div>'+
-          '</div>'+
-          '<div class="material-range-actions '+(showDelete?'':'hidden')+'" data-range-delete-wrap>'+
-            '<button type="button" class="material-range-delete" data-delete-range>削除</button>'+
+            '<button type="button" class="material-range-delete '+(showDelete?'':'hidden')+'" data-delete-range>削除</button>'+
           '</div>'+
         '</div>'+
       '</div>'+
@@ -3029,7 +3024,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const updateRangeDeleteVisibility=()=>{
         const multiple=rangeItems().length>1;
         rangeItems().forEach(range=>{
-          range.querySelector("[data-range-delete-wrap]")?.classList.toggle("hidden",!multiple);
+          range.querySelector("[data-delete-range]")?.classList.toggle("hidden",!multiple);
         });
       };
 
