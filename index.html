@@ -350,6 +350,10 @@ html.line-inapp .header{
   transform:translateX(0);
 }
 .record-section .inline-auto-hint{
+  /* Card title and right-side actions keep their intrinsic width.
+     The annotation owns only the remaining space, so it is the one item
+     allowed to shrink/ellipsis on narrow screens. */
+  flex:1 1 auto;
   min-width:0;
   margin:0;
   align-self:baseline;
@@ -415,6 +419,9 @@ html.line-inapp .header{
 }
 
 .review-prev-row{
+  display:flex;
+  justify-content:flex-start;
+  margin-top:var(--record-content-gap);
   max-height:1.5em;
   overflow:hidden;
   opacity:1;
@@ -654,7 +661,7 @@ html.line-inapp .header{
 }
 .material-entry{
   display:grid;
-  gap:var(--record-item-gap);
+  gap:0;
 }
 .material-entry>.field,
 .material-detail-field{
@@ -694,7 +701,8 @@ html.line-inapp .header{
 }
 .material-range-list{
   display:grid;
-  gap:var(--record-item-gap);
+  gap:0;
+  margin-top:var(--record-item-gap);
 }
 .material-range-shell{
   display:grid;
@@ -711,6 +719,10 @@ html.line-inapp .header{
 .material-range-content{
   position:relative;
   min-width:0;
+  /* Each range owns the following 16px spacing.
+     Because the spacing lives inside the collapsible shell, add/remove
+     animations no longer create an instant external grid-gap jump. */
+  padding-bottom:var(--record-item-gap);
 }
 .material-range-delete{
   position:absolute;
@@ -724,14 +736,42 @@ html.line-inapp .header{
   font-weight:600;
   line-height:1.2;
   white-space:nowrap;
+  opacity:0;
+  transform:translateX(-4px);
+  pointer-events:none;
+  transition:
+    transform var(--motion-dur) var(--motion-ease),
+    opacity var(--fade-dur) ease;
+  will-change:opacity,transform;
+}
+.material-range-delete.is-visible{
+  opacity:1;
+  transform:translateX(0);
+  pointer-events:auto;
 }
 .material-range-add-action{
   gap:6px;
   margin-top:0;
+  max-height:1.5em;
+  overflow:hidden;
+  opacity:1;
+  transform:translateX(0);
+  transition:
+    max-height var(--motion-dur) var(--motion-ease),
+    transform var(--motion-dur) var(--motion-ease),
+    opacity var(--fade-dur) ease;
+  will-change:max-height,opacity,transform;
 }
-.app.preview-mode .material-range-add-action,
+.app.preview-mode .material-range-add-action{
+  max-height:0;
+  opacity:0;
+  transform:translateX(-4px);
+  pointer-events:none;
+}
 .app.preview-mode .material-range-delete{
-  display:none;
+  opacity:0;
+  transform:translateX(-4px);
+  pointer-events:none;
 }
 .material-detail-stack{
   --material-page-input-width:calc(3ch + var(--record-horizontal-space)*2 + 6px);
@@ -788,11 +828,25 @@ html.line-inapp .header{
   display:block;
 }
 .material-range-number{
+  display:inline-block;
+  max-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+  opacity:0;
+  transform:translateX(-4px);
+  vertical-align:baseline;
   font-size:inherit;
   font-weight:inherit;
+  will-change:max-width,opacity,transform;
+  transition:
+    max-width var(--motion-dur) var(--motion-ease),
+    transform var(--motion-dur) var(--motion-ease),
+    opacity var(--fade-dur) ease;
 }
-.material-range-number.hidden{
-  display:none;
+.material-range-number.is-visible{
+  max-width:4em;
+  opacity:1;
+  transform:translateX(0);
 }
 .material-range-number-symbol{
   font-size:inherit;
@@ -883,9 +937,20 @@ html.line-inapp .header{
 .material-add-action{
   gap:6px;
   margin-top:var(--record-item-gap);
+  max-height:1.5em;
+  overflow:hidden;
+  opacity:1;
+  transform:translateX(0);
+  transition:
+    max-height var(--motion-dur) var(--motion-ease),
+    margin-top var(--motion-dur) var(--motion-ease),
+    transform var(--motion-dur) var(--motion-ease),
+    opacity var(--fade-dur) ease;
+  will-change:max-height,margin-top,opacity,transform;
 }
 .material-delete-action{
   width:0;
+  flex:0 0 auto;
   margin-left:auto;
   overflow:hidden;
   white-space:nowrap;
@@ -916,13 +981,34 @@ html.line-inapp .header{
   opacity:1;
   transform:translateX(0);
 }
-.app.preview-mode .material-add-action,
+.app.preview-mode .material-add-action{
+  max-height:0;
+  margin-top:0;
+  opacity:0;
+  transform:translateX(-4px);
+  pointer-events:none;
+}
 .app.preview-mode .material-delete-action{
-  display:none;
+  width:0;
+  pointer-events:none;
+}
+.app.preview-mode .material-delete-action .material-delete-label{
+  max-width:0;
+  opacity:0;
+  transform:translateX(-4px);
 }
 
 @media (prefers-reduced-motion:reduce){
+  .record-section button,
+  .record-section .card-status,
+  .record-section-title::before,
+  .choice-scroll-chevron,
+  .preview-edit-hint,
   .material-card-number-slot,
+  .material-range-number,
+  .material-range-delete,
+  .material-range-add-action,
+  .material-add-action,
   .material-delete-action,
   .material-delete-label,
   .material-entry-shell,
@@ -931,7 +1017,14 @@ html.line-inapp .header{
   .material-custom-content,
   .material-entry-content,
   .material-entry-content::before,
-  .material-entry-heading{
+  .material-entry-heading,
+  .vt-material .record-select-icon,
+  .previous-review-reveal,
+  .previous-review-content,
+  .review-close-icon,
+  .review-prev-row,
+  .vt-review .counter,
+  .vt-review #review::placeholder{
     transition:none;
   }
 }
@@ -1057,9 +1150,6 @@ textarea{
   font-size:inherit;
   font-weight:400;
 }
-.vt-review #review::placeholder{
-  font-weight:400;
-}
 .vt-review #review{
   display:block;
   height:calc(var(--record-control-height) * 4);
@@ -1138,6 +1228,14 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   display:none!important;
 }
 
+.record-section button{
+  transition:
+    background-color var(--record-color-dur) var(--record-color-ease),
+    border-color var(--record-color-dur) var(--record-color-ease),
+    color var(--record-color-dur) var(--record-color-ease),
+    opacity var(--fade-dur) ease;
+}
+
 .choice-button{
   flex:0 0 auto;
   width:auto;
@@ -1194,11 +1292,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   text-align:right;
   white-space:nowrap;
 }
-.review-prev-row{
-  display:flex;
-  justify-content:flex-start;
-  margin-top:var(--record-content-gap);
-}
 .review-prev-row[hidden]{
   display:none;
 }
@@ -1208,7 +1301,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .review-prev-toggle{
   display:inline-flex;
   align-items:center;
-  gap:var(--review-action-gap);
+  gap:0;
   padding:0;
   border:0;
   background:none;
@@ -1219,10 +1312,31 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   white-space:nowrap;
 }
 .review-close-icon{
-  display:none;
+  width:0;
+  flex:0 0 0;
+  margin-right:0;
+  overflow:hidden;
+  opacity:0;
+  transform:translateX(-4px) translateY(var(--record-mark-optical-y));
+  transition:
+    width var(--motion-dur) var(--motion-ease),
+    flex-basis var(--motion-dur) var(--motion-ease),
+    margin-right var(--motion-dur) var(--motion-ease),
+    transform var(--motion-dur) var(--motion-ease),
+    opacity var(--fade-dur) ease;
+  will-change:width,flex-basis,margin-right,opacity,transform;
 }
 .review-prev-toggle[aria-expanded="true"] .review-close-icon{
-  display:block;
+  width:var(--record-status-size);
+  flex-basis:var(--record-status-size);
+  margin-right:var(--review-action-gap);
+  opacity:1;
+  transform:translateX(0) translateY(var(--record-mark-optical-y));
+}
+#prevBtnLabel{
+  display:inline-block;
+  transform:translateX(0);
+  will-change:opacity,transform;
 }
 .previous-review-reveal{
   display:grid;
@@ -1257,17 +1371,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   line-height:1.65;
 }
 
-@media (prefers-reduced-motion:reduce){
-  .previous-review-reveal,
-  .previous-review-content,
-  .preview-edit-hint,
-  .vt-review .counter,
-  .vt-review #review::placeholder,
-  .vt-material .record-select-icon,
-  .review-prev-row{
-    transition:none;
-  }
-}
 .rating{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -1352,18 +1455,6 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     transform:translateY(0) scale(1);
     margin-top:14px!important;
     pointer-events:auto;
-  }
-  
-  button{
-    transition:
-      background-color 180ms ease-out,
-      border-color 180ms ease-out,
-      color 180ms ease-out,
-      transform 140ms cubic-bezier(.16,1,.3,1),
-      opacity 180ms ease-out;
-  }
-  button:active{
-    transform:scale(.985);
   }
 }
 .toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#20252b;color:#fff;padding:10px 14px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:50}.toast.show{opacity:1}
@@ -1903,7 +1994,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 16:50";
+  const BUILD_ID="2026-09-21 17:22";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -1956,8 +2047,18 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   function getRecord(){return state.records[state.lessonId]||null}
   function esc(s){return String(s??"").replace(/[&<>"']/g,c=>c==="&"?"&amp;":c==="<"?"&lt;":c===">"?"&gt;":c==="\""?"&quot;":"&#39;")}
   function unitFor(material,from,to){
-    const a=Number(from),b=Number(to||from);
-    if(!Number.isFinite(a))return "";
+    const start=String(from??"").trim();
+    const end=String(to??"").trim();
+
+    /* A range has no usable anchor until the start page exists.
+       In particular, Number("") would otherwise become 0 and a right-page-only
+       entry could produce a false unit match. */
+    if(!start)return "";
+
+    const a=Number(start);
+    const b=Number(end||start);
+    if(!Number.isFinite(a)||!Number.isFinite(b))return "";
+
     return (materialDb[material]||[])
       .filter(r=>a<=r.to&&b>=r.from)
       .map(r=>r.unit)
@@ -2044,7 +2145,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '<div class="material-range-clip">'+
         '<div class="material-range-content">'+
           '<div class="material-detail-stack">'+
-            '<div class="material-detail-field"><label class="label material-detail-label material-range-label">ページ範囲<span class="material-range-number hidden" data-range-number><span class="material-range-number-symbol" data-range-number-symbol></span><span data-range-number-index></span></span></label>'+
+            '<div class="material-detail-field"><label class="label material-detail-label material-range-label">ページ範囲<span class="material-range-number" data-range-number aria-hidden="true"><span class="material-range-number-symbol" data-range-number-symbol></span><span data-range-number-index></span></span></label>'+
               '<div class="material-range-controls">'+
                 '<input class="material-page-input" data-material-page-from inputmode="numeric" type="number" min="1" aria-label="開始ページ" value="'+esc(range.from||"")+'">'+
                 '<span class="material-range-separator" aria-hidden="true">〜</span>'+
@@ -2060,7 +2161,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
               '</div>'+
             '</div>'+
           '</div>'+
-          '<button type="button" class="material-range-delete '+(showDelete?'':'hidden')+'" data-delete-range>削除</button>'+
+          '<button type="button" class="material-range-delete '+(showDelete?'is-visible':'')+'" data-delete-range aria-hidden="'+String(!showDelete)+'">削除</button>'+
         '</div>'+
       '</div>'+
     '</div>';
@@ -2490,11 +2591,24 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       type:!!String(c.type||"").trim(),
       instructor:!!String(c.instructor||"").trim(),
       subject:Array.isArray(c.subjects)&&c.subjects.length>0,
-      material:!!c.materials?.length && c.materials.every(entry=>
-        entry.material==="__custom__"
+      material:!!c.materials?.length && c.materials.every(entry=>{
+        const hasMaterial=entry.material==="__custom__"
           ? !!String(entry.customMaterial||"").trim()
-          : !!String(entry.material||"").trim()
-      ),
+          : !!String(entry.material||"").trim();
+
+        const ranges=Array.isArray(entry.ranges)?entry.ranges:[];
+        const rangesAreValid=ranges.every(range=>{
+          const from=String(range?.from||"").trim();
+          const to=String(range?.to||"").trim();
+
+          /* Page ranges are optional because some materials (e.g. handouts)
+             have no meaningful page number. If a range is used, however,
+             it must have a start page; an end-page-only range is incomplete. */
+          return (!from && !to) || !!from;
+        });
+
+        return hasMaterial && rangesAreValid;
+      }),
       review:!!String(c.review||"").trim(),
       prevhomework:!!(
         state.rating ||
@@ -3147,7 +3261,79 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       ...materialEntries.querySelectorAll("[data-material-entry]")
     ];
 
-    const refreshMaterialEntryLabels=()=>{
+    const setRangeNumberText=(rangeNumber,symbol,indexText)=>{
+      const symbolEl=rangeNumber?.querySelector("[data-range-number-symbol]");
+      const indexEl=rangeNumber?.querySelector("[data-range-number-index]");
+      if(symbolEl)symbolEl.textContent=symbol;
+      if(indexEl)indexEl.textContent=indexText;
+    };
+
+    const refreshRangeNumber=(rangeNumber,symbol,indexText,visible,animate=true)=>{
+      if(!rangeNumber)return;
+
+      const currentSymbol=rangeNumber.querySelector("[data-range-number-symbol]")?.textContent||"";
+      const currentIndex=rangeNumber.querySelector("[data-range-number-index]")?.textContent||"";
+      const nextText=symbol+indexText;
+      const currentText=currentSymbol+currentIndex;
+      const wasVisible=rangeNumber.classList.contains("is-visible");
+
+      rangeNumber.getAnimations().forEach(animation=>animation.cancel());
+
+      if(!visible){
+        rangeNumber.classList.remove("is-visible");
+        rangeNumber.setAttribute("aria-hidden","true");
+        return;
+      }
+
+      rangeNumber.setAttribute("aria-hidden","false");
+
+      if(!wasVisible){
+        setRangeNumberText(rangeNumber,symbol,indexText);
+        if(!animate||prefersReducedMotion()){
+          rangeNumber.classList.add("is-visible");
+          return;
+        }
+        requestAnimationFrame(()=>{
+          requestAnimationFrame(()=>rangeNumber.classList.add("is-visible"));
+        });
+        return;
+      }
+
+      if(currentText===nextText)return;
+
+      if(!animate||prefersReducedMotion()){
+        setRangeNumberText(rangeNumber,symbol,indexText);
+        return;
+      }
+
+      /* One 210ms trajectory: old number exits to -4px, content swaps while
+         fully transparent, then the new number returns along the same path. */
+      const midpoint=MOTION.move/2;
+      const swapAnimation=rangeNumber.animate(
+        [
+          {opacity:1,transform:"translateX(0)",offset:0},
+          {opacity:0,transform:"translateX(-4px)",offset:.48},
+          {opacity:0,transform:"translateX(-4px)",offset:.52},
+          {opacity:1,transform:"translateX(0)",offset:1}
+        ],
+        {
+          duration:MOTION.move,
+          easing:MOTION.ease
+        }
+      );
+
+      const swapTimer=setTimeout(()=>{
+        setRangeNumberText(rangeNumber,symbol,indexText);
+      },midpoint);
+
+      swapAnimation.onfinish=()=>{
+        clearTimeout(swapTimer);
+        setRangeNumberText(rangeNumber,symbol,indexText);
+      };
+      swapAnimation.oncancel=()=>clearTimeout(swapTimer);
+    };
+
+    const refreshMaterialEntryLabels=({animateRangeNumbers=true}={})=>{
       const entries=materialEntryList();
       const multiple=entries.length>1;
       const atLimit=entries.length>=MATERIAL_MAX;
@@ -3177,12 +3363,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
         ranges.forEach((range,rangeIndex)=>{
           const rangeNumber=range.querySelector("[data-range-number]");
-          const rangeNumberSymbol=range.querySelector("[data-range-number-symbol]");
-          const rangeNumberIndex=range.querySelector("[data-range-number-index]");
-
-          rangeNumber?.classList.toggle("hidden",!showRangeNumbers);
-          if(rangeNumberSymbol)rangeNumberSymbol.textContent=showRangeNumbers?number:"";
-          if(rangeNumberIndex)rangeNumberIndex.textContent=showRangeNumbers?"-"+(rangeIndex+1):"";
+          refreshRangeNumber(
+            rangeNumber,
+            showRangeNumbers?number:"",
+            showRangeNumbers?"-"+(rangeIndex+1):"",
+            showRangeNumbers,
+            animateRangeNumbers
+          );
         });
       });
 
@@ -3237,38 +3424,39 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         return;
       }
 
+      title.getAnimations().forEach(animation=>animation.cancel());
+
       if(prefersReducedMotion()){
         title.textContent=nextText;
         return;
       }
 
-      const out=title.animate(
+      /* Renumber on one shared 210ms trajectory.
+         The old label exits to -4px, swaps while fully transparent,
+         then the new label returns along the same path. */
+      const midpoint=MOTION.move/2;
+      const animation=title.animate(
         [
-          {opacity:1,transform:"translateX(0)"},
-          {opacity:0,transform:"translateX(-4px)"}
+          {opacity:1,transform:"translateX(0)",offset:0},
+          {opacity:0,transform:"translateX(-4px)",offset:.48},
+          {opacity:0,transform:"translateX(-4px)",offset:.52},
+          {opacity:1,transform:"translateX(0)",offset:1}
         ],
         {
-          duration:MOTION.fade,
-          easing:"ease",
-          fill:"forwards"
+          duration:MOTION.move,
+          easing:MOTION.ease
         }
       );
 
-      out.onfinish=()=>{
+      const swapTimer=setTimeout(()=>{
         title.textContent=nextText;
-        out.cancel();
+      },midpoint);
 
-        title.animate(
-          [
-            {opacity:0,transform:"translateX(-4px)"},
-            {opacity:1,transform:"translateX(0)"}
-          ],
-          {
-            duration:MOTION.move-MOTION.fade,
-            easing:MOTION.ease
-          }
-        );
+      animation.onfinish=()=>{
+        clearTimeout(swapTimer);
+        title.textContent=nextText;
       };
+      animation.oncancel=()=>clearTimeout(swapTimer);
     };
 
     const removeMaterialEntry=entry=>{
@@ -3347,7 +3535,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       const updateRangeDeleteVisibility=()=>{
         const multiple=rangeItems().length>1;
         rangeItems().forEach(range=>{
-          range.querySelector("[data-delete-range]")?.classList.toggle("hidden",!multiple);
+          const deleteRangeBtn=range.querySelector("[data-delete-range]");
+          if(!deleteRangeBtn)return;
+          deleteRangeBtn.classList.toggle("is-visible",multiple);
+          deleteRangeBtn.setAttribute("aria-hidden",String(!multiple));
         });
       };
 
@@ -3461,7 +3652,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       if(first)requestMaterialDelete(first);
     };
 
-    refreshMaterialEntryLabels();
+    refreshMaterialEntryLabels({animateRangeNumbers:false});
 
     const revealMaterialEntry=entry=>{
       if(prefersReducedMotion()){
@@ -3515,12 +3706,50 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       prevRow.hidden=true;
     }
 
+    const setPreviousReviewToggle=(open,{animate=true}={})=>{
+      const nextLabel=open?"前回の講評を閉じる":"前回の講評を見る";
+
+      previousReview.classList.toggle("open",open);
+      previousReview.setAttribute("aria-hidden",String(!open));
+      prevBtn.setAttribute("aria-expanded",String(open));
+
+      prevBtnLabel.getAnimations().forEach(animation=>animation.cancel());
+
+      if(!animate||prefersReducedMotion()||prevBtnLabel.textContent===nextLabel){
+        prevBtnLabel.textContent=nextLabel;
+        return;
+      }
+
+      /* Same 210ms trajectory as other text substitutions:
+         current text exits left, swaps while transparent, then returns. */
+      const midpoint=MOTION.move/2;
+      const animation=prevBtnLabel.animate(
+        [
+          {opacity:1,transform:"translateX(0)",offset:0},
+          {opacity:0,transform:"translateX(-4px)",offset:.48},
+          {opacity:0,transform:"translateX(-4px)",offset:.52},
+          {opacity:1,transform:"translateX(0)",offset:1}
+        ],
+        {
+          duration:MOTION.move,
+          easing:MOTION.ease
+        }
+      );
+
+      const swapTimer=setTimeout(()=>{
+        prevBtnLabel.textContent=nextLabel;
+      },midpoint);
+
+      animation.onfinish=()=>{
+        clearTimeout(swapTimer);
+        prevBtnLabel.textContent=nextLabel;
+      };
+      animation.oncancel=()=>clearTimeout(swapTimer);
+    };
+
     prevBtn.onclick=()=>{
       state.showPrev=!state.showPrev;
-      previousReview.classList.toggle("open",state.showPrev);
-      previousReview.setAttribute("aria-hidden",String(!state.showPrev));
-      prevBtn.setAttribute("aria-expanded",String(state.showPrev));
-      prevBtnLabel.textContent=state.showPrev?"前回の講評を閉じる":"前回の講評を見る";
+      setPreviousReviewToggle(state.showPrev);
     };
 
     document.querySelectorAll("[data-rating]").forEach(b=>b.onclick=()=>{
