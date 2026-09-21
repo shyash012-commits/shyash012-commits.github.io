@@ -36,6 +36,18 @@ button{touch-action:manipulation}
   margin:0 -16px;
   padding:calc(10px + env(safe-area-inset-top)) 10px 10px
 }
+html.line-inapp .app{
+  padding-top:var(--line-header-height,0px);
+}
+html.line-inapp .header{
+  position:fixed;
+  top:0;
+  left:50%;
+  width:100%;
+  max-width:720px;
+  margin:0;
+  transform:translateX(-50%);
+}
 .header-row{
   display:grid;
   grid-template-columns:1fr auto 1fr;
@@ -1443,6 +1455,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 <div id="app"></div>
 <script>
 (() => {
+  const IS_LINE_INAPP=/\bLine\//i.test(navigator.userAgent);
+  document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
+
   const STORAGE_KEY="lesson-record-v01-github";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
@@ -1689,6 +1704,25 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   }
 
 
+  function syncLineHeaderLayout(){
+    if(!IS_LINE_INAPP)return;
+
+    const app=document.querySelector(".app");
+    const header=app?.querySelector(".header");
+    if(!app||!header)return;
+
+    const height=Math.ceil(header.getBoundingClientRect().height);
+    app.style.setProperty("--line-header-height",height+"px");
+  }
+
+  function scheduleLineHeaderLayout(){
+    if(!IS_LINE_INAPP)return;
+    requestAnimationFrame(()=>{
+      syncLineHeaderLayout();
+      requestAnimationFrame(syncLineHeaderLayout);
+    });
+  }
+
   function renderList(){
     if(footerScrollHandler){
       window.removeEventListener("scroll",footerScrollHandler);
@@ -1700,6 +1734,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     document.getElementById("app").innerHTML='<div class="app"><div class="header"><div class="header-row"><div></div><div class="header-center"><div class="header-title">授業記録システム v0.1</div><div class="header-meta">架空データ・試作版</div></div><div></div></div></div>'+
     '<h1 class="page-title">今日の授業</h1><div class="page-sub">'+Y+'年'+M+'月'+D+'日</div><div class="lesson-list">'+lessons.map(l=>{const done=!!state.records[l.id];return '<button class="lesson-card" data-open="'+l.id+'"><div class="lesson-time">'+pad(l.hour)+':'+pad(l.minute)+'</div><div><div class="lesson-name">'+esc(l.student)+'</div><div class="lesson-meta">'+esc(l.grade)+'・'+esc(l.subject)+'・'+esc(l.type)+'</div></div><span class="badge '+(done?'done':'')+'">'+(done?'記録済み':'未記録')+'</span></button>'}).join("")+'</div><p class="note" style="margin-top:18px">この試作版は架空データを使用し、入力内容はこのiPhoneのブラウザ内に保存されます。</p></div>';
     document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openRecord(b.dataset.open));
+    scheduleLineHeaderLayout();
   }
 
   function openRecord(id){
@@ -1824,6 +1859,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     '</div>'+
     '</div>';
     bindRecord(v);
+    scheduleLineHeaderLayout();
     requestAnimationFrame(fitRecordHorizontalControls);
   }
 
@@ -2988,7 +3024,13 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       requestAnimationFrame(()=>{a.style.height="";a.style.overflow=""});
     };
   }
-  window.addEventListener("resize",()=>requestAnimationFrame(fitRecordHorizontalControls),{passive:true});
+  window.addEventListener("resize",()=>{
+    requestAnimationFrame(fitRecordHorizontalControls);
+    scheduleLineHeaderLayout();
+  },{passive:true});
+  if(IS_LINE_INAPP&&window.visualViewport){
+    window.visualViewport.addEventListener("resize",scheduleLineHeaderLayout,{passive:true});
+  }
   renderList();
 })();
 </script>
