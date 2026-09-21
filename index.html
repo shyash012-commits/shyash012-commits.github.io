@@ -769,8 +769,11 @@ textarea{min-height:140px;resize:vertical;line-height:1.65}
 }
 .vt-review #review{
   display:block;
-  height:calc(var(--record-control-height) * 3);
-  min-height:calc(var(--record-control-height) * 3);
+  height:calc(var(--record-control-height) * 4);
+  min-height:calc(var(--record-control-height) * 4);
+  font-size:var(--record-control-font-size);
+  font-weight:var(--record-control-font-weight);
+  color:var(--record-control-text);
   /* 1.65 line-height adds visual leading above the glyphs.
      Reduce only the top inset so the visible text sits ~15px from top/left. */
   padding:10.5px 15px 15px;
@@ -953,6 +956,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 .previous-review-text{
   margin:0;
   font-size:var(--record-control-font-size);
+  font-weight:var(--record-control-font-weight);
+  color:var(--record-control-text);
   line-height:1.65;
 }
 
@@ -1682,7 +1687,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
           '<input data-custom-material value="'+esc(entry.customMaterial||"")+'">'+
         '</div>'+
         '<div class="material-detail-stack">'+
-          '<div class="material-detail-field"><label class="label">範囲</label>'+
+          '<div class="material-detail-field"><label class="label">範囲（ページ）</label>'+
             '<div class="material-range-controls">'+
               '<input class="material-page-input" data-material-page-from inputmode="numeric" type="number" min="1" aria-label="開始ページ" value="'+esc(range.from)+'">'+
               '<span class="material-range-separator" aria-hidden="true">〜</span>'+
