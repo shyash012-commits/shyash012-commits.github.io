@@ -2086,7 +2086,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 keyboard-dock-04";
+  const BUILD_ID="2026-09-21 keyboard-dock-05";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2354,6 +2354,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   let footerKeyboardOpeningRaf=0;
   let footerKeyboardOpeningSession=false;
   let footerKeyboardOpeningClosing=false;
+  let footerKeyboardOpeningComfortAdjusted=false;
+  let footerKeyboardOpeningComfortTimers=[];
 
   function writeRecord(v){
     if(!state.lessonId)return;
@@ -2552,6 +2554,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
     clearTimeout(footerKeyboardOpeningTimer);
     footerKeyboardOpeningTimer=null;
+    footerKeyboardOpeningComfortTimers.forEach(clearTimeout);
+    footerKeyboardOpeningComfortTimers=[];
     if(footerKeyboardOpeningRaf){
       cancelAnimationFrame(footerKeyboardOpeningRaf);
       footerKeyboardOpeningRaf=0;
@@ -2570,6 +2574,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     footerKeyboardOpeningHasOpened=false;
     footerKeyboardOpeningSession=false;
     footerKeyboardOpeningClosing=false;
+    footerKeyboardOpeningComfortAdjusted=false;
   }
 
   function bindBrowserFooterKeyboardOpening(){
@@ -2636,6 +2641,53 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     const viewportRecovered=()=>
       viewport.height>=footerKeyboardOpeningBaselineHeight-6;
 
+    /* Docking the footer before focus is what prevents the iOS fixed-layer
+       pop, but it also changes Safari's automatic focus-scroll decision for a
+       low textarea. After the keyboard is genuinely open, independently move
+       only the focused editor into a comfortable reading position. The footer
+       remains docked and follows pageTop, so this scroll does not alter the
+       keyboard-closing behavior we just stabilized. */
+    const comfortFocusedControl=()=>{
+      if(
+        !footerKeyboardOpeningSession ||
+        footerKeyboardOpeningClosing
+      )return;
+
+      const active=document.activeElement;
+      if(!isKeyboardEntryControl(active))return;
+
+      const rect=active.getBoundingClientRect();
+      const screenTop=rect.top-viewport.offsetTop;
+      const screenBottom=rect.bottom-viewport.offsetTop;
+      const desiredTop=165;
+      const comfortableBottom=Math.max(300,viewport.height-110);
+
+      /* Leave Safari alone when it already produced a good composition.
+         The first screenshot case lands around 400px from the visual top and
+         therefore enters this branch; the second screenshot case does not. */
+      if(screenTop>250 || screenBottom>comfortableBottom){
+        const delta=screenTop-desiredTop;
+        if(Math.abs(delta)>8){
+          window.scrollBy({top:delta,behavior:"auto"});
+          setDockTop();
+        }
+      }
+    };
+
+    const scheduleComfortFocusedControl=()=>{
+      if(footerKeyboardOpeningComfortAdjusted)return;
+      footerKeyboardOpeningComfortAdjusted=true;
+
+      /* Safari may finish its own low-field auto-scroll a few frames after the
+         visual viewport first reports the keyboard. Re-check twice, but only
+         during this opening transition; once the user can interact, we stop. */
+      comfortFocusedControl();
+      [90,220].forEach(delay=>{
+        const timer=setTimeout(comfortFocusedControl,delay);
+        footerKeyboardOpeningComfortTimers.push(timer);
+      });
+    };
+
     const sync=()=>{
       footerKeyboardOpeningRaf=0;
       const h=viewport.height;
@@ -2656,7 +2708,10 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
       const shrink=footerKeyboardOpeningBaselineHeight-h;
       if(shrink>80){
-        footerKeyboardOpeningHasOpened=true;
+        if(!footerKeyboardOpeningHasOpened){
+          footerKeyboardOpeningHasOpened=true;
+          scheduleComfortFocusedControl();
+        }
       }
       if(h>footerKeyboardOpeningLastHeight+0.5){
         footerKeyboardOpeningClosing=true;
@@ -2728,6 +2783,9 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       footerKeyboardOpeningHasOpened=false;
       footerKeyboardOpeningSession=true;
       footerKeyboardOpeningClosing=false;
+      footerKeyboardOpeningComfortAdjusted=false;
+      footerKeyboardOpeningComfortTimers.forEach(clearTimeout);
+      footerKeyboardOpeningComfortTimers=[];
 
       /* pointerdown reaches here before focus/default keyboard layout, so the
          absolute dock starts from the exact fixed-footer position. */
