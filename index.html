@@ -2009,6 +2009,33 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
     transform:translateX(0);
     text-align:left;
   }
+  /* Unselected open capsules use the same visual language as the header's
+     "一覧" capsule: pale outer capsule + white outlined inner circle. */
+  .record-nav-item:not(.active),
+  .record-nav-item.completed:not(.active),
+  .record-footer.preview-mode .record-nav-item:not(.active),
+  .record-footer.preview-mode .record-nav-item.completed:not(.active){
+    color:#243140;
+    background:linear-gradient(180deg,#ffffff 0%,#f2f5f8 100%);
+    box-shadow:
+      inset 0 0 0 1.25px #cbd3dc,
+      inset 0 1px 0 rgba(255,255,255,.98);
+  }
+
+  .record-nav-item:not(.active) .record-icon-circle,
+  .record-nav-item.completed:not(.active) .record-icon-circle,
+  .record-footer.preview-mode .record-nav-item:not(.active) .record-icon-circle{
+    color:#243140;
+  }
+
+  .record-nav-item:not(.active) .record-icon-circle::before,
+  .record-nav-item.completed:not(.active) .record-icon-circle::before,
+  .record-footer.preview-mode .record-nav-item:not(.active) .record-icon-circle::before{
+    transform:scale(var(--footer-icon-scale));
+    background:#fff;
+    box-shadow:inset 0 0 0 1.25px #aeb8c3;
+  }
+
 }
 
 </style>
@@ -2021,7 +2048,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-21 16:01";
+  const BUILD_ID="2026-09-21 16:03";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
