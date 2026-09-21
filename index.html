@@ -2052,6 +2052,18 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       other:document.querySelector('[data-record-section="other"]')
     };
 
+    const headerBottom=()=>{
+      const header=document.querySelector(".header");
+      if(!header)return 0;
+      // Use the header's actual viewport position, not only its height.
+      // In in-app browsers (e.g. LINE), the sticky header's rect can be
+      // offset while browser chrome / the visual viewport is changing.
+      return Math.max(0,header.getBoundingClientRect().bottom);
+    };
+
+    const targetDelta=target=>
+      target.getBoundingClientRect().top-headerBottom();
+
     const unlockFooterScroll=(runSpy=true)=>{
       footerScrollLock=null;
       clearTimeout(footerScrollUnlockTimer);
@@ -2059,29 +2071,41 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       if(runSpy && footerScrollHandler)requestAnimationFrame(footerScrollHandler);
     };
 
+    const finalizeFooterScroll=()=>{
+      if(!footerScrollLock)return;
+
+      const target=footerScrollLock.target;
+      const delta=targetDelta(target);
+
+      // One exact geometry-based correction after the smooth scroll settles.
+      // This absorbs LINE/Safari toolbar and visualViewport changes without
+      // changing the section's own 20px top-padding rule.
+      if(Math.abs(delta)>.5){
+        window.scrollBy({top:delta,behavior:"auto"});
+      }
+
+      requestAnimationFrame(()=>unlockFooterScroll(true));
+    };
+
     document.querySelectorAll("[data-footer-section]").forEach(btn=>{
       btn.onclick=()=>{
         const key=btn.dataset.footerSection,target=targets[key];
         if(!target)return;
 
-        const headerH=document.querySelector(".header")?.getBoundingClientRect().height||0;
-        // Align the section box directly below the sticky header.
-        // The section's own 20px top padding then becomes the visible header-to-title gap,
-        // so spacing has a single source of truth instead of a second scroll-only offset.
-        const rawY=window.scrollY+target.getBoundingClientRect().top-headerH;
-        const maxY=Math.max(0,document.documentElement.scrollHeight-window.innerHeight);
-        const y=Math.min(maxY,Math.max(0,rawY));
+        const delta=targetDelta(target);
 
         // During a tap-triggered smooth scroll, keep the tapped tab selected.
         // This prevents the scroll-spy from activating sections merely passed en route.
-        footerScrollLock={key,targetY:y,started:performance.now()};
+        footerScrollLock={key,target,started:performance.now()};
         clearTimeout(footerScrollUnlockTimer);
         setFooterActive(key);
 
-        window.scrollTo({top:y,behavior:"smooth"});
+        // Scroll by the measured viewport delta. This remains correct even when
+        // the sticky header is not sitting at viewport y=0 in an in-app browser.
+        window.scrollBy({top:delta,behavior:"smooth"});
 
-        // Safety unlock for interrupted/older Safari smooth-scroll behavior.
-        footerScrollUnlockTimer=setTimeout(()=>unlockFooterScroll(true),1100);
+        // Final geometry correction after mobile browser chrome has settled.
+        footerScrollUnlockTimer=setTimeout(finalizeFooterScroll,900);
       };
     });
 
@@ -2094,23 +2118,27 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
         ticking=false;
 
         if(footerScrollLock){
-          const distance=Math.abs(window.scrollY-footerScrollLock.targetY);
+          const distance=Math.abs(targetDelta(footerScrollLock.target));
           const elapsed=performance.now()-footerScrollLock.started;
 
           // Keep the requested section active until the scroll actually arrives.
           setFooterActive(footerScrollLock.key);
 
-          if(distance<=2 || elapsed>1050){
-            unlockFooterScroll(true);
+          if(distance<=1){
+            // Do not unlock immediately: the visual viewport can still move
+            // for a moment in LINE/Safari. Let finalizeFooterScroll verify it.
+            return;
+          }
+          if(elapsed>1100){
+            finalizeFooterScroll();
           }
           return;
         }
 
-        const headerH=document.querySelector(".header")?.getBoundingClientRect().height||0;
-        const probe=window.scrollY+headerH+24;
+        const probe=headerBottom()+24;
         let active="basic";
         [["lesson",targets.lesson],["homework",targets.homework],["other",targets.other]].forEach(([key,target])=>{
-          if(target&&target.offsetTop<=probe)active=key;
+          if(target&&target.getBoundingClientRect().top<=probe)active=key;
         });
         setFooterActive(active);
       });
