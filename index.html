@@ -1584,11 +1584,12 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       margin-top 360ms cubic-bezier(.16,1,.3,1);
   }
   .soft-reveal>*{overflow:hidden;min-height:0}
+  .soft-reveal-inner{min-height:0;overflow:hidden}
   .soft-reveal.open{
     grid-template-rows:1fr;
     opacity:1;
     transform:translateY(0) scale(1);
-    margin-top:14px!important;
+    margin-top:var(--record-item-gap)!important;
     pointer-events:auto;
   }
 }
@@ -2162,7 +2163,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-22 02:06";
+  const BUILD_ID="2026-09-22 02:13";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
@@ -2800,11 +2801,11 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
       '<div class="previous-review-reveal" id="previousReview" aria-hidden="true"><div class="previous-review-clip"><div class="previous-review-content"><p class="previous-review-text"><span class="previous-review-body">'+esc(previousReview.text)+'</span>'+(previousReview.meta?'<span class="previous-review-meta">'+esc(previousReview.meta)+'</span>':'')+'</p></div></div></div></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="homework"><h1 class="record-section-title">宿題確認</h1>'+
-    '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><div class="readonly prev-homework-readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">取り組み</label><div class="choice-grid homework-choice-grid" data-choice-scroll role="group" aria-label="宿題の取り組み">'+["済","途","未","忘"].map(x=>'<button type="button" class="choice-button '+(state.homeworkProgress===x?'active':'')+'" data-homework-progress="'+x+'" aria-pressed="'+(state.homeworkProgress===x)+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div></div><div class="field soft-reveal '+(!["未","忘"].includes(state.homeworkProgress)?'open':'')+'" id="homeworkRatingField" aria-hidden="'+String(["未","忘"].includes(state.homeworkProgress))+'"><label class="label">評価</label><div class="choice-grid homework-choice-grid" data-choice-scroll role="group" aria-label="宿題の評価">'+["◎","○","△"].map(r=>'<button type="button" class="choice-button '+(state.rating===r?'active':'')+'" data-rating="'+r+'" aria-pressed="'+(state.rating===r)+'"><span class="record-option-label">'+r+'</span></button>').join("")+'</div></div><div class="field"><label class="label">コメント（任意）</label><textarea id="homeworkComment" class="homework-comment-input" placeholder="補足事項を記録してください。">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
+    '<section class="card vt-prevhomework" data-card-status="prevhomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">前回の宿題</h2></div><div class="card-body"><div class="readonly prev-homework-readonly">'+esc(l.prevHomework)+'</div><div class="field"><label class="label">取り組み</label><div class="choice-grid homework-choice-grid" data-choice-scroll role="group" aria-label="宿題の取り組み">'+["済","途","未","忘"].map(x=>'<button type="button" class="choice-button '+(state.homeworkProgress===x?'active':'')+'" data-homework-progress="'+x+'" aria-pressed="'+(state.homeworkProgress===x)+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div></div><div class="field soft-reveal '+(!["未","忘"].includes(state.homeworkProgress)?'open':'')+'" id="homeworkRatingField" aria-hidden="'+String(["未","忘"].includes(state.homeworkProgress))+'"><div class="soft-reveal-inner"><label class="label">評価</label><div class="choice-grid homework-choice-grid" data-choice-scroll role="group" aria-label="宿題の評価">'+["◎","○","△"].map(r=>'<button type="button" class="choice-button '+(state.rating===r?'active':'')+'" data-rating="'+r+'" aria-pressed="'+(state.rating===r)+'"><span class="record-option-label">'+r+'</span></button>').join("")+'</div></div></div><div class="field"><label class="label">コメント（任意）</label><textarea id="homeworkComment" class="homework-comment-input" placeholder="補足事項を記録してください。">'+esc(v.homeworkComment)+'</textarea></div></div></section>'+
     '<section class="card vt-nexthomework" data-card-status="nexthomework"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">今回の宿題</h2></div><div class="card-body"><textarea id="nextHomework" style="min-height:96px" placeholder="今回出した宿題を記録">'+esc(v.nextHomework)+'</textarea></div></section>'+
     '</section>'+
     '<section class="record-section" data-record-section="other"><h1 class="record-section-title">特記事項</h1>'+
-    '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2><p class="hint inline-auto-hint">*複数選択可</p></div><div class="card-body"><div class="chips" id="forgotChips" data-choice-scroll>'+["なし","筆記用具","教材","宿題","連絡帳","その他"].map(x=>'<button type="button" class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></section>'+
+    '<section class="card vt-forgot" data-card-status="forgot"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">忘れ物</h2><p class="hint inline-auto-hint">*複数選択可</p></div><div class="card-body"><div class="chips" id="forgotChips" data-choice-scroll>'+["なし","筆記用具","教材","宿題","連絡帳","その他"].map(x=>'<button type="button" class="chip '+(state.forgot.has(x)?'active':'')+'" data-forgot="'+x+'"><span class="record-option-label">'+x+'</span></button>').join("")+'</div><div class="field soft-reveal '+(state.forgot.has("その他")?'open':'')+'" id="forgotOtherWrap"><div class="soft-reveal-inner"><label class="label">その他の内容</label><input id="forgotOther" value="'+esc(v.forgotOther||"")+'"></div></div></div></section>'+
     '<section class="card vt-note" data-card-status="note"><div class="card-title-row"><span class="card-status" aria-hidden="true"></span><h2 class="card-title">備考（内部用）</h2></div><div class="card-body"><textarea id="note" style="min-height:110px">'+esc(v.note)+'</textarea></div></section>'+
     '</section>'+
     '</form>'+
