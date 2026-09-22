@@ -1741,29 +1741,40 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 }
 .record-nav-item:active{transform:none}
 
+.record-nav-item{
+  --nav-outline:var(--footer-white-outline);
+  --nav-reflection:inset 0 1px 0 rgba(255,255,255,.98);
+}
+.record-nav-item.active{
+  --nav-outline:var(--footer-blue-outline);
+  --nav-reflection:inset 0 1px 0 rgba(255,255,255,.12);
+}
+.record-nav-item.completed:not(.active){
+  --nav-outline:var(--footer-completed-outline);
+  --nav-reflection:inset 0 1px 0 rgba(255,255,255,.12);
+}
+.record-footer.preview-mode .record-nav-item,
+.record-footer.preview-mode .record-nav-item.completed:not(.active){
+  --nav-outline:var(--footer-white-outline);
+  --nav-reflection:inset 0 1px 0 rgba(255,255,255,.98);
+}
+.record-footer.preview-mode .record-nav-item.active{
+  --nav-outline:var(--footer-green-outline);
+  --nav-reflection:inset 0 1px 0 rgba(255,255,255,.12);
+}
 .record-nav-item::after{
   content:"";
   position:absolute;
   inset:0;
   z-index:4;
-  border:1.25px solid var(--footer-white-outline);
+  border:1.25px solid var(--nav-outline);
   border-radius:inherit;
+  box-shadow:var(--nav-reflection);
   pointer-events:none;
   box-sizing:border-box;
-  transition:border-color var(--footer-color-dur) var(--footer-color-ease);
-}
-.record-nav-item.active::after{
-  border-color:var(--footer-blue-outline);
-}
-.record-nav-item.completed:not(.active)::after{
-  border-color:var(--footer-completed-outline);
-}
-.record-footer.preview-mode .record-nav-item::after,
-.record-footer.preview-mode .record-nav-item.completed:not(.active)::after{
-  border-color:var(--footer-white-outline);
-}
-.record-footer.preview-mode .record-nav-item.active::after{
-  border-color:var(--footer-green-outline);
+  transition:
+    border-color var(--footer-color-dur) var(--footer-color-ease),
+    box-shadow var(--footer-color-dur) var(--footer-color-ease);
 }
 
 .record-nav-item .record-icon-circle{
@@ -2186,7 +2197,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-23 02:42";
+  const BUILD_ID="2026-09-23 02:49";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
