@@ -1618,30 +1618,26 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   --footer-color-dur:.15s;
   --footer-color-ease:cubic-bezier(.22,.72,.26,1);
 
-  /* Shared materials */
-  --footer-white-bg:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
+  /* Four capsule materials.
+     White is copied from the List capsule.
+     Blue is copied from the Submit capsule.
+     Green and gray use the same colored-material construction as Submit;
+     only the palette changes. */
+  --footer-white-bg:linear-gradient(180deg,#ffffff 0%,#f2f5f8 100%);
   --footer-white-outline:#cbd3dc;
-  --footer-white-shadow:
-    inset 0 1px 0 rgba(255,255,255,.12),
-    inset 0 0 0 1.25px var(--footer-white-outline);
+  --footer-white-shadow:inset 0 1px 0 rgba(255,255,255,.98);
 
   --footer-blue-bg:linear-gradient(180deg,#2f8cff 0%,#2278ef 100%);
   --footer-blue-outline:#2278ef;
-  --footer-blue-shadow:
-    inset 0 1px 0 rgba(255,255,255,.12),
-    inset 0 0 0 1.25px var(--footer-blue-outline);
+  --footer-blue-shadow:inset 0 1px 0 rgba(255,255,255,.12);
 
   --footer-green-bg:linear-gradient(180deg,#56cf8d 0%,#35b978 100%);
   --footer-green-outline:#2faa68;
-  --footer-green-shadow:
-    inset 0 1px 0 rgba(255,255,255,.12),
-    inset 0 0 0 1.25px var(--footer-green-outline);
+  --footer-green-shadow:inset 0 1px 0 rgba(255,255,255,.12);
 
-  --footer-completed-bg:linear-gradient(180deg,#e1e5e9 0%,#d5dbe1 46%,#c5cdd5 100%);
+  --footer-completed-bg:linear-gradient(180deg,#e1e5e9 0%,#c5cdd5 100%);
   --footer-completed-outline:#9faab6;
-  --footer-completed-shadow:
-    inset 0 1px 0 rgba(255,255,255,.12),
-    inset 0 0 0 1.25px var(--footer-completed-outline);
+  --footer-completed-shadow:inset 0 1px 0 rgba(255,255,255,.12);
   position:fixed;
   left:50%;
   bottom:10px;
@@ -1744,6 +1740,31 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   will-change:width;
 }
 .record-nav-item:active{transform:none}
+
+.record-nav-item::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:4;
+  border:1.25px solid var(--footer-white-outline);
+  border-radius:inherit;
+  pointer-events:none;
+  box-sizing:border-box;
+  transition:border-color var(--footer-color-dur) var(--footer-color-ease);
+}
+.record-nav-item.active::after{
+  border-color:var(--footer-blue-outline);
+}
+.record-nav-item.completed:not(.active)::after{
+  border-color:var(--footer-completed-outline);
+}
+.record-footer.preview-mode .record-nav-item::after,
+.record-footer.preview-mode .record-nav-item.completed:not(.active)::after{
+  border-color:var(--footer-white-outline);
+}
+.record-footer.preview-mode .record-nav-item.active::after{
+  border-color:var(--footer-green-outline);
+}
 
 .record-nav-item .record-icon-circle{
   position:relative;
@@ -1906,7 +1927,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   border-radius:var(--footer-item-r);
   border:1.25px solid var(--footer-white-outline);
   background:var(--footer-white-bg);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+  box-shadow:var(--footer-white-shadow);
   display:block;
   overflow:hidden;
   transition:
@@ -1938,8 +1959,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   inset:0;
   border-radius:50%;
   border:0;
-  background:var(--footer-white-bg);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+  background:#fff;
+  box-shadow:none;
   transform:scale(.94047619);
   transform-origin:50% 50%;
   z-index:0;
@@ -1996,7 +2017,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   color:#fff;
   border-color:var(--footer-green-outline);
   background:var(--footer-green-bg);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+  box-shadow:var(--footer-green-shadow);
 }
 .record-footer.preview-mode .record-preview-button .preview-icon-slot{
   color:var(--footer-green-outline);
@@ -2071,8 +2092,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
 
 /* Header material only; body selection controls remain flat. */
 .header-back{
-  background:linear-gradient(180deg,#ffffff 0%,#edf1f5 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+  background:linear-gradient(180deg,#ffffff 0%,#f2f5f8 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.98);
 }
 
 
@@ -2131,10 +2152,8 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   .record-footer.preview-mode .record-nav-item:not(.active),
   .record-footer.preview-mode .record-nav-item.completed:not(.active){
     color:#243140;
-    background:linear-gradient(180deg,#ffffff 0%,#f2f5f8 100%);
-    box-shadow:
-      inset 0 0 0 1.25px #cbd3dc,
-      inset 0 1px 0 rgba(255,255,255,.98);
+    background:var(--footer-white-bg);
+    box-shadow:var(--footer-white-shadow);
   }
 
   .record-nav-item:not(.active) .record-icon-circle,
@@ -2167,7 +2186,7 @@ input:focus,textarea:focus,select:focus{border-color:#7a9ec7;box-shadow:0 0 0 3p
   document.documentElement.classList.toggle("line-inapp",IS_LINE_INAPP);
 
   const STORAGE_KEY="lesson-record-v01-github";
-  const BUILD_ID="2026-09-23 02:32";
+  const BUILD_ID="2026-09-23 02:42";
   const SUBJECTS=["国語","数学","英語","理科","社会"];
   const INSTRUCTORS=["石井","田中","佐々木"];
 
